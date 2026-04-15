@@ -1,0 +1,88 @@
+---
+import { getCollection, render } from "astro:content";
+import Base from "../../../layouts/Base.astro";
+import ConjugationTable from "../../../components/ConjugationTable.astro";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("tenses");
+  return entries.map(entry => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const { title, oneLineRule, examples, relatedTenses, pitfalls } = entry.data;
+---
+
+<Base
+  title={title}
+  description={oneLineRule}
+  breadcrumb={[
+    { label: "Verbes", href: "/verbs" },
+    { label: title },
+  ]}
+>
+  <article>
+    <hgroup>
+      <h1>{title}</h1>
+      <p class="one-line-rule">{oneLineRule}</p>
+    </hgroup>
+
+    <Content />
+
+    {pitfalls && pitfalls.length > 0 && (
+      <section>
+        <h2>Common pitfalls</h2>
+        <ul>
+          {pitfalls.map(p => <li set:html={p} />)}
+        </ul>
+      </section>
+    )}
+
+    {examples && examples.length > 0 && (
+      <section>
+        <h2>Examples</h2>
+        <dl class="examples">
+          {examples.map(ex => (
+            <>
+              <dt lang="fr" set:html={ex.fr} />
+              <dd>{ex.en}</dd>
+            </>
+          ))}
+        </dl>
+      </section>
+    )}
+
+    <ConjugationTable tenseId={entry.id} />
+
+    {relatedTenses && relatedTenses.length > 0 && (
+      <section>
+        <h2>Related tenses</h2>
+        <ul>
+          {relatedTenses.map(slug => (
+            <li><a href={`/verbs/tenses/${slug}`}>{slug}</a></li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <p><a href="/verbs">← Back to the tense diagram</a></p>
+  </article>
+</Base>
+
+<style>
+  .one-line-rule {
+    font-size: 1.05rem;
+    color: var(--pico-muted-color);
+  }
+  .examples dt {
+    font-weight: 600;
+    margin-top: 0.75rem;
+  }
+  .examples dd {
+    color: var(--pico-muted-color);
+    margin-left: 0;
+  }
+</style>

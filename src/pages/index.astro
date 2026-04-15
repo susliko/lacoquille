@@ -1,0 +1,46 @@
+---
+import Base from "../layouts/Base.astro";
+
+const topics = [
+  {
+    id: "verbs",
+    name: "Verbes",
+    desc: "Tenses, moods, conjugation & the interactive tense diagram.",
+    href: "/verbs",
+    available: true,
+  },
+  { id: "pronouns",     name: "Pronoms",       desc: "Subject, object, reflexive, relative & more.", available: false },
+  { id: "adjectives",   name: "Adjectifs",     desc: "Agreement, placement, comparison.",             available: false },
+  { id: "articles",     name: "Articles",      desc: "Definite, indefinite, partitive.",              available: false },
+  { id: "adverbs",      name: "Adverbes",      desc: "Formation, placement, degree.",                 available: false },
+  { id: "prepositions", name: "Prépositions",  desc: "à, de & common verb combinations.",             available: false },
+  { id: "negation",     name: "Négation",      desc: "ne…pas, ne…plus, ne…jamais & more.",           available: false },
+  { id: "questions",    name: "Interrogation", desc: "Inversion, est-ce que, intonation.",            available: false },
+  { id: "syntax",       name: "Syntaxe",       desc: "Word order, sentence structure.",               available: false },
+];
+---
+
+<Base title="French Grammar Reference">
+  <hgroup>
+    <h1>French Grammar Reference</h1>
+    <p>An interactive, well-structured reference for every aspect of French grammar. Start with verbs — the rest is on its way.</p>
+  </hgroup>
+
+  <div class="topic-grid">
+    {topics.map(topic => (
+      topic.available
+        ? (
+          <a href={topic.href} class="topic-card available">
+            <span class="topic-name">{topic.name}</span>
+            <span class="topic-desc">{topic.desc}</span>
+          </a>
+        ) : (
+          <div class="topic-card coming-soon" aria-disabled="true">
+            <span class="topic-name">{topic.name}</span>
+            <span class="topic-desc">{topic.desc}</span>
+            <span class="topic-desc" style="font-style:italic">Coming soon</span>
+          </div>
+        )
+    ))}
+  </div>
+</Base>

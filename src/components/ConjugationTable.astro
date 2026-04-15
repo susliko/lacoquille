@@ -1,0 +1,41 @@
+---
+import { VERBS, PERSONS } from "../data/conjugations/index";
+import type { TenseId } from "../data/conjugations/types";
+
+interface Props {
+  tenseId: string;
+  verbName?: string;
+}
+
+const { tenseId, verbName = "parler" } = Astro.props;
+const verb = VERBS[verbName];
+const forms = verb?.forms[tenseId as TenseId];
+---
+
+{forms && (
+  <section>
+    <h2>Conjugation — <em>{verb.infinitive}</em> ({verb.translation})</h2>
+    <table class="conj-table">
+      <thead>
+        <tr>
+          <th scope="col">Person</th>
+          <th scope="col">Form</th>
+        </tr>
+      </thead>
+      <tbody>
+        {PERSONS.map(person => {
+          const form = forms[person];
+          if (form === null) return null;
+          return (
+            <tr>
+              <th scope="row">{person}</th>
+              <td>
+                <span class="verb-stem">{verb.infinitive.slice(0, -2)}</span><span class="verb-ending">{form.replace(verb.infinitive.slice(0, -2), "")}</span>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </section>
+)}

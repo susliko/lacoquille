@@ -1,0 +1,198 @@
+{
+  "nodes": [
+    {
+      "id": "present-indicatif",
+      "lane": "indicatif",
+      "timePosition": "present",
+      "aspect": "ongoing",
+      "literary": false
+    },
+    {
+      "id": "imparfait",
+      "lane": "indicatif",
+      "timePosition": "past",
+      "aspect": "habitual",
+      "literary": false
+    },
+    {
+      "id": "passe-compose",
+      "lane": "indicatif",
+      "timePosition": "near-past",
+      "aspect": "completed",
+      "literary": false
+    },
+    {
+      "id": "plus-que-parfait",
+      "lane": "indicatif",
+      "timePosition": "far-past",
+      "aspect": "anterior",
+      "literary": false
+    },
+    {
+      "id": "passe-simple",
+      "lane": "indicatif",
+      "timePosition": "past",
+      "aspect": "completed",
+      "literary": true
+    },
+    {
+      "id": "passe-anterieur",
+      "lane": "indicatif",
+      "timePosition": "far-past",
+      "aspect": "anterior",
+      "literary": true
+    },
+    {
+      "id": "futur-simple",
+      "lane": "indicatif",
+      "timePosition": "future",
+      "aspect": "none",
+      "literary": false
+    },
+    {
+      "id": "futur-anterieur",
+      "lane": "indicatif",
+      "timePosition": "far-future",
+      "aspect": "anterior",
+      "literary": false
+    },
+    {
+      "id": "conditionnel-present",
+      "lane": "conditionnel",
+      "timePosition": "future",
+      "aspect": "none",
+      "literary": false
+    },
+    {
+      "id": "conditionnel-passe",
+      "lane": "conditionnel",
+      "timePosition": "far-future",
+      "aspect": "anterior",
+      "literary": false
+    },
+    {
+      "id": "subjonctif-present",
+      "lane": "subjonctif",
+      "timePosition": "present",
+      "aspect": "none",
+      "literary": false
+    },
+    {
+      "id": "subjonctif-passe",
+      "lane": "subjonctif",
+      "timePosition": "past",
+      "aspect": "completed",
+      "literary": false
+    },
+    {
+      "id": "subjonctif-imparfait",
+      "lane": "subjonctif",
+      "timePosition": "past",
+      "aspect": "ongoing",
+      "literary": true
+    },
+    {
+      "id": "subjonctif-plus-que-parfait",
+      "lane": "subjonctif",
+      "timePosition": "far-past",
+      "aspect": "anterior",
+      "literary": true
+    },
+    {
+      "id": "imperatif-present",
+      "lane": "imperatif",
+      "timePosition": "present",
+      "aspect": "none",
+      "literary": false
+    },
+    {
+      "id": "imperatif-passe",
+      "lane": "imperatif",
+      "timePosition": "near-future",
+      "aspect": "completed",
+      "literary": false
+    }
+  ],
+  "edges": [
+    {
+      "type": "auxiliary-compound",
+      "from": "present-indicatif",
+      "to": "passe-compose",
+      "label": "avoir/être + PP"
+    },
+    {
+      "type": "auxiliary-compound",
+      "from": "imparfait",
+      "to": "plus-que-parfait",
+      "label": "avoir/être + PP"
+    },
+    {
+      "type": "auxiliary-compound",
+      "from": "passe-simple",
+      "to": "passe-anterieur",
+      "label": "avoir/être + PP",
+      "literary": true
+    },
+    {
+      "type": "auxiliary-compound",
+      "from": "futur-simple",
+      "to": "futur-anterieur",
+      "label": "avoir/être + PP"
+    },
+    {
+      "type": "auxiliary-compound",
+      "from": "conditionnel-present",
+      "to": "conditionnel-passe",
+      "label": "avoir/être + PP"
+    },
+    {
+      "type": "auxiliary-compound",
+      "from": "subjonctif-present",
+      "to": "subjonctif-passe",
+      "label": "avoir/être + PP"
+    },
+    {
+      "type": "auxiliary-compound",
+      "from": "subjonctif-imparfait",
+      "to": "subjonctif-plus-que-parfait",
+      "label": "avoir/être + PP",
+      "literary": true
+    },
+    {
+      "type": "aspect-pair",
+      "from": "imparfait",
+      "to": "passe-compose",
+      "label": "ongoing vs completed"
+    },
+    {
+      "type": "stem-share",
+      "from": "futur-simple",
+      "to": "conditionnel-present",
+      "label": "same stem, different endings"
+    },
+    {
+      "type": "mood-swap",
+      "from": "present-indicatif",
+      "to": "subjonctif-present",
+      "label": "same time, different mood"
+    },
+    {
+      "type": "anteriority",
+      "from": "plus-que-parfait",
+      "to": "passe-compose",
+      "label": "before the past"
+    },
+    {
+      "type": "anteriority",
+      "from": "futur-anterieur",
+      "to": "futur-simple",
+      "label": "before the future"
+    },
+    {
+      "type": "anteriority",
+      "from": "conditionnel-passe",
+      "to": "conditionnel-present",
+      "label": "before the conditional"
+    }
+  ]
+}

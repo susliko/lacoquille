@@ -1,0 +1,250 @@
+/* Import Pico.css — classless, dark-mode-aware, mobile-first */
+@import "@picocss/pico/css/pico.min.css";
+
+/* ── Kit CSS custom properties ───────────────────────────────── */
+:root {
+  /* Mood hues — used on node cards and edges throughout the Grammar Map */
+  --mood-indicatif: 210;    /* blue */
+  --mood-conditionnel: 265; /* purple */
+  --mood-subjonctif: 30;    /* amber */
+  --mood-imperatif: 160;    /* teal */
+
+  /* Edge stroke widths */
+  --edge-width-default: 2px;
+  --edge-width-highlight: 3px;
+
+  /* Aspect icon fill */
+  --icon-completed: var(--pico-color);
+  --icon-ongoing: var(--pico-muted-color);
+
+  /* Diagram layout */
+  --diagram-card-width: 9rem;
+  --diagram-card-height: 5.5rem;
+  --diagram-lane-gap: 1.5rem;
+  --diagram-col-gap: 1rem;
+  --diagram-padding: 1.5rem;
+}
+
+/* ── Typography overrides ────────────────────────────────────── */
+body {
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+/* Tighter headings for reference density */
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.35rem; }
+h3 { font-size: 1.1rem;  }
+
+/* ── Top navigation ─────────────────────────────────────────── */
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem var(--pico-spacing);
+  border-bottom: 1px solid var(--pico-muted-border-color);
+  font-size: 0.875rem;
+  flex-wrap: wrap;
+}
+.site-nav .brand {
+  font-weight: 700;
+  color: var(--pico-color);
+  text-decoration: none;
+}
+.site-nav .breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.site-nav .breadcrumb li + li::before {
+  content: "/";
+  color: var(--pico-muted-color);
+  margin-right: 0.25rem;
+}
+
+/* ── Topic grid (home page) ─────────────────────────────────── */
+.topic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+.topic-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.25rem 1rem;
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+  text-decoration: none;
+  color: var(--pico-color);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.topic-card:hover {
+  border-color: var(--pico-primary);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--pico-primary) 15%, transparent);
+}
+.topic-card.available .topic-name {
+  font-weight: 600;
+}
+.topic-card.coming-soon {
+  opacity: 0.55;
+  pointer-events: none;
+}
+.topic-card .topic-desc {
+  font-size: 0.8rem;
+  color: var(--pico-muted-color);
+}
+
+/* ── Diagram container ──────────────────────────────────────── */
+.diagram-scroll-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Conjugation table ──────────────────────────────────────── */
+.conj-table {
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  width: 100%;
+}
+.conj-table th, .conj-table td {
+  padding: 0.3rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--pico-muted-border-color);
+}
+.conj-table th {
+  font-size: 0.8rem;
+  color: var(--pico-muted-color);
+  font-weight: 600;
+}
+
+/* ── Verb diagram ───────────────────────────────────────────── */
+.verb-diagram {
+  margin: 1.5rem 0;
+}
+
+.diagram-controls {
+  margin-bottom: 1rem;
+}
+.diagram-controls .inline-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+.diagram-controls label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  margin: 0;
+}
+.inline-checkbox {
+  cursor: pointer;
+}
+
+.grammar-map-svg {
+  display: block;
+  font-family: inherit;
+  overflow: visible;
+}
+.grammar-map-svg .col-label,
+.grammar-map-svg .lane-label {
+  font-family: inherit;
+  user-select: none;
+}
+.grammar-map-svg .diagram-node,
+.grammar-map-svg .diagram-edge {
+  outline: none;
+}
+.grammar-map-svg .diagram-node:focus-visible rect {
+  outline: 2px solid var(--pico-primary);
+  outline-offset: 2px;
+}
+
+/* Panels */
+.edge-panel,
+.node-panel {
+  position: relative;
+  margin-top: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+  background: var(--pico-card-background-color);
+}
+.close-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  color: var(--pico-muted-color);
+  padding: 0.25rem 0.5rem;
+  min-width: 0;
+}
+.edge-type-label {
+  text-transform: capitalize;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  color: var(--pico-muted-color);
+  display: block;
+  margin-bottom: 0.3rem;
+}
+.edge-nodes {
+  font-size: 0.875rem;
+}
+.one-line-rule {
+  font-size: 0.95rem;
+  color: var(--pico-muted-color);
+  margin-bottom: 1rem;
+}
+.highlighted-row {
+  background: color-mix(in srgb, var(--pico-primary) 12%, transparent);
+  font-weight: 700;
+}
+.learn-more {
+  display: inline-block;
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+}
+
+/* Legend */
+.diagram-legend {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+}
+.diagram-legend dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.3rem 0.75rem;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+.diagram-legend dt { margin: 0; }
+.diagram-legend dd { margin: 0; }
+
+/* ── Ending highlight (animated morph) ─────────────────────── */
+.verb-stem { }
+.verb-ending {
+  color: hsl(var(--mood-indicatif) 70% 50%);
+  font-weight: 600;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .verb-ending.animate-in {
+    animation: ending-pop 0.25s ease-out;
+  }
+  @keyframes ending-pop {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}

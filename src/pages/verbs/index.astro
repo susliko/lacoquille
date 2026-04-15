@@ -1,0 +1,84 @@
+---
+import Base from "../../layouts/Base.astro";
+import VerbDiagram from "../../components/VerbDiagram";
+import { getCollection } from "astro:content";
+import diagramData from "../../content/verbs/diagram.json";
+
+// Load all tense entries to build lookup maps for the diagram
+const tenseEntries = await getCollection("tenses");
+
+const tenseTitles: Record<string, string> = {};
+const tenseRules:  Record<string, string> = {};
+for (const entry of tenseEntries) {
+  tenseTitles[entry.id] = entry.data.title;
+  tenseRules[entry.id]  = entry.data.oneLineRule;
+}
+
+const choicePages = [
+  { slug: "imparfait-vs-passe-compose", title: "Imparfait vs Passé composé" },
+  { slug: "subjonctif-triggers",        title: "Subjonctif triggers" },
+  { slug: "si-clauses",                 title: "Si-clauses" },
+  { slug: "futur-vs-conditionnel",      title: "Futur vs Conditionnel" },
+  { slug: "reported-speech",            title: "Reported speech & sequence of tenses" },
+];
+---
+
+<Base
+  title="Verbes"
+  description="All French verb tenses and moods in one interactive diagram."
+  breadcrumb={[{ label: "Verbes" }]}
+>
+  <hgroup>
+    <h1>Verbes</h1>
+    <p>Every French tense and mood, their relations, and when to use each one.</p>
+  </hgroup>
+
+  {/* Interactive tense diagram — SolidJS island */}
+  <VerbDiagram
+    client:load
+    data={diagramData}
+    tenseTitles={tenseTitles}
+    tenseRules={tenseRules}
+  />
+
+  {/* Tense index */}
+  <section>
+    <h2>All tenses</h2>
+    <ul class="tense-list">
+      {tenseEntries
+        .sort((a, b) => a.data.title.localeCompare(b.data.title))
+        .map(entry => (
+          <li>
+            <a href={`/verbs/tenses/${entry.id}`}>{entry.data.title}</a>
+            <span class="tense-rule">— {entry.data.oneLineRule}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  {/* Choice pages */}
+  <section>
+    <h2>Tense-choice guides</h2>
+    <ul class="choice-list">
+      {choicePages.map(page => (
+        <li>
+          <a href={`/verbs/choice/${page.slug}`}>{page.title}</a>
+        </li>
+      ))}
+    </ul>
+  </section>
+</Base>
+
+<style>
+  .tense-list li {
+    padding: 0.3rem 0;
+  }
+  .tense-rule {
+    font-size: 0.875rem;
+    color: var(--pico-muted-color);
+  }
+  .choice-list li {
+    padding: 0.3rem 0;
+  }
+</style>
