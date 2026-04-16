@@ -8,25 +8,49 @@ import { AspectIcon } from "./GrammarMap/AspectIcon";
 import { VERBS, PERSONS, VERB_OPTIONS } from "../data/conjugations/index";
 import type { TenseId, Person } from "../data/conjugations/types";
 
-// ── Layout constants ──────────────────────────────────────────
-const CARD_W = 140;
-const CARD_H = 62;        // shorter now — no description text
-const COL_GAP = 16;
-const LANE_GAP = 14;
-const LANE_HEADER_W = 96;
-const COL_HEADER_H = 28;
-const PAD = 12;
+// ── Desktop layout (time=X, mood=Y) ──────────────────────────
+const DK_CARD_W = 140;
+const DK_CARD_H = 62;
+const DK_COL_GAP = 16;
+const DK_LANE_GAP = 14;
+const DK_LANE_HEADER_W = 96;
+const DK_COL_HEADER_H = 28;
+const DK_PAD = 12;
 
-const NUM_COLS = 7;
-const COL_W = CARD_W + COL_GAP;
-const LANE_H = CARD_H + LANE_GAP;
+const DK_NUM_COLS = 7;
+const DK_COL_W = DK_CARD_W + DK_COL_GAP;
+const DK_LANE_H = DK_CARD_H + DK_LANE_GAP;
 
-function colX(col: number) { return LANE_HEADER_W + PAD + col * COL_W; }
-function laneY(row: number) { return COL_HEADER_H + PAD + row * LANE_H; }
+const DK_SVG_W = DK_LANE_HEADER_W + DK_PAD * 2 + DK_NUM_COLS * DK_COL_W;
+const DK_SVG_H = DK_COL_HEADER_H + DK_PAD * 2 + MOOD_ORDER.length * DK_LANE_H;
 
-const SVG_W = LANE_HEADER_W + PAD * 2 + NUM_COLS * COL_W;
-const SVG_H = COL_HEADER_H + PAD * 2 + MOOD_ORDER.length * LANE_H;
+function dkColX(col: number) { return DK_LANE_HEADER_W + DK_PAD + col * DK_COL_W; }
+function dkLaneY(row: number) { return DK_COL_HEADER_H + DK_PAD + row * DK_LANE_H; }
 
+// ── Mobile layout (mood=X, time=Y) — transposed ──────────────
+// 4 mood columns × ~78px ≈ 362px total → fits 375px phones
+const MB_CARD_W = 74;
+const MB_CARD_H = 58;
+const MB_COL_GAP = 4;
+const MB_ROW_GAP = 5;
+const MB_TIME_LABEL_W = 46;
+const MB_MOOD_HEADER_H = 26;
+
+const MB_COL_W = MB_CARD_W + MB_COL_GAP;
+const MB_ROW_H = MB_CARD_H + MB_ROW_GAP;
+
+const MB_SVG_W = MB_TIME_LABEL_W + MOOD_ORDER.length * MB_COL_W;
+const MB_SVG_H = MB_MOOD_HEADER_H + Object.keys(TIME_COLUMNS).length * MB_ROW_H;
+
+const MB_TIME_LABELS: Record<string, string> = {
+  "far-past": "ant.", "past": "past", "near-past": "rec.",
+  "present": "now", "near-future": "near", "future": "fut.", "far-future": "f.ant.",
+};
+
+function mbColX(moodIdx: number) { return MB_TIME_LABEL_W + moodIdx * MB_COL_W; }
+function mbRowY(timeIdx: number) { return MB_MOOD_HEADER_H + timeIdx * MB_ROW_H; }
+
+// ── Types ─────────────────────────────────────────────────────
 interface NodePos { node: DiagramNode; x: number; y: number; cx: number; cy: number; }
 
 interface Props {
@@ -35,14 +59,13 @@ interface Props {
   tenseRules:  Record<string, string>;
 }
 
-// ── Verbal periphrases — computed from aller/venir/être ───────
-const PERIPHRASES: Record<string, (verbInf: string, person: string) => string> = {
+// ── Verbal periphrases — computed dynamically ─────────────────
+const PERIPHRASES: Record<string, (inf: string, person: string) => string> = {
   "futur-proche": (inf, person) => {
     const f = VERBS["aller"]?.forms["present-indicatif"]?.[person as Person];
     return f ? `${f} ${inf}` : "—";
   },
   "passe-recent": (inf, person) => {
-    // venir conjugated inline (common irregular)
     const venir: Record<string, string> = {
       je: "viens", tu: "viens", il: "vient",
       nous: "venons", vous: "venez", ils: "viennent",
@@ -50,47 +73,57 @@ const PERIPHRASES: Record<string, (verbInf: string, person: string) => string> =
     return `${venir[person] ?? "—"} de ${inf}`;
   },
   "present-progressif": (inf, person) => {
-    const etre = VERBS["être"]?.forms["present-indicatif"]?.[person as Person];
-    return etre ? `${etre} en train de ${inf}` : "—";
+    const f = VERBS["être"]?.forms["present-indicatif"]?.[person as Person];
+    return f ? `${f} en train de ${inf}` : "—";
   },
 };
 
+// ── Edge path — desktop ───────────────────────────────────────
 function edgePath(from: NodePos, to: NodePos, edge: DiagramEdge): string {
   const dy = to.cy - from.cy;
-
-  // Cross-lane edges (mood-swap, stem-share): elbow from bottom/top of card
   if (edge.type === "mood-swap" || edge.type === "stem-share") {
-    const midX = from.cx;
-    const fromY = dy > 0 ? from.y + CARD_H : from.y;
-    const toY   = dy > 0 ? to.y            : to.y + CARD_H;
-    return `M ${from.cx} ${fromY} C ${midX} ${from.cy + dy * 0.5}, ${midX} ${from.cy + dy * 0.5}, ${to.cx} ${toY}`;
+    const fromY = dy > 0 ? from.y + DK_CARD_H : from.y;
+    const toY   = dy > 0 ? to.y               : to.y + DK_CARD_H;
+    return `M ${from.cx} ${fromY} C ${from.cx} ${from.cy + dy * 0.5}, ${from.cx} ${from.cy + dy * 0.5}, ${to.cx} ${toY}`;
   }
-
-  // Same-lane horizontal edges: offset slightly from center to avoid overlap
   if (Math.abs(dy) < 4) {
-    const yOff = from.cy - 4;
-    return `M ${from.x + CARD_W} ${yOff} L ${to.x} ${yOff}`;
+    return `M ${from.x + DK_CARD_W} ${from.cy - 4} L ${to.x} ${to.cy - 4}`;
   }
-
-  // Generic diagonal
   const cp1y = from.cy + dy * 0.4;
   const cp2y = to.cy - dy * 0.4;
   return `M ${from.cx} ${from.cy} C ${from.cx} ${cp1y}, ${to.cx} ${cp2y}, ${to.cx} ${to.cy}`;
 }
 
+// ── Edge path — mobile (transposed axes) ─────────────────────
+function edgePathMobile(from: NodePos, to: NodePos): string {
+  const dx = to.cx - from.cx;
+  const dy = to.cy - from.cy;
+  if (Math.abs(dx) < 4) {
+    // Same column (same mood) → vertical
+    const fy = dy > 0 ? from.y + MB_CARD_H : from.y;
+    const ty = dy > 0 ? to.y               : to.y + MB_CARD_H;
+    return `M ${from.cx} ${fy} L ${to.cx} ${ty}`;
+  }
+  if (Math.abs(dy) < 4) {
+    // Same row (same time) → horizontal
+    const fx = dx > 0 ? from.x + MB_CARD_W : from.x;
+    const tx = dx > 0 ? to.x               : to.x + MB_CARD_W;
+    return `M ${fx} ${from.cy} L ${tx} ${to.cy}`;
+  }
+  // Diagonal
+  return `M ${from.cx} ${from.cy} C ${from.cx} ${to.cy}, ${to.cx} ${from.cy}, ${to.cx} ${to.cy}`;
+}
+
+// ── Component ─────────────────────────────────────────────────
 export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
-  // ── Reactive state ────────────────────────────────────────
   const [selectedPerson, setSelectedPerson] = createSignal<string>("je");
   const [selectedVerb,   setSelectedVerb]   = createSignal<string>("parler");
   const [showLiterary,   setShowLiterary]   = createSignal(false);
   const [activeNode,     setActiveNode]     = createSignal<string | null>(null);
   const [activeEdge,     setActiveEdge]     = createSignal<DiagramEdge | null>(null);
-  const [activeMood,     setActiveMood]     = createSignal<MoodId>("indicatif");
   const [isMobile,       setIsMobile]       = createSignal(
     typeof window !== "undefined" ? window.innerWidth < 768 : false
   );
-
-  // Tier-1 linking: will be wired to example-sentence verb tokens
   const [highlightedTense, _setHighlightedTense] = createSignal<string | null>(null);
 
   onMount(() => {
@@ -99,11 +132,10 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
     onCleanup(() => window.removeEventListener("resize", check));
   });
 
-  // ── Derived ───────────────────────────────────────────────
+  // ── Derived ─────────────────────────────────────────────────
   const visibleNodes = createMemo(() =>
     data.nodes.filter(n => showLiterary() || !n.literary)
   );
-
   const visibleEdges = createMemo(() =>
     data.edges.filter(e => {
       if (e.literary && !showLiterary()) return false;
@@ -112,39 +144,41 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
     })
   );
 
-  const nodePositions = createMemo<NodePos[]>(() =>
+  // Desktop: time=col, mood=row
+  const dkNodePositions = createMemo<NodePos[]>(() =>
     visibleNodes().map(node => {
       const col = TIME_COLUMNS[node.timePosition];
       const row = MOOD_ORDER.indexOf(node.lane as MoodId);
-      const x = colX(col);
-      const y = laneY(row);
-      return { node, x, y, cx: x + CARD_W / 2, cy: y + CARD_H / 2 };
+      const x = dkColX(col), y = dkLaneY(row);
+      return { node, x, y, cx: x + DK_CARD_W / 2, cy: y + DK_CARD_H / 2 };
     })
   );
-
-  const posMap = createMemo(() => {
+  const dkPosMap = createMemo(() => {
     const m = new Map<string, NodePos>();
-    for (const p of nodePositions()) m.set(p.node.id, p);
+    for (const p of dkNodePositions()) m.set(p.node.id, p);
     return m;
   });
 
-  // Tenses in the active mood lane, sorted by time column
-  const mobileLaneNodes = createMemo(() =>
-    visibleNodes()
-      .filter(n => n.lane === activeMood())
-      .sort((a, b) => TIME_COLUMNS[a.timePosition] - TIME_COLUMNS[b.timePosition])
+  // Mobile: mood=col, time=row
+  const mbNodePositions = createMemo<NodePos[]>(() =>
+    visibleNodes().map(node => {
+      const col = MOOD_ORDER.indexOf(node.lane as MoodId);
+      const row = TIME_COLUMNS[node.timePosition];
+      const x = mbColX(col), y = mbRowY(row);
+      return { node, x, y, cx: x + MB_CARD_W / 2, cy: y + MB_CARD_H / 2 };
+    })
   );
+  const mbPosMap = createMemo(() => {
+    const m = new Map<string, NodePos>();
+    for (const p of mbNodePositions()) m.set(p.node.id, p);
+    return m;
+  });
 
   function getConjugation(tenseId: string): string {
     const verb   = VERBS[selectedVerb()];
     const person = selectedPerson();
     if (!verb) return "—";
-
-    // Periphrastic tenses — computed, not stored
-    if (tenseId in PERIPHRASES) {
-      return PERIPHRASES[tenseId]!(verb.infinitive, person);
-    }
-
+    if (tenseId in PERIPHRASES) return PERIPHRASES[tenseId]!(verb.infinitive, person);
     const forms = verb.forms[tenseId as TenseId];
     if (!forms) return "—";
     return forms[person as keyof typeof forms] ?? "—";
@@ -158,7 +192,12 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
     return tenseTitles[node.id] ?? (node as any).title ?? node.id;
   }
 
-  // ── Shared panels (used by both desktop + mobile) ─────────
+  function openNode(id: string) {
+    setActiveNode(activeNode() === id ? null : id);
+    setActiveEdge(null);
+  }
+
+  // ── Shared panels ────────────────────────────────────────────
   const Panels = () => (
     <>
       <Show when={activeEdge()}>
@@ -166,10 +205,10 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
           <aside class="edge-panel" role="complementary" aria-live="polite">
             <button class="panel-close" onClick={() => setActiveEdge(null)} aria-label="Close">✕</button>
             <strong class="panel-type-tag">{edge().type.replace(/-/g, " ")}</strong>
-            <p style={{ color: EDGE_COLOR[edge().type], "font-weight": "500" }}>
+            <p style={{ color: EDGE_COLOR[edge().type], "font-weight": "500", "margin-bottom": "0.25rem" }}>
               {EDGE_LABEL[edge().type]}
             </p>
-            <p style={{ "margin-top": "0.4rem", color: "var(--text-2)", "font-size": "0.9rem" }}>
+            <p style={{ color: "var(--text-2)", "font-size": "0.875rem", margin: "0" }}>
               {edge().label}
             </p>
             <p class="panel-edge-nodes">
@@ -188,10 +227,10 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
       <Show when={activeNodeData()}>
         {(nodeData: () => DiagramNode) => {
           const tenseId = () => nodeData().id;
-          const verb    = () => VERBS[selectedVerb()];
-          const forms   = () => {
-            if (tenseId() in PERIPHRASES) return null; // periphrases shown differently
-            return verb()?.forms[tenseId() as TenseId];
+          const isPeriph = () => tenseId() in PERIPHRASES;
+          const forms = () => {
+            if (isPeriph()) return null;
+            return VERBS[selectedVerb()]?.forms[tenseId() as TenseId];
           };
 
           return (
@@ -200,48 +239,23 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
               <h3 class="panel-title">{nodeTitle(nodeData())}</h3>
               <p class="panel-rule">{tenseRules[tenseId()] ?? ""}</p>
 
-              <Show when={forms()}>
-                {f => (
-                  <table class="panel-conj-table">
-                    <tbody>
-                      {PERSONS.map(person => {
-                        const form = f()[person];
-                        if (form === null) return null;
-                        const active = () => selectedPerson() === person;
-                        return (
-                          <tr
-                            class={active() ? "active-row" : ""}
-                            onClick={() => setSelectedPerson(person)}
-                            style={{ cursor: "pointer" }}
-                          >
-                            <th scope="row">{person}</th>
-                            <td>{form}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                )}
-              </Show>
-
-              <Show when={tenseId() in PERIPHRASES}>
-                <table class="panel-conj-table">
-                  <tbody>
-                    {PERSONS.map(person => {
-                      const form = getConjugation(tenseId());
-                      const verbObj = VERBS[selectedVerb()];
-                      const active = () => selectedPerson() === person;
-                      const personForm = PERIPHRASES[tenseId()]?.(verbObj?.infinitive ?? "", person) ?? "—";
-                      return (
-                        <tr class={active() ? "active-row" : ""} onClick={() => setSelectedPerson(person)} style={{ cursor: "pointer" }}>
-                          <th scope="row">{person}</th>
-                          <td>{personForm}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </Show>
+              <table class="panel-conj-table">
+                <tbody>
+                  {PERSONS.map(person => {
+                    const form = isPeriph()
+                      ? (PERIPHRASES[tenseId()]?.(VERBS[selectedVerb()]?.infinitive ?? "", person) ?? "—")
+                      : (forms()?.[person] ?? null);
+                    if (form === null) return null;
+                    const active = () => selectedPerson() === person;
+                    return (
+                      <tr class={active() ? "active-row" : ""} onClick={() => setSelectedPerson(person)} style={{ cursor: "pointer" }}>
+                        <th scope="row">{person}</th>
+                        <td>{form}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
 
               <a href={`/verbs/tenses/${tenseId()}`} class="panel-learn-more">
                 Full reference page →
@@ -253,162 +267,245 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
     </>
   );
 
-  // ── Mobile tense card ─────────────────────────────────────
-  const MobileCard = (node: DiagramNode) => {
-    const hue   = MOOD_HUE[node.lane as MoodId];
-    const isActive = () => activeNode() === node.id;
+  // ── Node card (SVG) — shared renderer with size params ───────
+  const NodeCard = (props: {
+    node: DiagramNode;
+    x: number; y: number;
+    cardW: number; cardH: number;
+    fontSize: { title: number; form: number };
+  }) => {
+    const { node, x, y, cardW, cardH, fontSize } = props;
+    const isActive     = () => activeNode() === node.id;
+    const isHighlighted = () => highlightedTense() === node.id;
+    const activated    = () => isActive() || isHighlighted();
+    const hue = MOOD_HUE[node.lane as MoodId];
+
     return (
-      <button
-        class={`tense-card-mobile${isActive() ? " active" : ""}`}
-        style={{ "--hue": hue } as any}
-        onClick={() => {
-          setActiveNode(isActive() ? null : node.id);
-          setActiveEdge(null);
-        }}
-        type="button"
-        aria-expanded={isActive()}
+      <g
+        class="diagram-node"
+        onClick={() => openNode(node.id)}
+        style={{ cursor: "pointer" }}
+        role="button" tabIndex={0}
+        aria-label={`${nodeTitle(node)}: ${getConjugation(node.id)}`}
+        aria-pressed={isActive()}
+        onKeyDown={e => e.key === "Enter" && openNode(node.id)}
       >
-        <div class="tcm-stripe" />
-        <div class="tcm-body">
-          <div class="tcm-header">
-            <span class="tcm-title">{nodeTitle(node)}</span>
-            <span class="tcm-aspect">
-              <AspectIcon aspect={node.aspect} size={13} color={`hsl(${hue} 55% 55%)`} />
-            </span>
-          </div>
-          <div class="tcm-form">{getConjugation(node.id)}</div>
-          <div class="tcm-rule">{tenseRules[node.id] ?? ""}</div>
-        </div>
-      </button>
+        {/* Opaque base — blocks edge lines from showing through */}
+        <rect x={x} y={y} width={cardW} height={cardH} rx="6" fill="var(--surface-2)" />
+        {/* Color overlay */}
+        <rect x={x} y={y} width={cardW} height={cardH} rx="6"
+          fill={activated() ? `hsl(${hue} 55% 45% / 0.18)` : "none"}
+          stroke={activated() ? `hsl(${hue} 65% 55%)` : `hsl(${hue} 40% 50% / 0.4)`}
+          stroke-width={activated() ? 1.5 : 1}
+        />
+        {/* Left accent stripe */}
+        <line
+          x1={x + 4} y1={y + 9} x2={x + 4} y2={y + cardH - 9}
+          stroke={`hsl(${hue} 65% 55%)`}
+          stroke-width="3" stroke-linecap="round"
+          opacity={activated() ? 1 : 0.55}
+        />
+        {/* Tense name */}
+        <text x={x + 11} y={y + 14 + fontSize.title * 0.35}
+          font-size={String(fontSize.title)} font-weight="600"
+          fill={`hsl(${hue} 65% 62%)`}
+        >
+          {nodeTitle(node)}
+        </text>
+        {/* Conjugated form */}
+        <text x={x + cardW / 2 + 3} y={y + cardH * 0.68}
+          text-anchor="middle" font-size={String(fontSize.form)} font-weight="700"
+          fill="var(--text)"
+        >
+          {getConjugation(node.id)}
+        </text>
+        {/* Aspect icon */}
+        <g transform={`translate(${x + cardW - 14}, ${y + 5})`}>
+          <AspectIcon aspect={node.aspect} size={10} color={`hsl(${hue} 55% 55%)`} />
+        </g>
+      </g>
     );
   };
 
-  // ── Render ─────────────────────────────────────────────────
+  // ── Legend ────────────────────────────────────────────────────
+  const Legend = () => (
+    <details class="diagram-legend">
+      <summary>Connection types</summary>
+      <div class="legend-grid">
+        {(Object.entries(EDGE_COLOR) as [keyof typeof EDGE_COLOR, string][]).map(([type, color]) => (
+          <div class="legend-item">
+            <svg width="32" height="10" aria-hidden="true">
+              <line x1="0" y1="5" x2="32" y2="5"
+                stroke={color} stroke-width="2.5"
+                stroke-dasharray={EDGE_DASH[type]}
+                stroke-linecap="round"
+              />
+            </svg>
+            <span>{type.replace(/-/g, " ")}</span>
+          </div>
+        ))}
+      </div>
+    </details>
+  );
+
+  // ── Controls bar ──────────────────────────────────────────────
+  const Controls = () => (
+    <div class="diagram-controls">
+      <div class="control-group">
+        <span class="control-label">Verb</span>
+        <select class="verb-select" value={selectedVerb()} onChange={e => setSelectedVerb(e.currentTarget.value)}>
+          {VERB_OPTIONS.map(opt => <option value={opt.value}>{opt.label}</option>)}
+        </select>
+      </div>
+      <div class="control-group">
+        <span class="control-label">Person</span>
+        <div class="person-pills">
+          {PERSONS.map(p => (
+            <button class={`person-pill${selectedPerson() === p ? " active" : ""}`}
+              onClick={() => setSelectedPerson(p)} type="button">{p}</button>
+          ))}
+        </div>
+      </div>
+      <label class="literary-toggle">
+        <input type="checkbox" checked={showLiterary()} onChange={e => setShowLiterary(e.currentTarget.checked)} />
+        <span class="literary-toggle-label">Literary tenses</span>
+      </label>
+    </div>
+  );
+
+  // ── Render ────────────────────────────────────────────────────
   return (
     <div class="verb-diagram">
-      {/* Controls — shared */}
-      <div class="diagram-controls">
-        <div class="control-group">
-          <span class="control-label">Verb</span>
-          <select class="verb-select" value={selectedVerb()} onChange={e => setSelectedVerb(e.currentTarget.value)}>
-            {VERB_OPTIONS.map(opt => <option value={opt.value}>{opt.label}</option>)}
-          </select>
-        </div>
+      <Controls />
 
-        <div class="control-group">
-          <span class="control-label">Person</span>
-          <div class="person-pills">
-            {PERSONS.map(p => (
-              <button
-                class={`person-pill${selectedPerson() === p ? " active" : ""}`}
-                onClick={() => setSelectedPerson(p)}
-                type="button"
-              >{p}</button>
-            ))}
-          </div>
-        </div>
-
-        <label class="literary-toggle">
-          <input type="checkbox" checked={showLiterary()} onChange={e => setShowLiterary(e.currentTarget.checked)} />
-          <span class="literary-toggle-label">Literary tenses</span>
-        </label>
-      </div>
-
-      {/* ── MOBILE VIEW ── */}
+      {/* ── MOBILE: transposed SVG (mood=col, time=row) ── */}
       <Show when={isMobile()}>
-        <div class="diagram-mobile">
-          {/* Mood tabs */}
-          <div class="mood-tabs" role="tablist">
+        <div class="diagram-scroll-wrap">
+          <svg width={MB_SVG_W} height={MB_SVG_H}
+            viewBox={`0 0 ${MB_SVG_W} ${MB_SVG_H}`}
+            class="grammar-map-svg"
+            role="img" aria-label="French verb tense diagram"
+          >
+            {/* Mood column backgrounds */}
             <For each={MOOD_ORDER}>
-              {mood => (
-                <button
-                  class={`mood-tab${activeMood() === mood ? " active" : ""}`}
-                  style={{ "--hue": MOOD_HUE[mood] } as any}
-                  role="tab"
-                  aria-selected={activeMood() === mood}
-                  onClick={() => setActiveMood(mood)}
-                  type="button"
-                >{MOOD_LABELS[mood]}</button>
+              {(mood, i) => (
+                <rect
+                  x={mbColX(i())} y={MB_MOOD_HEADER_H - 4}
+                  width={MB_CARD_W} height={MB_SVG_H - MB_MOOD_HEADER_H + 4}
+                  fill={`hsl(${MOOD_HUE[mood]} 55% 50% / 0.04)`} rx="4"
+                />
               )}
             </For>
-          </div>
 
-          {/* Tense cards for active mood */}
-          <div class="tense-cards-mobile" role="tabpanel">
-            <For each={mobileLaneNodes()}>
-              {node => <MobileCard {...node} />}
+            {/* Mood column headers */}
+            <For each={MOOD_ORDER}>
+              {(mood, i) => (
+                <text
+                  x={mbColX(i()) + MB_CARD_W / 2} y={MB_MOOD_HEADER_H - 8}
+                  text-anchor="middle" font-size="8" font-weight="700"
+                  fill={`hsl(${MOOD_HUE[mood]} 60% 58%)`}
+                >
+                  {mood === "indicatif" ? "Ind." : mood === "conditionnel" ? "Cond." : mood === "subjonctif" ? "Subj." : "Imp."}
+                </text>
+              )}
             </For>
-          </div>
 
-          <Panels />
+            {/* Time row labels */}
+            {Object.entries(MB_TIME_LABELS).map(([pos, label]) => {
+              const row = TIME_COLUMNS[pos as keyof typeof TIME_COLUMNS];
+              return (
+                <text
+                  x={MB_TIME_LABEL_W - 4}
+                  y={mbRowY(row) + MB_CARD_H / 2 + 3}
+                  text-anchor="end" font-size="7.5" fill="var(--text-2)"
+                >
+                  {label}
+                </text>
+              );
+            })}
 
-          {/* Mobile legend */}
-          <details class="diagram-legend">
-            <summary>Connection types</summary>
-            <div class="legend-grid">
-              <For each={Object.entries(EDGE_COLOR) as [keyof typeof EDGE_COLOR, string][]}>
-                {([type, color]) => (
-                  <div class="legend-item">
-                    <svg width="28" height="10" aria-hidden="true">
-                      <line x1="0" y1="5" x2="28" y2="5"
-                        stroke={color} stroke-width="2.5"
-                        stroke-dasharray={EDGE_DASH[type]}
-                        stroke-linecap="round"
-                      />
-                    </svg>
-                    <span>{type.replace(/-/g, " ")}</span>
-                  </div>
-                )}
-              </For>
-            </div>
-          </details>
+            {/* Edges */}
+            <For each={visibleEdges()}>
+              {edge => {
+                const from = mbPosMap().get(edge.from);
+                const to   = mbPosMap().get(edge.to);
+                if (!from || !to) return null;
+                const isActive = () => activeEdge() === edge;
+                const edgeColor = EDGE_COLOR[edge.type];
+                const d = edgePathMobile(from, to);
+                return (
+                  <g class="diagram-edge"
+                    onClick={() => setActiveEdge(isActive() ? null : edge)}
+                    style={{ cursor: "pointer" }}
+                    role="button" tabIndex={0}
+                    aria-label={`${edge.type}: ${edge.label}`}
+                    onKeyDown={e => e.key === "Enter" && setActiveEdge(isActive() ? null : edge)}
+                  >
+                    <path d={d} fill="none" stroke={edgeColor}
+                      stroke-width={isActive() ? 2.5 : 1.5}
+                      stroke-dasharray={EDGE_DASH[edge.type]}
+                      stroke-linecap="round"
+                      opacity={isActive() ? 1 : 0.6}
+                    />
+                    <path d={d} fill="none" stroke="transparent" stroke-width="12" />
+                  </g>
+                );
+              }}
+            </For>
+
+            {/* Node cards */}
+            <For each={mbNodePositions()}>
+              {({ node, x, y }) => (
+                <NodeCard node={node} x={x} y={y}
+                  cardW={MB_CARD_W} cardH={MB_CARD_H}
+                  fontSize={{ title: 8, form: 11 }}
+                />
+              )}
+            </For>
+          </svg>
         </div>
+        <Panels />
+        <Legend />
       </Show>
 
-      {/* ── DESKTOP SVG VIEW ── */}
+      {/* ── DESKTOP: horizontal SVG (time=col, mood=row) ── */}
       <Show when={!isMobile()}>
         <div class="diagram-scroll-wrap">
-          <svg
-            width={SVG_W} height={SVG_H}
-            viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+          <svg width={DK_SVG_W} height={DK_SVG_H}
+            viewBox={`0 0 ${DK_SVG_W} ${DK_SVG_H}`}
             class="grammar-map-svg"
-            role="img"
-            aria-label="French verb tense diagram"
+            role="img" aria-label="French verb tense diagram"
           >
             {/* Lane backgrounds */}
             <For each={MOOD_ORDER}>
               {(mood, i) => (
                 <rect
-                  x={LANE_HEADER_W} y={laneY(i()) - LANE_GAP / 2}
-                  width={SVG_W - LANE_HEADER_W} height={LANE_H}
-                  fill={`hsl(${MOOD_HUE[mood]} 55% 50% / 0.04)`}
-                  rx="4"
+                  x={DK_LANE_HEADER_W} y={dkLaneY(i()) - DK_LANE_GAP / 2}
+                  width={DK_SVG_W - DK_LANE_HEADER_W} height={DK_LANE_H}
+                  fill={`hsl(${MOOD_HUE[mood]} 55% 50% / 0.04)`} rx="4"
                 />
               )}
             </For>
 
             {/* Column headers */}
-            <For each={Object.entries({
+            {(Object.entries({
               "far-past": "anterior", "past": "past", "near-past": "recent past",
               "present": "present", "near-future": "near future",
               "future": "future", "far-future": "future anterior",
-            })}>
-              {([pos, label]) => {
-                const col = TIME_COLUMNS[pos as keyof typeof TIME_COLUMNS];
-                return (
-                  <text x={colX(col) + CARD_W / 2} y={COL_HEADER_H - 7}
-                    text-anchor="middle" font-size="9" fill="var(--text-2)">
-                    {label}
-                  </text>
-                );
-              }}
-            </For>
+            }) as [string, string][]).map(([pos, label]) => {
+              const col = TIME_COLUMNS[pos as keyof typeof TIME_COLUMNS];
+              return (
+                <text x={dkColX(col) + DK_CARD_W / 2} y={DK_COL_HEADER_H - 7}
+                  text-anchor="middle" font-size="9" fill="var(--text-2)">
+                  {label}
+                </text>
+              );
+            })}
 
             {/* Lane labels */}
             <For each={MOOD_ORDER}>
               {(mood, i) => (
-                <text
-                  x={LANE_HEADER_W - 8} y={laneY(i()) + CARD_H / 2 + 4}
+                <text x={DK_LANE_HEADER_W - 8} y={dkLaneY(i()) + DK_CARD_H / 2 + 4}
                   text-anchor="end" font-size="10" font-weight="600"
                   fill={`hsl(${MOOD_HUE[mood]} 60% 55%)`}
                 >
@@ -417,32 +514,29 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
               )}
             </For>
 
-            {/* Edges — colored by type */}
+            {/* Edges */}
             <For each={visibleEdges()}>
               {edge => {
-                const from = posMap().get(edge.from);
-                const to   = posMap().get(edge.to);
+                const from = dkPosMap().get(edge.from);
+                const to   = dkPosMap().get(edge.to);
                 if (!from || !to) return null;
                 const isActive = () => activeEdge() === edge;
                 const edgeColor = EDGE_COLOR[edge.type];
                 const d = edgePath(from, to, edge);
                 return (
-                  <g
-                    class="diagram-edge"
+                  <g class="diagram-edge"
                     onClick={() => setActiveEdge(isActive() ? null : edge)}
                     style={{ cursor: "pointer" }}
                     role="button" tabIndex={0}
                     aria-label={`${edge.type}: ${edge.label}`}
                     onKeyDown={e => e.key === "Enter" && setActiveEdge(isActive() ? null : edge)}
                   >
-                    <path d={d} fill="none"
-                      stroke={edgeColor}
+                    <path d={d} fill="none" stroke={edgeColor}
                       stroke-width={isActive() ? 3 : 2}
                       stroke-dasharray={EDGE_DASH[edge.type]}
                       stroke-linecap="round"
                       opacity={isActive() ? 1 : 0.55}
                     />
-                    {/* Wide invisible hit target */}
                     <path d={d} fill="none" stroke="transparent" stroke-width="16" />
                   </g>
                 );
@@ -450,84 +544,18 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
             </For>
 
             {/* Node cards */}
-            <For each={nodePositions()}>
-              {({ node, x, y }) => {
-                const isActive     = () => activeNode() === node.id;
-                const isHighlighted = () => highlightedTense() === node.id;
-                const hue = MOOD_HUE[node.lane as MoodId];
-                const activated = () => isActive() || isHighlighted();
-
-                return (
-                  <g
-                    class="diagram-node"
-                    onClick={() => { setActiveNode(isActive() ? null : node.id); setActiveEdge(null); }}
-                    style={{ cursor: "pointer" }}
-                    role="button" tabIndex={0}
-                    aria-label={`${nodeTitle(node)}: ${getConjugation(node.id)}`}
-                    onKeyDown={e => e.key === "Enter" && setActiveNode(isActive() ? null : node.id)}
-                  >
-                    {/* Card background */}
-                    <rect
-                      x={x} y={y} width={CARD_W} height={CARD_H} rx="7"
-                      fill={activated() ? `hsl(${hue} 50% 45% / 0.14)` : "var(--surface-2)"}
-                      stroke={activated() ? `hsl(${hue} 65% 55%)` : `hsl(${hue} 40% 50% / 0.35)`}
-                      stroke-width={activated() ? 1.5 : 1}
-                    />
-                    {/* Left accent stripe */}
-                    <line
-                      x1={x + 4} y1={y + 10} x2={x + 4} y2={y + CARD_H - 10}
-                      stroke={`hsl(${hue} 65% 55%)`}
-                      stroke-width="3"
-                      stroke-linecap="round"
-                      opacity={activated() ? 1 : 0.6}
-                    />
-                    {/* Tense name */}
-                    <text x={x + 14} y={y + 17}
-                      font-size="10" font-weight="600"
-                      fill={`hsl(${hue} 60% 60%)`}
-                    >
-                      {nodeTitle(node)}
-                    </text>
-                    {/* Conjugated form */}
-                    <text x={x + CARD_W / 2 + 4} y={y + 43}
-                      text-anchor="middle" font-size="15" font-weight="700"
-                      fill={activated() ? "var(--text)" : "var(--text)"}
-                    >
-                      {getConjugation(node.id)}
-                    </text>
-                    {/* Aspect icon */}
-                    <g transform={`translate(${x + CARD_W - 18}, ${y + 7})`}>
-                      <AspectIcon aspect={node.aspect} size={11} color={`hsl(${hue} 55% 55%)`} />
-                    </g>
-                  </g>
-                );
-              }}
+            <For each={dkNodePositions()}>
+              {({ node, x, y }) => (
+                <NodeCard node={node} x={x} y={y}
+                  cardW={DK_CARD_W} cardH={DK_CARD_H}
+                  fontSize={{ title: 10, form: 14 }}
+                />
+              )}
             </For>
           </svg>
         </div>
-
         <Panels />
-
-        {/* Desktop legend */}
-        <details class="diagram-legend">
-          <summary>Connection types</summary>
-          <div class="legend-grid">
-            <For each={Object.entries(EDGE_COLOR) as [keyof typeof EDGE_COLOR, string][]}>
-              {([type, color]) => (
-                <div class="legend-item">
-                  <svg width="36" height="10" aria-hidden="true">
-                    <line x1="0" y1="5" x2="36" y2="5"
-                      stroke={color} stroke-width="2.5"
-                      stroke-dasharray={EDGE_DASH[type]}
-                      stroke-linecap="round"
-                    />
-                  </svg>
-                  <span>{type.replace(/-/g, " ")}</span>
-                </div>
-              )}
-            </For>
-          </div>
-        </details>
+        <Legend />
       </Show>
     </div>
   );
