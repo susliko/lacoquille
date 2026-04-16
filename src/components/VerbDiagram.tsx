@@ -4,7 +4,6 @@ import {
   TIME_COLUMNS, MOOD_LABELS, MOOD_ORDER, MOOD_HUE,
   EDGE_COLOR, EDGE_DASH, EDGE_LABEL,
 } from "./GrammarMap/types";
-import { AspectIcon } from "./GrammarMap/AspectIcon";
 import { VERBS, PERSONS, VERB_OPTIONS } from "../data/conjugations/index";
 import type { TenseId, Person } from "../data/conjugations/types";
 
@@ -188,7 +187,13 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
     activeNode() ? (data.nodes.find(n => n.id === activeNode()) ?? null) : null
   );
 
+  // Short title for diagram cards (diagram.json title wins)
   function nodeTitle(node: DiagramNode): string {
+    return (node as any).title ?? tenseTitles[node.id] ?? node.id;
+  }
+
+  // Full title for detail panels (content page title wins)
+  function nodePanelTitle(node: DiagramNode): string {
     return tenseTitles[node.id] ?? (node as any).title ?? node.id;
   }
 
@@ -236,7 +241,7 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
           return (
             <aside class="node-panel" role="complementary" aria-live="polite">
               <button class="panel-close" onClick={() => setActiveNode(null)} aria-label="Close">✕</button>
-              <h3 class="panel-title">{nodeTitle(nodeData())}</h3>
+              <h3 class="panel-title">{nodePanelTitle(nodeData())}</h3>
               <p class="panel-rule">{tenseRules[tenseId()] ?? ""}</p>
 
               <table class="panel-conj-table">
@@ -319,10 +324,7 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
         >
           {getConjugation(node.id)}
         </text>
-        {/* Aspect icon */}
-        <g transform={`translate(${x + cardW - 14}, ${y + 5})`}>
-          <AspectIcon aspect={node.aspect} size={10} color={`hsl(${hue} 55% 55%)`} />
-        </g>
+        {/* Aspect icon removed — shown only in detail panel */}
       </g>
     );
   };
@@ -386,6 +388,16 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
             class="grammar-map-svg"
             role="img" aria-label="French verb tense diagram"
           >
+            <defs>
+              <marker id="mb-arr-aux" viewBox="0 0 8 6" refX="7" refY="3"
+                markerWidth="5" markerHeight="4" orient="auto" markerUnits="userSpaceOnUse">
+                <path d="M 0 0 L 8 3 L 0 6 Z" fill={EDGE_COLOR["auxiliary-compound"]} />
+              </marker>
+              <marker id="mb-arr-ant" viewBox="0 0 8 6" refX="7" refY="3"
+                markerWidth="5" markerHeight="4" orient="auto" markerUnits="userSpaceOnUse">
+                <path d="M 0 0 L 8 3 L 0 6 Z" fill={EDGE_COLOR["anteriority"]} />
+              </marker>
+            </defs>
             {/* Mood column backgrounds */}
             <For each={MOOD_ORDER}>
               {(mood, i) => (
@@ -446,6 +458,11 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
                       stroke-dasharray={EDGE_DASH[edge.type]}
                       stroke-linecap="round"
                       opacity={isActive() ? 1 : 0.6}
+                      marker-end={
+                        edge.type === "auxiliary-compound" ? "url(#mb-arr-aux)"
+                        : edge.type === "anteriority"       ? "url(#mb-arr-ant)"
+                        : undefined
+                      }
                     />
                     <path d={d} fill="none" stroke="transparent" stroke-width="12" />
                   </g>
@@ -476,6 +493,16 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
             class="grammar-map-svg"
             role="img" aria-label="French verb tense diagram"
           >
+            <defs>
+              <marker id="dk-arr-aux" viewBox="0 0 8 6" refX="7" refY="3"
+                markerWidth="6" markerHeight="5" orient="auto" markerUnits="userSpaceOnUse">
+                <path d="M 0 0 L 8 3 L 0 6 Z" fill={EDGE_COLOR["auxiliary-compound"]} />
+              </marker>
+              <marker id="dk-arr-ant" viewBox="0 0 8 6" refX="7" refY="3"
+                markerWidth="6" markerHeight="5" orient="auto" markerUnits="userSpaceOnUse">
+                <path d="M 0 0 L 8 3 L 0 6 Z" fill={EDGE_COLOR["anteriority"]} />
+              </marker>
+            </defs>
             {/* Lane backgrounds */}
             <For each={MOOD_ORDER}>
               {(mood, i) => (
@@ -536,6 +563,11 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
                       stroke-dasharray={EDGE_DASH[edge.type]}
                       stroke-linecap="round"
                       opacity={isActive() ? 1 : 0.55}
+                      marker-end={
+                        edge.type === "auxiliary-compound" ? "url(#dk-arr-aux)"
+                        : edge.type === "anteriority"       ? "url(#dk-arr-ant)"
+                        : undefined
+                      }
                     />
                     <path d={d} fill="none" stroke="transparent" stroke-width="16" />
                   </g>
