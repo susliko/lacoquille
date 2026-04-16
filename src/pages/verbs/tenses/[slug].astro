@@ -32,14 +32,7 @@ const { title, oneLineRule, examples, relatedTenses, pitfalls } = entry.data;
 
     <Content />
 
-    {pitfalls && pitfalls.length > 0 && (
-      <section>
-        <h2>Common pitfalls</h2>
-        <ul>
-          {pitfalls.map(p => <li set:html={p} />)}
-        </ul>
-      </section>
-    )}
+    {/* pitfalls are covered in the Markdown body — frontmatter array is for the diagram detail panel only */}
 
     {examples && examples.length > 0 && (
       <section>
@@ -75,14 +68,14 @@ const { title, oneLineRule, examples, relatedTenses, pitfalls } = entry.data;
 <style>
   .one-line-rule {
     font-size: 1.05rem;
-    color: var(--pico-muted-color);
+    color: var(--text-2);
   }
   .examples dt {
     font-weight: 600;
     margin-top: 0.75rem;
   }
   .examples dd {
-    color: var(--pico-muted-color);
+    color: var(--text-2);
     margin-left: 0;
   }
 </style>

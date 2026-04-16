@@ -34,8 +34,8 @@ const choicePages = [
   </hgroup>
 
   {/* Interactive tense diagram — SolidJS island */}
-  <VerbDiagram
-    client:load
+<VerbDiagram
+    client:only="solid-js"
     data={diagramData}
     tenseTitles={tenseTitles}
     tenseRules={tenseRules}
@@ -76,7 +76,7 @@ const choicePages = [
   }
   .tense-rule {
     font-size: 0.875rem;
-    color: var(--pico-muted-color);
+    color: var(--text-2);
   }
   .choice-list li {
     padding: 0.3rem 0;

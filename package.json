@@ -13,8 +13,9 @@
   },
   "dependencies": {
     "@astrojs/solid-js": "^6.0.1",
-    "@picocss/pico": "^2.1.1",
     "astro": "^6.1.7",
+    "express": "^5.2.1",
+    "playwright": "^1.59.1",
     "solid-js": "^1.9.12"
   }
 }

@@ -28,5 +28,6 @@ export interface VerbData {
   translation: string; // brief English gloss, e.g. "to speak"
   auxiliaire: "avoir" | "être";
   participe: string;  // past participle (masc. sg. base form shown; être-verbs get agreement note elsewhere)
+  stem?: string;      // override stem for stem/ending highlighting in tables (defaults to infinitive minus last 2 chars)
   forms: Partial<Record<TenseId, TenseForms>>;
 }

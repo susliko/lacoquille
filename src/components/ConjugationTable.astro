@@ -26,11 +26,19 @@ const forms = verb?.forms[tenseId as TenseId];
         {PERSONS.map(person => {
           const form = forms[person];
           if (form === null) return null;
+          const stem = verb.stem ?? verb.infinitive.slice(0, -2);
+          const hasStem = form.startsWith(stem);
           return (
             <tr>
               <th scope="row">{person}</th>
               <td>
-                <span class="verb-stem">{verb.infinitive.slice(0, -2)}</span><span class="verb-ending">{form.replace(verb.infinitive.slice(0, -2), "")}</span>
+                {hasStem ? (
+                  <>
+                    <span class="verb-stem">{stem}</span><span class="verb-ending">{form.slice(stem.length)}</span>
+                  </>
+                ) : (
+                  <strong>{form}</strong>
+                )}
               </td>
             </tr>
           );

@@ -5,112 +5,128 @@
       "lane": "indicatif",
       "timePosition": "present",
       "aspect": "ongoing",
-      "literary": false
+      "literary": false,
+      "title": "Présent"
     },
     {
       "id": "imparfait",
       "lane": "indicatif",
       "timePosition": "past",
       "aspect": "habitual",
-      "literary": false
+      "literary": false,
+      "title": "Imparfait"
     },
     {
       "id": "passe-compose",
       "lane": "indicatif",
       "timePosition": "near-past",
       "aspect": "completed",
-      "literary": false
+      "literary": false,
+      "title": "Passé composé"
     },
     {
       "id": "plus-que-parfait",
       "lane": "indicatif",
       "timePosition": "far-past",
       "aspect": "anterior",
-      "literary": false
+      "literary": false,
+      "title": "Plus-que-parfait"
     },
     {
       "id": "passe-simple",
       "lane": "indicatif",
       "timePosition": "past",
       "aspect": "completed",
-      "literary": true
+      "literary": true,
+      "title": "Passé simple"
     },
     {
       "id": "passe-anterieur",
       "lane": "indicatif",
       "timePosition": "far-past",
       "aspect": "anterior",
-      "literary": true
+      "literary": true,
+      "title": "Passé antérieur"
     },
     {
       "id": "futur-simple",
       "lane": "indicatif",
       "timePosition": "future",
       "aspect": "none",
-      "literary": false
+      "literary": false,
+      "title": "Futur simple"
     },
     {
       "id": "futur-anterieur",
       "lane": "indicatif",
       "timePosition": "far-future",
       "aspect": "anterior",
-      "literary": false
+      "literary": false,
+      "title": "Futur antérieur"
     },
     {
       "id": "conditionnel-present",
       "lane": "conditionnel",
       "timePosition": "future",
       "aspect": "none",
-      "literary": false
+      "literary": false,
+      "title": "Conditionnel"
     },
     {
       "id": "conditionnel-passe",
       "lane": "conditionnel",
       "timePosition": "far-future",
       "aspect": "anterior",
-      "literary": false
+      "literary": false,
+      "title": "Conditionnel passé"
     },
     {
       "id": "subjonctif-present",
       "lane": "subjonctif",
       "timePosition": "present",
       "aspect": "none",
-      "literary": false
+      "literary": false,
+      "title": "Subj. présent"
     },
     {
       "id": "subjonctif-passe",
       "lane": "subjonctif",
       "timePosition": "past",
       "aspect": "completed",
-      "literary": false
+      "literary": false,
+      "title": "Subj. passé"
     },
     {
       "id": "subjonctif-imparfait",
       "lane": "subjonctif",
       "timePosition": "past",
       "aspect": "ongoing",
-      "literary": true
+      "literary": true,
+      "title": "Subj. imparfait"
     },
     {
       "id": "subjonctif-plus-que-parfait",
       "lane": "subjonctif",
       "timePosition": "far-past",
       "aspect": "anterior",
-      "literary": true
+      "literary": true,
+      "title": "Subj. pq-parfait"
     },
     {
       "id": "imperatif-present",
       "lane": "imperatif",
       "timePosition": "present",
       "aspect": "none",
-      "literary": false
+      "literary": false,
+      "title": "Impératif"
     },
     {
       "id": "imperatif-passe",
       "lane": "imperatif",
       "timePosition": "near-future",
       "aspect": "completed",
-      "literary": false
+      "literary": false,
+      "title": "Impératif passé"
     }
   ],
   "edges": [

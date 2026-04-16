@@ -4,11 +4,12 @@ export type AspectId = "completed" | "ongoing" | "anterior" | "habitual" | "none
 export type TimePosition = "far-past" | "past" | "near-past" | "present" | "near-future" | "future" | "far-future";
 
 export interface DiagramNode {
-  id: string;           // tense slug, matches content collection
+  id: string;
   lane: MoodId;
   timePosition: TimePosition;
   aspect: AspectId;
   literary: boolean;
+  title?: string;
 }
 
 export interface DiagramEdge {
