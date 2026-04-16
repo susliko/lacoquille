@@ -79,36 +79,81 @@ const PERIPHRASES: Record<string, (inf: string, person: string) => string> = {
 
 // ── Edge path — desktop ───────────────────────────────────────
 function edgePath(from: NodePos, to: NodePos, edge: DiagramEdge): string {
+  const dx = to.cx - from.cx;
   const dy = to.cy - from.cy;
+
+  // Cross-lane edges: bezier from card top/bottom
   if (edge.type === "mood-swap" || edge.type === "stem-share") {
     const fromY = dy > 0 ? from.y + DK_CARD_H : from.y;
     const toY   = dy > 0 ? to.y               : to.y + DK_CARD_H;
     return `M ${from.cx} ${fromY} C ${from.cx} ${from.cy + dy * 0.5}, ${from.cx} ${from.cy + dy * 0.5}, ${to.cx} ${toY}`;
   }
+
+  // Same-lane (horizontal) edges
   if (Math.abs(dy) < 4) {
-    return `M ${from.x + DK_CARD_W} ${from.cy - 4} L ${to.x} ${to.cy - 4}`;
+    const goingRight = dx > 0;
+    // Connect card edges, not centers, so the line stays between the cards
+    const startX = goingRight ? from.x + DK_CARD_W : from.x;
+    const endX   = goingRight ? to.x               : to.x + DK_CARD_W;
+
+    // Y offset per type so overlapping same-lane lines stay visually separate
+    const yOff = edge.type === "auxiliary-compound" ? -7
+               : edge.type === "aspect-pair"         ?  7
+               : 0;
+    const y = from.cy + yOff;
+
+    // Count skipped columns — if > 1, arc above the row to avoid intermediate cards
+    const fromCol = TIME_COLUMNS[from.node.timePosition];
+    const toCol   = TIME_COLUMNS[to.node.timePosition];
+    if (Math.abs(toCol - fromCol) > 1) {
+      const arcTop = from.y - 18;
+      return `M ${startX} ${y} C ${startX} ${arcTop}, ${endX} ${arcTop}, ${endX} ${y}`;
+    }
+
+    return `M ${startX} ${y} L ${endX} ${y}`;
   }
+
+  // Generic diagonal
   const cp1y = from.cy + dy * 0.4;
   const cp2y = to.cy - dy * 0.4;
   return `M ${from.cx} ${from.cy} C ${from.cx} ${cp1y}, ${to.cx} ${cp2y}, ${to.cx} ${to.cy}`;
 }
 
-// ── Edge path — mobile (transposed axes) ─────────────────────
-function edgePathMobile(from: NodePos, to: NodePos): string {
+// ── Edge path — mobile (transposed: mood=col, time=row) ──────
+function edgePathMobile(from: NodePos, to: NodePos, edge: DiagramEdge): string {
   const dx = to.cx - from.cx;
   const dy = to.cy - from.cy;
+
   if (Math.abs(dx) < 4) {
-    // Same column (same mood) → vertical
-    const fy = dy > 0 ? from.y + MB_CARD_H : from.y;
-    const ty = dy > 0 ? to.y               : to.y + MB_CARD_H;
-    return `M ${from.cx} ${fy} L ${to.cx} ${ty}`;
+    // Same column (same mood) → vertical; connect card edges not centers
+    const goingDown = dy > 0;
+    const startY = goingDown ? from.y + MB_CARD_H : from.y;
+    const endY   = goingDown ? to.y               : to.y + MB_CARD_H;
+
+    // X offset by type to separate overlapping same-column lines
+    const xOff = edge.type === "auxiliary-compound" ? -5
+               : edge.type === "aspect-pair"         ?  5
+               : 0;
+    const x = from.cx + xOff;
+
+    // Arc to the side if skipping 2+ rows
+    const fromRow = TIME_COLUMNS[from.node.timePosition];
+    const toRow   = TIME_COLUMNS[to.node.timePosition];
+    if (Math.abs(toRow - fromRow) > 1) {
+      const arcLeft = from.x - 14;
+      return `M ${x} ${startY} C ${arcLeft} ${startY}, ${arcLeft} ${endY}, ${x} ${endY}`;
+    }
+
+    return `M ${x} ${startY} L ${x} ${endY}`;
   }
+
   if (Math.abs(dy) < 4) {
-    // Same row (same time) → horizontal
+    // Same row (same time) → horizontal; connect card edges
     const fx = dx > 0 ? from.x + MB_CARD_W : from.x;
     const tx = dx > 0 ? to.x               : to.x + MB_CARD_W;
     return `M ${fx} ${from.cy} L ${tx} ${to.cy}`;
   }
+
   // Diagonal
   return `M ${from.cx} ${from.cy} C ${from.cx} ${to.cy}, ${to.cx} ${from.cy}, ${to.cx} ${to.cy}`;
 }
@@ -444,7 +489,7 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
                 if (!from || !to) return null;
                 const isActive = () => activeEdge() === edge;
                 const edgeColor = EDGE_COLOR[edge.type];
-                const d = edgePathMobile(from, to);
+                const d = edgePathMobile(from, to, edge);
                 return (
                   <g class="diagram-edge"
                     onClick={() => setActiveEdge(isActive() ? null : edge)}
