@@ -113,6 +113,14 @@
       "title": "Subj. pq-parfait"
     },
     {
+      "id": "futur-proche",
+      "lane": "indicatif",
+      "timePosition": "near-future",
+      "aspect": "none",
+      "literary": false,
+      "title": "Futur proche"
+    },
+    {
       "id": "imperatif-present",
       "lane": "imperatif",
       "timePosition": "present",
@@ -173,6 +181,12 @@
       "to": "subjonctif-plus-que-parfait",
       "label": "avoir/être + PP",
       "literary": true
+    },
+    {
+      "type": "auxiliary-compound",
+      "from": "present-indicatif",
+      "to": "futur-proche",
+      "label": "aller (présent) + infinitif"
     },
     {
       "type": "aspect-pair",

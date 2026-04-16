@@ -18,7 +18,11 @@ export type TenseId =
   | "subjonctif-imparfait"
   | "subjonctif-plus-que-parfait"
   | "imperatif-present"
-  | "imperatif-passe";
+  | "imperatif-passe"
+  // Verbal periphrases — computed dynamically, no stored forms needed
+  | "futur-proche"
+  | "passe-recent"
+  | "present-progressif";
 
 /** null = this person has no imperative form */
 export type TenseForms = Record<Person, string | null>;
