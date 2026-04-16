@@ -4,7 +4,6 @@ import VerbDiagram from "../../components/VerbDiagram";
 import { getCollection } from "astro:content";
 import diagramData from "../../content/verbs/diagram.json";
 
-// Load all tense entries to build lookup maps for the diagram
 const tenseEntries = await getCollection("tenses");
 
 const tenseTitles: Record<string, string> = {};
@@ -21,64 +20,60 @@ const choicePages = [
   { slug: "futur-vs-conditionnel",      title: "Futur vs Conditionnel" },
   { slug: "reported-speech",            title: "Reported speech & sequence of tenses" },
 ];
+
+// Sort by time position for a logical reading order
+const timeOrder = ["present","near-past","past","far-past","near-future","future","far-future"];
+const sortedTenses = [...tenseEntries].sort((a, b) => {
+  const ai = timeOrder.indexOf(a.data.timePosition);
+  const bi = timeOrder.indexOf(b.data.timePosition);
+  return ai - bi;
+});
 ---
 
 <Base
   title="Verbes"
-  description="All French verb tenses and moods in one interactive diagram."
+  description="Every French verb tense and mood in one interactive diagram."
   breadcrumb={[{ label: "Verbes" }]}
 >
-  <hgroup>
+  <div style="margin-bottom: 1.5rem;">
+    <p class="home-eyebrow">Grammaire</p>
     <h1>Verbes</h1>
-    <p>Every French tense and mood, their relations, and when to use each one.</p>
-  </hgroup>
+    <p style="color: var(--text-2); margin-top: 0.4rem;">
+      Every French tense and mood — their relations, formations, and when to use each one.
+    </p>
+  </div>
 
-  {/* Interactive tense diagram — SolidJS island */}
-<VerbDiagram
+  <VerbDiagram
     client:only="solid-js"
     data={diagramData}
     tenseTitles={tenseTitles}
     tenseRules={tenseRules}
   />
 
-  {/* Tense index */}
-  <section>
-    <h2>All tenses</h2>
-    <ul class="tense-list">
-      {tenseEntries
-        .sort((a, b) => a.data.title.localeCompare(b.data.title))
-        .map(entry => (
+  <div class="verbs-index">
+    <section>
+      <h2>All tenses</h2>
+      <ul class="tense-index-list">
+        {sortedTenses.map(entry => (
           <li>
-            <a href={`/verbs/tenses/${entry.id}`}>{entry.data.title}</a>
-            <span class="tense-rule">— {entry.data.oneLineRule}</span>
+            <a href={`/verbs/tenses/${entry.id}`}>
+              <span class="tense-link-title">{entry.data.title}</span>
+              <span class="tense-link-rule">{entry.data.oneLineRule}</span>
+            </a>
           </li>
-        ))
-      }
-    </ul>
-  </section>
+        ))}
+      </ul>
+    </section>
 
-  {/* Choice pages */}
-  <section>
-    <h2>Tense-choice guides</h2>
-    <ul class="choice-list">
-      {choicePages.map(page => (
-        <li>
-          <a href={`/verbs/choice/${page.slug}`}>{page.title}</a>
-        </li>
-      ))}
-    </ul>
-  </section>
+    <section>
+      <h2>Tense-choice guides</h2>
+      <ul class="choice-index-list">
+        {choicePages.map(page => (
+          <li>
+            <a href={`/verbs/choice/${page.slug}`}>{page.title}</a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  </div>
 </Base>
-
-<style>
-  .tense-list li {
-    padding: 0.3rem 0;
-  }
-  .tense-rule {
-    font-size: 0.875rem;
-    color: var(--text-2);
-  }
-  .choice-list li {
-    padding: 0.3rem 0;
-  }
-</style>

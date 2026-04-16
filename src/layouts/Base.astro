@@ -7,7 +7,7 @@ interface Props {
   breadcrumb?: { label: string; href?: string }[];
 }
 
-const { title, description = "A modern French grammar reference.", breadcrumb = [] } = Astro.props;
+const { title, description = "An interactive French grammar reference.", breadcrumb = [] } = Astro.props;
 ---
 
 <!doctype html>
@@ -23,15 +23,18 @@ const { title, description = "A modern French grammar reference.", breadcrumb = 
     <nav class="site-nav">
       <a href="/" class="brand">Frenchlation</a>
       {breadcrumb.length > 0 && (
-        <ol class="breadcrumb">
-          {breadcrumb.map(({ label, href }) => (
-            <li>{href ? <a href={href}>{label}</a> : label}</li>
-          ))}
-        </ol>
+        <>
+          <span class="sep">·</span>
+          <ol class="breadcrumb">
+            {breadcrumb.map(({ label, href }) => (
+              <li>{href ? <a href={href}>{label}</a> : label}</li>
+            ))}
+          </ol>
+        </>
       )}
     </nav>
 
-    <main class="container">
+    <main>
       <slot />
     </main>
   </body>

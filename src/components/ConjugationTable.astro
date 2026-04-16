@@ -13,8 +13,14 @@ const forms = verb?.forms[tenseId as TenseId];
 ---
 
 {forms && (
-  <section>
-    <h2>Conjugation — <em>{verb.infinitive}</em> ({verb.translation})</h2>
+  <section class="conj-section">
+    <h2>
+      Conjugation —
+      <span class="conj-verb-label">{verb.infinitive}</span>
+      <span style="font-family: var(--font-body); font-size: 0.85rem; color: var(--text-2); font-weight: 300;">
+        ({verb.translation})
+      </span>
+    </h2>
     <table class="conj-table">
       <thead>
         <tr>

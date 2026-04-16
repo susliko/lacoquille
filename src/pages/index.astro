@@ -21,26 +21,32 @@ const topics = [
 ---
 
 <Base title="French Grammar Reference">
-  <hgroup>
-    <h1>French Grammar Reference</h1>
-    <p>An interactive, well-structured reference for every aspect of French grammar. Start with verbs — the rest is on its way.</p>
-  </hgroup>
+  <div class="home-hero">
+    <div class="home-hero-bg" aria-hidden="true">GRAMMAIRE</div>
+    <div class="home-hero-content">
+      <p class="home-eyebrow">L'atlas de la langue française</p>
+      <h1 class="home-title">French Grammar<br/>Reference</h1>
+      <p class="home-subtitle">
+        An interactive reference for every aspect of French grammar —
+        structured, visual, and built to make the hard parts click.
+      </p>
+    </div>
+  </div>
 
   <div class="topic-grid">
     {topics.map(topic => (
-      topic.available
-        ? (
-          <a href={topic.href} class="topic-card available">
-            <span class="topic-name">{topic.name}</span>
-            <span class="topic-desc">{topic.desc}</span>
-          </a>
-        ) : (
-          <div class="topic-card coming-soon" aria-disabled="true">
-            <span class="topic-name">{topic.name}</span>
-            <span class="topic-desc">{topic.desc}</span>
-            <span class="topic-desc" style="font-style:italic">Coming soon</span>
-          </div>
-        )
+      topic.available ? (
+        <a href={topic.href} class="topic-card available">
+          <span class="topic-badge">available</span>
+          <span class="topic-name">{topic.name}</span>
+          <span class="topic-desc">{topic.desc}</span>
+        </a>
+      ) : (
+        <div class="topic-card coming-soon" aria-disabled="true">
+          <span class="topic-name">{topic.name}</span>
+          <span class="topic-desc">{topic.desc}</span>
+        </div>
+      )
     ))}
   </div>
 </Base>
