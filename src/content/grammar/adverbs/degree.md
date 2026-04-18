@@ -1,4 +1,5 @@
 ---
+difficulty: beginner
 title: "Degree Adverbs"
 oneLineRule: "Degree adverbs (très, trop, plus, moins) modify adjectives and other adverbs."
 pitfalls:

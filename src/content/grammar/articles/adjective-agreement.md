@@ -1,4 +1,5 @@
 ---
+difficulty: beginner
 title: "Adjective Agreement"
 oneLineRule: "Adjectives agree in gender and number with the noun they modify: -e for feminine, -s/-es for plural."
 pitfalls:

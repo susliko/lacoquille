@@ -1,4 +1,5 @@
 ---
+difficulty: beginner
 title: "Présent de l'indicatif"
 mood: indicatif
 timePosition: present

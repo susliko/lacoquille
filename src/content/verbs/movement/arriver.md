@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Arriver — to arrive"
 oneLineRule: "Expresses the endpoint of a journey — arriving at a destination."
 pitfalls:

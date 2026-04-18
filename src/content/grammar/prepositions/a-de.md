@@ -1,4 +1,5 @@
 ---
+difficulty: beginner
 title: "à and de with Articles"
 oneLineRule: "à + le = au, à + les = aux, de + le = du, de + les = des."
 pitfalls:

@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Le Participe Passé"
 oneLineRule: "The -é/-i/-u form used in compound tenses and as an adjective, with agreement rules depending on the auxiliary."
 pitfalls:

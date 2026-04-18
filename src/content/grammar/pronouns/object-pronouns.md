@@ -1,4 +1,5 @@
 ---
+difficulty: beginner
 title: "Object Pronouns"
 oneLineRule: "Object pronouns receive the action of the verb — directly (le/la/les) or indirectly via an intermediary (me/te/lui/leur)."
 pitfalls:

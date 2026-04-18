@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Impératif passé"
 mood: imperatif
 timePosition: near-future

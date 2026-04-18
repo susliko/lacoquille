@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Double Pronoun Order"
 oneLineRule: "When two pronouns combine, they follow MSSA-LL-YE order: me/te/se nous/vous → le/la/les → lui/leur → y → en."
 pitfalls:

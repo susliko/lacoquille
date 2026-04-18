@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Aller — to go"
 oneLineRule: "Expresses motion away from the speaker's location toward a destination."
 pitfalls:

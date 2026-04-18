@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Subjonctif passé"
 mood: subjonctif
 timePosition: past

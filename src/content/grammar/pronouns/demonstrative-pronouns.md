@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Demonstrative Pronouns"
 oneLineRule: "Demonstrative pronouns point to specific things, with -ci/-là adding near/far distinction."
 pitfalls:

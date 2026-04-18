@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Venir — to come"
 oneLineRule: "Expresses motion toward the speaker's location or a reference point."
 pitfalls:

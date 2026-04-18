@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Imparfait"
 mood: indicatif
 timePosition: past

@@ -1,8 +1,12 @@
 ---
+difficulty: intermediate
 title: "Imparfait vs Passé composé"
 relatedTenses:
   - imparfait
   - passe-compose
+relatedGuides:
+  - auxiliary-choice
+  - si-clauses
 ---
 
 The single hardest choice in French past tense — not because the rule is complex, but because it requires rethinking what "past" means.

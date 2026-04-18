@@ -1,4 +1,5 @@
 ---
+difficulty: beginner
 title: "Definite Articles"
 oneLineRule: "Use le, la, les (the) when referring to something specific both speaker and listener can identify."
 pitfalls:

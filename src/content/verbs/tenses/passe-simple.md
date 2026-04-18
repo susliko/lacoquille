@@ -1,4 +1,5 @@
 ---
+difficulty: advanced
 title: "Passé simple"
 mood: indicatif
 timePosition: past

@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Reported speech & sequence of tenses"
 relatedTenses:
   - imparfait

@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Question Words"
 oneLineRule: "Use qui (who), que (what), ou (where), quand (when), comment (how), pourquoi (why), and combien (how many/much) to ask for specific information."
 pitfalls:

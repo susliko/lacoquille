@@ -1,4 +1,5 @@
 ---
+difficulty: beginner
 title: "Prepositions"
 oneLineRule: "Prepositions connect words; à and de are the most important, forming contractions with articles."
 pitfalls:

@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Le Gérondif"
 oneLineRule: "En + present participle — expresses an action occurring simultaneously with the main verb, often indicating manner, cause, or circumstance."
 pitfalls:

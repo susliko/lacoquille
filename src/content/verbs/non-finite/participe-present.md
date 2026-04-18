@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Le Participe Présent"
 oneLineRule: "The -ant form expressing simultaneous action or a quality, used after prepositions and as an adjective substitute."
 pitfalls:

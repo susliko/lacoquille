@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Relative Pronouns"
 oneLineRule: "Relative pronouns connect a clause to a noun, introducing information that describes or defines that noun."
 pitfalls:

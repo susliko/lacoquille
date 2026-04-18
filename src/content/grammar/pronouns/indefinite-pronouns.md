@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Indefinite Pronouns"
 oneLineRule: "Indefinite pronouns refer to unspecified people or things — someone, everyone, no one, something, nothing."
 pitfalls:

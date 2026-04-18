@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Partir — to leave"
 oneLineRule: "Expresses departure from a place — the origin point of motion."
 pitfalls:

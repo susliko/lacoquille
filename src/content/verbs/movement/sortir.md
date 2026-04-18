@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Sortir — to go out"
 oneLineRule: "Expresses motion out of an enclosed space or away from a place."
 pitfalls:

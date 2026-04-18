@@ -1,4 +1,5 @@
 ---
+difficulty: beginner
 title: "Reflexive Pronouns"
 oneLineRule: "Reflexive pronouns show the action bounces back to the subject — the subject does something to or for itself."
 pitfalls:

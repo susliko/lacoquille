@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Conditionnel passé"
 mood: conditionnel
 timePosition: far-future

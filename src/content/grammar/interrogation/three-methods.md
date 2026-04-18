@@ -1,4 +1,5 @@
 ---
+difficulty: beginner
 title: "Three Ways to Ask Questions"
 oneLineRule: "Use rising intonation informally, est-ce que in conversation, or inversion formally."
 pitfalls:
@@ -30,17 +31,26 @@ Simply raise your voice at the end of the statement. The subject and verb order 
 
 - *Tu pars ?* — Are you leaving?
 - *Il fait froid ?* — Is it cold?
-- *Vous voulez cafe ?* — Do you want coffee?
+- *Vous voulez café ?* — Do you want coffee?
 
 This is common in casual speech, with friends, and in quick exchanges.
 
 ## Est-ce que (standard)
 
-Insert **est-ce que** after the subject. The statement word order stays intact.
+Think of **est-ce que** as a question frame — it signals "treat the following statement as a question" without changing any word order. It sits between the subject and the verb.
 
-- *Est-ce que tu viens ?* — Are you coming?
-- *Est-ce que il fait beau ?* — Is the weather nice?
-- *Est-ce que vous avez le temps ?* — Do you have time?
+The structure is: **est-ce que + [subject] + [rest of statement] + ?**
+
+Imagine the statement *Tu as faim* (you're hungry). To turn it into a question without rearranging words:
+
+*Est-ce que tu as faim ?* — Are you hungry?
+
+| Statement | With est-ce que |
+|-----------|-----------------|
+| *Il fait beau.* | *Est-ce que **il** fait beau ?* |
+| *Vous avez le temps.* | *Est-ce que **vous** avez le temps ?* |
+
+The subject stays in its natural position. The word order is identical to the original statement — you're just framing it as a question.
 
 This is the workhorse of everyday French conversation. It's neutral and natural.
 

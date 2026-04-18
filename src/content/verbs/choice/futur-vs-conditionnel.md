@@ -1,10 +1,13 @@
 ---
+difficulty: intermediate
 title: "Futur vs Conditionnel"
 relatedTenses:
   - futur-simple
   - conditionnel-present
   - futur-anterieur
   - conditionnel-passe
+relatedGuides:
+  - si-clauses
 ---
 
 Both tenses share the same stem — the difference is entirely in the endings and in the meaning they encode.

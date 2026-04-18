@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Possessive Pronouns"
 oneLineRule: "Possessive pronouns replace possessive adjectives + noun, showing ownership with gender and number agreement."
 pitfalls:

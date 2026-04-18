@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Adverb Placement"
 oneLineRule: "Place adverbs after the verb they modify, or before adjectives/adverbs they modify."
 pitfalls:

@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Adjective Placement"
 oneLineRule: "Most adjectives go after the noun; a few 'opinion' adjectives (beauty, age, size, goodness) go before."
 pitfalls:

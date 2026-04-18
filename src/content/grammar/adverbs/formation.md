@@ -1,4 +1,5 @@
 ---
+difficulty: beginner
 title: "Adverb Formation"
 oneLineRule: "Most adverbs form from adjectives with -ment; some are irregular."
 pitfalls:

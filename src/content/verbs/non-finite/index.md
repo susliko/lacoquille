@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Non-finite Verb Forms"
 oneLineRule: "Verb forms that are not tied to a specific subject or time."
 pitfalls:

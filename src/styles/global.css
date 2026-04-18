@@ -778,22 +778,83 @@ article {
   color: var(--gold);
 }
 
+/* ── Related guides cards ───────────────────────────────────── */
+.related-guides-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+.related-guide-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  min-width: 180px;
+  flex: 1;
+  max-width: 240px;
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.related-guide-card:hover {
+  border-color: var(--gold);
+  background: var(--surface-3);
+}
+.related-guide-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+}
+.related-guide-arrow {
+  color: var(--gold);
+  font-size: 1rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.related-guide-card:hover .related-guide-arrow {
+  opacity: 1;
+}
+
 /* ── Diagram legend ──────────────────────────────────────────── */
 .diagram-legend {
   margin-top: 1rem;
 }
+.legend-section {
+  margin-bottom: 0.75rem;
+}
+.legend-section:last-child {
+  margin-bottom: 0;
+}
+.legend-section-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-2);
+  margin: 0 0 0.35rem 0;
+}
 .legend-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem 1.5rem;
-  margin-top: 0.5rem;
+  gap: 0.5rem 1.25rem;
+  margin-top: 0.35rem;
 }
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.78rem;
+  gap: 0.4rem;
+  font-size: 0.75rem;
   color: var(--text-2);
+}
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
 }
 
 /* ── Verbs index section columns ─────────────────────────────── */

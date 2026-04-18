@@ -4,6 +4,7 @@ import { glob } from "astro/loaders";
 
 // ── Mood / field enums ────────────────────────────────────────
 const MoodEnum = z.enum(["indicatif", "conditionnel", "subjonctif", "imperatif", "nonfinite"]);
+const DifficultyEnum = z.enum(["beginner", "intermediate", "advanced"]).default("beginner");
 const AspectEnum = z.enum(["completed", "ongoing", "anterior", "habitual", "none"]);
 const TimePositionEnum = z.enum(["far-past", "past", "near-past", "present", "near-future", "future", "far-future"]);
 
@@ -16,6 +17,7 @@ const tenses = defineCollection({
     timePosition: TimePositionEnum,
     aspect: AspectEnum,
     literary: z.boolean().default(false),
+    difficulty: DifficultyEnum,
     oneLineRule: z.string(),        // shown in diagram node card
     pitfalls: z.array(z.string()).optional(),
     relatedTenses: z.array(z.string()).optional(),
@@ -33,6 +35,7 @@ const choice = defineCollection({
   schema: z.object({
     title: z.string(),
     relatedTenses: z.array(z.string()),
+    relatedGuides: z.array(z.string()).optional(),
   }),
 });
 
@@ -41,6 +44,7 @@ const grammar = defineCollection({
   loader: glob({ pattern: "**/*.md", base: "./src/content/grammar" }),
   schema: z.object({
     title: z.string(),
+    difficulty: DifficultyEnum,
     oneLineRule: z.string(),
     pitfalls: z.array(z.string()).optional(),
     examples: z.array(z.object({

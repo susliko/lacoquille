@@ -1,4 +1,5 @@
 ---
+difficulty: beginner
 title: "Color Adjectives"
 oneLineRule: "Most colors agree with the noun; compound colors and noun-turned-colors stay invariable."
 pitfalls:

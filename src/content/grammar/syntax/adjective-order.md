@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Adjective + Noun Order"
 oneLineRule: "Most adjectives follow the noun; BAGS adjectives (Beauty, Age, Goodness, Size) usually precede it — but position changes meaning."
 pitfalls:

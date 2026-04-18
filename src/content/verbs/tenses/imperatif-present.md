@@ -1,4 +1,5 @@
 ---
+difficulty: beginner
 title: "Impératif présent"
 mood: imperatif
 timePosition: present

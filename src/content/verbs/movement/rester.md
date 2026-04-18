@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Rester — to stay, to remain"
 oneLineRule: "Expresses a state of remaining in a place — no motion involved."
 pitfalls:

@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Futur antérieur"
 mood: indicatif
 timePosition: far-future

@@ -1,4 +1,5 @@
 ---
+difficulty: beginner
 title: "L'Infinitif"
 oneLineRule: "The base form of the verb, used after modal verbs, prepositions, and as a noun substitute."
 pitfalls:

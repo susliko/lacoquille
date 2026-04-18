@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Conditionnel présent"
 mood: conditionnel
 timePosition: future

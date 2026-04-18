@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Entrer — to enter"
 oneLineRule: "Expresses motion into an enclosed space or container."
 pitfalls:

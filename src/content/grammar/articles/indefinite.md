@@ -1,4 +1,5 @@
 ---
+difficulty: beginner
 title: "Indefinite Articles"
 oneLineRule: "Use un, une, des (a/an, some) when introducing something new or speaking generally about countable nouns."
 pitfalls:

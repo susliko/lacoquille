@@ -1,4 +1,5 @@
 ---
+difficulty: beginner
 title: "Passé composé"
 mood: indicatif
 timePosition: near-past

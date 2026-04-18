@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Syntax & Word Order"
 oneLineRule: "French has strict word order rules that differ from English, especially for pronouns and adjectives."
 pitfalls:

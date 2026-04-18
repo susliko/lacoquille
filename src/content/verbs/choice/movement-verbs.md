@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Movement Verb Choice Guide"
 relatedTenses:
   - present-indicatif

@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Verb + Preposition Combinations"
 oneLineRule: "French verbs require specific prepositions that often don't match English — memorize them in patterns."
 pitfalls:

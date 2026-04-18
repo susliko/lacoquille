@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Subjonctif présent"
 mood: subjonctif
 timePosition: present

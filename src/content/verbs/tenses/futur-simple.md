@@ -1,4 +1,5 @@
 ---
+difficulty: beginner
 title: "Futur simple"
 mood: indicatif
 timePosition: future

@@ -1,4 +1,5 @@
 ---
+difficulty: advanced
 title: "Subjonctif imparfait"
 mood: subjonctif
 timePosition: past

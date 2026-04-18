@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Partitive Articles"
 oneLineRule: "Use du, de la, de l', des (some) with uncountable nouns to express an unspecified quantity."
 pitfalls:

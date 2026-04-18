@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Futur proche"
 mood: indicatif
 timePosition: near-future

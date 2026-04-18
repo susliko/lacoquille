@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Y and En Pronouns"
 oneLineRule: "Y replaces à + noun phrase; en replaces de + noun phrase — cutting sentences and avoiding repetition."
 pitfalls:

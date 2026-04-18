@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Si-clauses"
 relatedTenses:
   - present-indicatif
@@ -7,6 +8,10 @@ relatedTenses:
   - futur-simple
   - conditionnel-present
   - conditionnel-passe
+relatedGuides:
+  - futur-vs-conditionnel
+  - subjonctif-triggers
+  - auxiliary-choice
 ---
 
 French conditional sentences follow strict tense-pairing rules. Knowing the three canonical patterns covers 95% of usage.

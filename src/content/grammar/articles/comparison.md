@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Comparison & Superlatives"
 oneLineRule: "Use plus/moins/aussi + adjective + que for comparison; le/la/les plus/moins + adjective for superlative."
 pitfalls:

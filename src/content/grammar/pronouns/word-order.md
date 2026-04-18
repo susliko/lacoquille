@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Double Pronoun Word Order"
 oneLineRule: "When two pronouns meet, they line up in a strict order: me/te/se nous/vous → le/la/les → lui/leur → y → en."
 pitfalls:

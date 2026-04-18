@@ -1,4 +1,5 @@
 ---
+difficulty: advanced
 title: "Passé antérieur"
 mood: indicatif
 timePosition: far-past

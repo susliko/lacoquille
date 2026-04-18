@@ -329,6 +329,8 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
     const isHighlighted = () => highlightedTense() === node.id;
     const activated    = () => isActive() || isHighlighted();
     const hue = MOOD_HUE[node.lane as MoodId];
+    const isPresent = () => node.id === "present-indicatif";
+    const isLiterary = () => node.literary;
 
     return (
       <g
@@ -342,23 +344,34 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
       >
         {/* Opaque base — blocks edge lines from showing through */}
         <rect x={x} y={y} width={cardW} height={cardH} rx="6" fill="var(--surface-2)" />
+        {/* Beginner's start indicator: gold ring on présent */}
+        {isPresent() && (
+          <rect x={x - 2} y={y - 2} width={cardW + 4} height={cardH + 4} rx="8"
+            fill="none"
+            stroke="var(--gold)"
+            stroke-width="1.5"
+            opacity="0.5"
+          />
+        )}
         {/* Color overlay */}
         <rect x={x} y={y} width={cardW} height={cardH} rx="6"
-          fill={activated() ? `hsl(${hue} 55% 45% / 0.18)` : "none"}
-          stroke={activated() ? `hsl(${hue} 65% 55%)` : `hsl(${hue} 40% 50% / 0.4)`}
+          fill={activated() ? `hsl(${hue} 55% 45% / 0.18)` : isLiterary() ? "none" : "none"}
+          stroke={activated() ? `hsl(${hue} 65% 55%)` : isLiterary() ? `hsl(${hue} 40% 50% / 0.2)` : `hsl(${hue} 40% 50% / 0.4)`}
           stroke-width={activated() ? 1.5 : 1}
+          opacity={isLiterary() ? 0.65 : 1}
         />
         {/* Left accent stripe */}
         <line
           x1={x + 4} y1={y + 9} x2={x + 4} y2={y + cardH - 9}
           stroke={`hsl(${hue} 65% 55%)`}
           stroke-width="3" stroke-linecap="round"
-          opacity={activated() ? 1 : 0.55}
+          opacity={activated() ? 1 : isLiterary() ? 0.35 : 0.55}
         />
         {/* Tense name */}
         <text x={x + 11} y={y + 14 + fontSize.title * 0.35}
           font-size={String(fontSize.title)} font-weight="600"
           fill={`hsl(${hue} 65% 62%)`}
+          opacity={isLiterary() ? 0.7 : 1}
         >
           {nodeTitle(node)}
         </text>
@@ -366,10 +379,30 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
         <text x={x + cardW / 2 + 3} y={y + cardH * 0.68}
           text-anchor="middle" font-size={String(fontSize.form)} font-weight="700"
           fill="var(--text)"
+          opacity={isLiterary() ? 0.7 : 1}
         >
           {getConjugation(node.id)}
         </text>
-        {/* Aspect icon removed — shown only in detail panel */}
+        {/* Literary lock icon */}
+        {isLiterary() && (
+          <text x={x + cardW - 10} y={y + 14}
+            font-size={fontSize.title > 10 ? 9 : 7}
+            opacity={0.55}
+            fill="var(--text-2)"
+          >
+            📚
+          </text>
+        )}
+        {/* Beginner's start label */}
+        {isPresent() && (
+          <text x={x + cardW / 2} y={y + cardH + 10}
+            text-anchor="middle" font-size="7"
+            fill="var(--gold)"
+            opacity={0.7}
+          >
+            start here
+          </text>
+        )}
       </g>
     );
   };
@@ -377,20 +410,36 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
   // ── Legend ────────────────────────────────────────────────────
   const Legend = () => (
     <details class="diagram-legend">
-      <summary>Connection types</summary>
-      <div class="legend-grid">
-        {(Object.entries(EDGE_COLOR) as [keyof typeof EDGE_COLOR, string][]).map(([type, color]) => (
+      <summary>Key</summary>
+      <div class="legend-section">
+        <p class="legend-section-title">Difficulty</p>
+        <div class="legend-grid">
           <div class="legend-item">
-            <svg width="32" height="10" aria-hidden="true">
-              <line x1="0" y1="5" x2="32" y2="5"
-                stroke={color} stroke-width="2.5"
-                stroke-dasharray={EDGE_DASH[type]}
-                stroke-linecap="round"
-              />
-            </svg>
-            <span>{type.replace(/-/g, " ")}</span>
+            <span class="legend-dot" style={{ background: "var(--gold)", opacity: "0.6" }} />
+            <span>Présent — start here</span>
           </div>
-        ))}
+          <div class="legend-item">
+            <span style={{ opacity: "0.65", "font-size": "10px" }}>📚</span>
+            <span>Literary tense — rare in speech</span>
+          </div>
+        </div>
+      </div>
+      <div class="legend-section">
+        <p class="legend-section-title">Connections</p>
+        <div class="legend-grid">
+          {(Object.entries(EDGE_COLOR) as [keyof typeof EDGE_COLOR, string][]).map(([type, color]) => (
+            <div class="legend-item">
+              <svg width="32" height="10" aria-hidden="true">
+                <line x1="0" y1="5" x2="32" y2="5"
+                  stroke={color} stroke-width="2.5"
+                  stroke-dasharray={EDGE_DASH[type]}
+                  stroke-linecap="round"
+                />
+              </svg>
+              <span>{type.replace(/-/g, " ")}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </details>
   );

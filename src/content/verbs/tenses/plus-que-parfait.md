@@ -1,4 +1,5 @@
 ---
+difficulty: intermediate
 title: "Plus-que-parfait"
 mood: indicatif
 timePosition: far-past

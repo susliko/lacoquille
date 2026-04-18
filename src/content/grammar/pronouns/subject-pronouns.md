@@ -1,4 +1,5 @@
 ---
+difficulty: beginner
 title: "Subject Pronouns"
 oneLineRule: "Subject pronouns tell us who or what performs the action of the verb."
 pitfalls:

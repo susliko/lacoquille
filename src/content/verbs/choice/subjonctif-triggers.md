@@ -1,71 +1,106 @@
 ---
+difficulty: intermediate
 title: "Subjonctif triggers"
 relatedTenses:
   - subjonctif-present
   - subjonctif-passe
+relatedGuides:
+  - si-clauses
 ---
 
 The subjonctif isn't triggered by a feeling in the speaker — it's triggered by specific words and structures. Learn these as fixed chunks.
 
-## The rule in one line
+## The Core Idea
 
-**Subjonctif = main clause expresses something non-factual (will, doubt, emotion, obligation) + *que* + different subject**
+**Subjonctif = main clause expresses something non-factual (doubt, wish, emotion, obligation) + *que* + different subject**
 
-## Categories of triggers
-
-### Obligation and necessity
-*il faut que · il est nécessaire que · il est indispensable que · il est essentiel que · il vaut mieux que*
+When the main clause expresses a will, doubt, emotion, or necessity — anything non-factual — French shifts to subjonctif to signal that the outcome is uncertain, desired, or required. The subjects must change: if both clauses share the same subject, use **infinitive** instead.
 
 > *Il faut que tu **partes** maintenant.*
+> "il faut" expresses obligation; subject shifts from "il" to "tu"
 
-### Possibility and doubt
-*il est possible que · il se peut que · il est peu probable que · douter que · ne pas croire que · ne pas penser que*
+## Color-Coded Trigger Groups
 
-> *Il est possible qu'il **ait** raison.*
+### Wishes & Will — *volonté* 🔴
 
-Note: **Affirmative** *croire que / penser que / espérer que / être sûr que* take **indicatif** — only their negative/interrogative forms trigger subjonctif.
-
-| | Mood |
-|---|---|
-| *Je crois qu'il **vient**.* | Indicatif |
-| *Je ne crois pas qu'il **vienne**.* | Subjonctif |
-| *Crois-tu qu'il **vienne** ?* | Subjonctif (doubt implied) |
-
-### Emotion
-*être content/heureux/triste/surpris/déçu/fâché/ravi/choqué que · regretter que · avoir peur que · craindre que · être fier que*
-
-> *Je suis surpris qu'elle **soit** déjà là.*
-
-### Will, wish, desire
-*vouloir que · désirer que · souhaiter que · préférer que · aimer que · exiger que · demander que · ordonner que · interdire que · permettre que*
+*vouloir que · désirer que · souhaiter que · préférer que · demander que · exiger que · ordonner que · interdire que · permettre que*
 
 > *Elle veut que nous **venions** dîner.*
 
-### Concessive and purpose conjunctions (always subjonctif)
-*bien que · quoique · à moins que · pour que · afin que · avant que · de peur que · sans que · pourvu que · à condition que · en attendant que · jusqu'à ce que*
+### Necessity & Obligation — *nécessité* 🟠
+
+*il faut que · il est nécessaire que · il est essentiel que · il est indispensable que · il vaut mieux que*
+
+> *Il faut que tu **sois** là à midi.*
+
+### Emotion & Reaction — *émotion* 🔵
+
+*être content/heureux/fâché/surpris/déçu/choqué/ravi que · regretter que · avoir peur que · craindre que · être fier que*
+
+> *Je suis surpris qu'elle **soit** déjà là.*
+
+### Doubt & Denial — *doute* ⚪
+
+*douter que · ne pas croire que · ne pas penser que · il est possible/improbable que · il se peut que*
+
+> *Il est possible qu'il **ait** raison.*
+
+### The *croire/penser* Nuance
+
+**Affirmative** *croire que / penser que* take **indicatif** — they express certainty. Only their **negative and interrogative** forms trigger subjonctif.
+
+| | Mood |
+|---|---|
+| *Je crois qu'il **vient**.* | Indicatif (certainty) |
+| *Je ne crois pas qu'il **vienne**.* | Subjonctif (doubt) |
+| *Crois-tu qu'il **vienne** ?* | Subjonctif (doubt implied) |
+
+### Concession & Purpose — *opposition/but* 🟣
+
+These **always** trigger subjonctif regardless of the main verb:
+
+*bien que · quoique · pour que · afin que · à moins que · avant que · sans que · pourvu que · à condition que · de peur que · en attendant que · jusqu'à ce que*
 
 > *Bien qu'il **fasse** froid, elle sort sans manteau.*
 
-### Superlative and uniqueness (often subjonctif)
-*le seul/unique/premier/dernier/meilleur … que*
+**Mnemonic:** "**B**e **Q**uiet, **P**lease, **A**nd **S**tay **Q**uiet, **P**lease" → **B**ien **Q**ue · **P**our **Q**ue · **A**vant **Q**ue · **S**ans **Q**ue · **P**ourvu **Q**ue
+
+### Superlative & Uniqueness — *le seul/unique/premier/dernier … que*
+
+Often triggers subjonctif:
 
 > *C'est le meilleur film que j'**aie** vu.*
 
-## When NOT to use subjonctif
+## Same Subject = Infinitive
 
-Use **indicatif** when the main verb expresses:
+When both clauses share the same subject, use **infinitive** — no subjonctif, no *que*:
+
+- *Je veux **partir*** (not *~~que je parte~~*)
+- *Elle souhaite **réussir*** (not *~~qu'elle réussisse~~*)
+- *Il est important de **faire*** (not *~~que quelqu'un fasse~~*)
+
+## Same as in English
+
+Some structures map directly to English — these are your allies:
+
+- *il faut que* → "it is necessary that"
+- *je veux que* → "I want that"
+- *être content que* → "to be happy that"
+- *avant que* → "before"
+
+When English uses "that" with a shift in subject, French subjonctif usually follows.
+
+## When NOT to Use Subjonctif
+
+**Indicatif** when the main verb expresses:
 - Certainty or factual knowledge: *savoir que, voir que, entendre que, constater que*
 - Declared facts: *dire que, affirmer que, annoncer que* (when asserting, not doubting)
-- Hope in common expressions: *espérer que* usually takes indicatif in everyday speech
+- Affirmative *espérer que* in everyday speech
 
-Use **infinitive** (no subjunctive at all) when:
-- Both clauses share the same subject: *Je veux **partir*** (not *que je parte*)
-- After impersonal expressions with no personal subject shift: *Il est important de **faire*** (not *que quelqu'un fasse*)
-
-## Quick-reference: must-know trigger chunks
+## Quick-Reference: Must-Know Chunks
 
 | Chunk | Translation |
-|-------|-------------|
+|---|---|
 | *il faut que + subj* | it is necessary that |
 | *pour que + subj* | so that |
 | *bien que + subj* | although |

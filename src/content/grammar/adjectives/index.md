@@ -1,4 +1,5 @@
 ---
+difficulty: beginner
 title: "Adjectives"
 oneLineRule: "French adjectives agree in gender and number with nouns and vary their placement before or after the noun."
 pitfalls:
