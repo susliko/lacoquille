@@ -1,0 +1,90 @@
+---
+import Base from "../../../layouts/Base.astro";
+import ArticleDiagram from "../../../components/ArticleDiagram";
+
+const articleNodes = [
+  {
+    id: "definite",
+    label: "Definite",
+    forms: ["le", "la", "les"],
+    description: '"the" — specific',
+    href: "/grammar/articles/definite",
+  },
+  {
+    id: "indefinite",
+    label: "Indefinite",
+    forms: ["un", "une", "des"],
+    description: '"a/an/some" — general',
+    href: "/grammar/articles/indefinite",
+  },
+  {
+    id: "partitive",
+    label: "Partitive",
+    forms: ["du", "de la", "de l'"],
+    description: '"some" — partial',
+    href: "/grammar/articles/partitive",
+  },
+];
+---
+
+<Base
+  title="Articles"
+  breadcrumb={[{ label: "Grammar", href: "/grammar" }, { label: "Articles" }]}
+>
+  <article>
+    <div class="hgroup">
+      <h1>Articles</h1>
+      <p class="hgroup-rule">Articles specify noun count and definiteness: definite (the), indefinite (a/an), and partitive (some).</p>
+    </div>
+
+    <ArticleDiagram client:only="solid-js" nodes={articleNodes} />
+
+    <section>
+      <h2>The three types</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>French</th>
+            <th>English</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="/grammar/articles/definite">Definite</a></td>
+            <td><em>le, la, les</em></td>
+            <td>the</td>
+            <td><em>le livre</em> — the book</td>
+          </tr>
+          <tr>
+            <td><a href="/grammar/articles/indefinite">Indefinite</a></td>
+            <td><em>un, une, des</em></td>
+            <td>a, an, some</td>
+            <td><em>un livre</em> — a book</td>
+          </tr>
+          <tr>
+            <td><a href="/grammar/articles/partitive">Partitive</a></td>
+            <td><em>du, de la, de l'</em></td>
+            <td>some</td>
+            <td><em>du pain</em> — some bread</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Adjective topics</h2>
+      <p>
+        Articles often appear alongside adjectives. Learn how adjectives work:
+      </p>
+      <ul>
+        <li><a href="/grammar/articles/adjective-agreement">Adjective agreement →</a> — gender and number</li>
+        <li><a href="/grammar/articles/adjective-placement">Adjective placement →</a> — before or after nouns</li>
+        <li><a href="/grammar/articles/comparison">Comparison →</a> — plus...que, le plus</li>
+      </ul>
+    </section>
+
+    <a href="/grammar" class="back-link">← Back to Grammar</a>
+  </article>
+</Base>

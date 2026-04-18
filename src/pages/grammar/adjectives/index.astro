@@ -1,0 +1,94 @@
+---
+import Base from "../../../layouts/Base.astro";
+import ArticleDiagram from "../../../components/ArticleDiagram";
+
+const adjectiveNodes = [
+  {
+    id: "adjective-agreement",
+    label: "Agreement",
+    forms: ["grand", "grande", "grands", "grandes"],
+    description: "gender + number",
+    href: "/grammar/articles/adjective-agreement",
+  },
+  {
+    id: "adjective-placement",
+    label: "Placement",
+    forms: ["before", "after"],
+    description: "before/after noun",
+    href: "/grammar/articles/adjective-placement",
+  },
+  {
+    id: "colors",
+    label: "Colors",
+    forms: ["rouge", "bleu marine"],
+    description: "agreement patterns",
+    href: "/grammar/adjectives/colors",
+  },
+  {
+    id: "comparison",
+    label: "Comparison",
+    forms: ["plus...que", "le plus"],
+    description: "comparing qualities",
+    href: "/grammar/adjectives/comparison",
+  },
+];
+---
+
+<Base
+  title="Adjectives"
+  breadcrumb={[{ label: "Grammar", href: "/grammar" }, { label: "Adjectives" }]}
+>
+  <article>
+    <div class="hgroup">
+      <h1>Adjectives</h1>
+      <p class="hgroup-rule">French adjectives agree in gender and number with nouns and vary their placement before or after the noun.</p>
+    </div>
+
+    <ArticleDiagram client:only="solid-js" nodes={adjectiveNodes} />
+
+    <section>
+      <h2>The three key rules</h2>
+
+      <h3>1. Agreement</h3>
+      <p>Adjectives change form to match the noun: <em>grand</em> (masc) → <em>grande</em> (fem).</p>
+
+      <h3>2. Placement</h3>
+      <p>Most adjectives go <strong>after</strong> the noun. A few common adjectives — BAGS (Beauty, Age, Goodness, Size) — go <strong>before</strong>.</p>
+
+      <h3>3. Invariable</h3>
+      <p>Some adjectives never change: compound colors, noun-turned-colors.</p>
+    </section>
+
+    <section>
+      <h2>Adjective topics</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Topic</th>
+            <th>Content</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="/grammar/articles/adjective-agreement">Agreement →</a></td>
+            <td>Gender and number agreement, irregular forms, special forms before vowels</td>
+          </tr>
+          <tr>
+            <td><a href="/grammar/articles/adjective-placement">Placement →</a></td>
+            <td>Before or after noun, the BAGS group, meaning changes with position</td>
+          </tr>
+          <tr>
+            <td><a href="/grammar/adjectives/colors">Colors →</a></td>
+            <td>Regular, invariable, and compound color adjectives</td>
+          </tr>
+          <tr>
+            <td><a href="/grammar/adjectives/comparison">Comparison →</a></td>
+            <td>Comparative, superlative, and irregular forms</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <a href="/grammar" class="back-link">← Back to Grammar</a>
+  </article>
+</Base>

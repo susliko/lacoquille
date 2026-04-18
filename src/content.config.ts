@@ -36,4 +36,56 @@ const choice = defineCollection({
   }),
 });
 
-export const collections = { tenses, choice };
+// ── Grammar pages ─────────────────────────────────────────────
+const grammar = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/grammar" }),
+  schema: z.object({
+    title: z.string(),
+    oneLineRule: z.string(),
+    pitfalls: z.array(z.string()).optional(),
+    examples: z.array(z.object({
+      fr: z.string(),
+      en: z.string(),
+    })).optional(),
+  }),
+});
+
+// ── Verb groups ────────────────────────────────────────────────
+const groups = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/verbs/groups" }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string().optional(),
+    relatedVerbs: z.array(z.string()).optional(),
+  }),
+});
+
+// ── Movement verb pages ─────────────────────────────────────────
+const movement = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/verbs/movement" }),
+  schema: z.object({
+    title: z.string(),
+    oneLineRule: z.string(),
+    pitfalls: z.array(z.string()).optional(),
+    examples: z.array(z.object({
+      fr: z.string(),
+      en: z.string(),
+    })).optional(),
+  }),
+});
+
+// ── Non-finite verb forms ───────────────────────────────────────
+const nonfinite = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/verbs/non-finite" }),
+  schema: z.object({
+    title: z.string(),
+    oneLineRule: z.string(),
+    pitfalls: z.array(z.string()).optional(),
+    examples: z.array(z.object({
+      fr: z.string(),
+      en: z.string(),
+    })).optional(),
+  }),
+});
+
+export const collections = { tenses, choice, grammar, groups, movement, nonfinite };

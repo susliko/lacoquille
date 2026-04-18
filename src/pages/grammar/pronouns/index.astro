@@ -1,0 +1,157 @@
+---
+import Base from "../../../layouts/Base.astro";
+import GrammarDiagram from "../../../components/GrammarDiagram";
+
+const pronounNodes = [
+  {
+    id: "subject",
+    label: "Subject",
+    sublabel: "je, tu, il...",
+    href: "/grammar/pronouns/subject-pronouns",
+  },
+  {
+    id: "object",
+    label: "Object",
+    sublabel: "me, te, le...",
+    href: "/grammar/pronouns/object-pronouns",
+  },
+  {
+    id: "reflexive",
+    label: "Reflexive",
+    sublabel: "me, te, se...",
+    href: "/grammar/pronouns/reflexive-pronouns",
+  },
+  {
+    id: "relative",
+    label: "Relative",
+    sublabel: "qui, que, dont",
+    href: "/grammar/pronouns/relative-pronouns",
+  },
+  {
+    id: "demonstrative",
+    label: "Demonstrative",
+    sublabel: "celui, celle, ce",
+    href: "/grammar/pronouns/demonstrative-pronouns",
+  },
+  {
+    id: "possessive",
+    label: "Possessive",
+    sublabel: "le mien, la tienne",
+    href: "/grammar/pronouns/possessive-pronouns",
+  },
+  {
+    id: "indefinite",
+    label: "Indefinite",
+    sublabel: "on, quelqu'un",
+    href: "/grammar/pronouns/indefinite-pronouns",
+  },
+  {
+    id: "y-en",
+    label: "y / en",
+    sublabel: "remplacement",
+    href: "/grammar/pronouns/y-en-pronouns",
+  },
+];
+---
+
+<Base
+  title="French Pronouns"
+  breadcrumb={[{ label: "Grammar", href: "/grammar" }, { label: "Pronouns" }]}
+>
+  <article>
+    <div class="hgroup">
+      <h1>French Pronouns</h1>
+      <p class="hgroup-rule">Pronouns replace nouns and show relationships to verbs, prepositions, and possessors.</p>
+    </div>
+
+    <GrammarDiagram client:only="solid-js" nodes={pronounNodes} centerLabel="Pronouns" />
+
+    <section>
+      <h2>What it is</h2>
+      <p>
+        Pronouns are words that take the place of nouns. They allow you to avoid repetition,
+        refer to things indirectly, and construct complex sentences. French has more pronoun
+        types than English and stricter rules about where they appear in a sentence.
+      </p>
+    </section>
+
+    <section>
+      <h2>Key principle: position</h2>
+      <p>
+        Unlike English, most French pronouns must appear <strong>before the verb</strong>
+        (or before the auxiliary in compound tenses):
+      </p>
+      <p><em>Je <strong>le</strong> vois.</em> — I see it.</p>
+      <p><em>Je <strong>lui</strong> ai parlé.</em> — I spoke to him.</p>
+      <p>
+        This rule applies to all pronoun types except relative pronouns and some
+        demonstrative pronouns in specific contexts.
+      </p>
+    </section>
+
+    <section>
+      <h2>All pronoun types</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Examples</th>
+            <th>Function</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="/grammar/pronouns/subject-pronouns">Subject</a></td>
+            <td><em>je, tu, il, elle, on</em></td>
+            <td>Perform the action</td>
+          </tr>
+          <tr>
+            <td><a href="/grammar/pronouns/object-pronouns">Object</a></td>
+            <td><em>me, te, le, la, lui, leur</em></td>
+            <td>Receive the action directly or indirectly</td>
+          </tr>
+          <tr>
+            <td><a href="/grammar/pronouns/reflexive-pronouns">Reflexive</a></td>
+            <td><em>me, te, se, nous, vous</em></td>
+            <td>Action reflects back on the subject</td>
+          </tr>
+          <tr>
+            <td><a href="/grammar/pronouns/relative-pronouns">Relative</a></td>
+            <td><em>qui, que, dont, où</em></td>
+            <td>Connect a clause to a noun</td>
+          </tr>
+          <tr>
+            <td><a href="/grammar/pronouns/demonstrative-pronouns">Demonstrative</a></td>
+            <td><em>celui, celle, ce, cela</em></td>
+            <td>Point to specific things</td>
+          </tr>
+          <tr>
+            <td><a href="/grammar/pronouns/possessive-pronouns">Possessive</a></td>
+            <td><em>le mien, la tienne, les nôtres</em></td>
+            <td>Show ownership</td>
+          </tr>
+          <tr>
+            <td><a href="/grammar/pronouns/indefinite-pronouns">Indefinite</a></td>
+            <td><em>on, chacun, quelqu'un</em></td>
+            <td>Refer to unspecified things</td>
+          </tr>
+          <tr>
+            <td><a href="/grammar/pronouns/y-en-pronouns">y / en</a></td>
+            <td><em>y, en</em></td>
+            <td>Replace à + noun or de + noun</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Word order</h2>
+      <p>
+        When combining two pronouns together, French has strict order rules.
+        <a href="/grammar/pronouns/word-order">Learn the double pronoun order →</a>
+      </p>
+    </section>
+
+    <a href="/grammar" class="back-link">← Back to Grammar</a>
+  </article>
+</Base>
