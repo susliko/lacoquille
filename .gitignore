@@ -29,3 +29,6 @@ pnpm-debug.log*
 
 # screenshots
 *.png
+
+# vscode
+.vscode/
