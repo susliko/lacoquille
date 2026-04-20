@@ -11,6 +11,15 @@ npx astro check  # Type-check .astro, .tsx, .ts files (run before committing)
 
 Node 22+ required.
 
+## GitHub Operations
+
+**Use GitHub MCP tools for all repo operations** (not git CLI):
+- `github_push_files` — push files to repo
+- `github_create_pull_request` — create PR
+- `github_get_file_contents` — read files from repo
+- `github_list_commits` — view commit history
+- Repository: `susliko/lacoquille` on branch `main`
+
 ## Architecture
 
 - **Astro 5** static-first framework with **SolidJS** islands for interactivity
