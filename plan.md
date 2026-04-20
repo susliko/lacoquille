@@ -1,4 +1,4 @@
-# Frenchlation — French Grammar Reference Site (v1)
+# La Coquille — French Grammar Reference Site (v1)
 
 ## Context
 
@@ -163,7 +163,7 @@ These are all good ideas previously discussed; they return as candidates after v
 - **Example-sentence tokenization.** For Tier-1 linking, verbs in examples need tagging. Manual Markdown frontmatter for v1 (low volume, high control); automate later only if the catalog grows.
 - **Choice-page list.** Current five: PC-vs-imparfait, subjonctif triggers, si-clauses, futur-vs-conditionnel, reported speech. Candidates to add if scope permits: gerund vs infinitive, *dont/que/qui*, *depuis/il y a/pendant*.
 - **Copyright path for example sentences.** Hand-authored realistic sentences for v1; curated quotes with attribution can be introduced later.
-- **Domain name.** Placeholder `frenchlation.pages.dev` for v1; custom domain whenever.
+- **Domain name.** Placeholder `lacoquille.pages.dev` for v1; custom domain whenever.
 - **Analytics.** Plausible or Umami (self-host or SaaS) vs none. Default: none until there's a reason.
 - **License.** MIT for code; CC-BY-SA for grammar content is the reasonable default.
 - **Testing bar.** Minimum: Lighthouse in CI. Unit tests for the conjugation rules (easy, worth it because it's hand-written). Diagram behaviour covered by a small Playwright smoke test.

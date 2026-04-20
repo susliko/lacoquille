@@ -1,4 +1,4 @@
-# Frenchlation
+# La Coquille
 
 An interactive French grammar reference site. The centerpiece is a single SVG diagram connecting all verb tenses by their semantic relations (auxiliary composition, aspect pairs, stem sharing, mood swaps, anteriority). Built with Astro, SolidJS islands, and Pico.css.
 
