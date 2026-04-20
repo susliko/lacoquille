@@ -24,3 +24,8 @@ pnpm-debug.log*
 .idea/
 
 .opencode/
+
+.playwright-mcp/
+
+# screenshots
+*.png

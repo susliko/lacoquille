@@ -97,8 +97,8 @@ function edgePath(from: NodePos, to: NodePos, edge: DiagramEdge): string {
     const endX   = goingRight ? to.x               : to.x + DK_CARD_W;
 
     // Y offset per type so overlapping same-lane lines stay visually separate
-    const yOff = edge.type === "auxiliary-compound" ? -7
-               : edge.type === "aspect-pair"         ?  7
+    const yOff = edge.type === "auxiliary-compound" ? -8
+               : edge.type === "aspect-pair"         ?  8
                : 0;
     const y = from.cy + yOff;
 
@@ -131,8 +131,8 @@ function edgePathMobile(from: NodePos, to: NodePos, edge: DiagramEdge): string {
     const endY   = goingDown ? to.y               : to.y + MB_CARD_H;
 
     // X offset by type to separate overlapping same-column lines
-    const xOff = edge.type === "auxiliary-compound" ? -5
-               : edge.type === "aspect-pair"         ?  5
+    const xOff = edge.type === "auxiliary-compound" ? -6
+               : edge.type === "aspect-pair"         ?  6
                : 0;
     const x = from.cx + xOff;
 
@@ -554,7 +554,6 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
                       opacity={isActive() ? 1 : 0.6}
                       marker-end={
                         edge.type === "auxiliary-compound" ? "url(#mb-arr-aux)"
-                        : edge.type === "anteriority"       ? "url(#mb-arr-ant)"
                         : undefined
                       }
                     />
@@ -659,7 +658,6 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
                       opacity={isActive() ? 1 : 0.55}
                       marker-end={
                         edge.type === "auxiliary-compound" ? "url(#dk-arr-aux)"
-                        : edge.type === "anteriority"       ? "url(#dk-arr-ant)"
                         : undefined
                       }
                     />

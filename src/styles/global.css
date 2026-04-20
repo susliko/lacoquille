@@ -536,6 +536,7 @@ article {
 .person-pills {
   display: flex;
   gap: 3px;
+  justify-content: center;
 }
 .person-pill {
   all: unset;
