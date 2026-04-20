@@ -32,3 +32,6 @@ pnpm-debug.log*
 
 # vscode
 .vscode/
+
+# lacq runtime data
+lacq/data/

@@ -27,6 +27,14 @@ Node 22+ required.
 - Conjugation data lives in `src/data/conjugations/` (parler, être, avoir, aller, faire, finir, vendre)
 - `VerbDiagram.tsx` is a SolidJS island — **uses `solid-js` imports, NOT React** (tsconfig has `jsxImportSource: "solid-js"`)
 
+## Article of the Day Backend
+
+The `lacq/` directory is a Rust (Axum) backend server that:
+- Serves `/api/article-of-the-day` with daily Maupassant story
+- Fetches from Gutendex API and Gutenberg for book text
+- Caches translations and story metadata in `lacq/data/`
+- Run with: `cd lacq && cargo run` (port 8080)
+
 ## Adding tenses
 
 1. Create `src/content/verbs/tenses/<slug>.md` with required frontmatter (see README.md)
