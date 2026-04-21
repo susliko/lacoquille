@@ -5,9 +5,19 @@ interface Props {
   title: string;
   description?: string;
   breadcrumb?: { label: string; href?: string }[];
+  section?: "reference" | "reference/grammar" | "practice";
 }
 
-const { title, description = "An interactive French grammar reference.", breadcrumb = [] } = Astro.props;
+const { title, description = "An interactive French grammar reference.", breadcrumb = [], section } = Astro.props;
+const pathname = Astro.url.pathname;
+
+function isActive(href: string) {
+  if (!section) return false;
+  if (section === "reference" && pathname.startsWith("/reference")) return true;
+  if (section === "reference/grammar" && pathname.startsWith("/reference/grammar")) return true;
+  if (section === "practice" && pathname.startsWith("/practice")) return true;
+  return false;
+}
 ---
 
 <!doctype html>
@@ -22,20 +32,62 @@ const { title, description = "An interactive French grammar reference.", breadcr
   <body>
     <nav class="site-nav">
       <a href="/" class="brand">La Coquille</a>
-      {breadcrumb.length > 0 && (
-        <>
-          <span class="sep">·</span>
-          <ol class="breadcrumb">
-            {breadcrumb.map(({ label, href }) => (
-              <li>{href ? <a href={href}>{label}</a> : label}</li>
-            ))}
-          </ol>
-        </>
-      )}
+      <span class="sep">·</span>
+      <ol class="breadcrumb">
+        {breadcrumb.map(({ label, href }) => (
+          <li>{href ? <a href={href}>{label}</a> : label}</li>
+        ))}
+      </ol>
+      <button class="nav-hamburger" aria-label="Open menu" id="nav-toggle">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <rect y="3" width="18" height="2" rx="1" fill="currentColor"/>
+          <rect y="8" width="18" height="2" rx="1" fill="currentColor"/>
+          <rect y="13" width="18" height="2" rx="1" fill="currentColor"/>
+        </svg>
+      </button>
+      <ul class="nav-links">
+        <li><a href="/reference/verbs" class={section === "reference" ? "active" : ""}>Verbs</a></li>
+        <li><a href="/reference/grammar" class={section === "reference/grammar" ? "active" : ""}>Grammar</a></li>
+        <li><a href="/practice" class={section === "practice" ? "active" : ""}>Practice</a></li>
+      </ul>
+    </nav>
+
+    <div class="nav-drawer-overlay" id="nav-overlay"></div>
+    <nav class="nav-drawer" id="nav-drawer">
+      <a href="/reference/verbs" class={section === "reference" ? "active" : ""}>Verbs</a>
+      <a href="/reference/grammar" class={section === "reference/grammar" ? "active" : ""}>Grammar</a>
+      <a href="/practice" class={section === "practice" ? "active" : ""}>Practice</a>
     </nav>
 
     <main>
       <slot />
     </main>
+
+    <script>
+      const toggle = document.getElementById("nav-toggle");
+      const drawer = document.getElementById("nav-drawer");
+      const overlay = document.getElementById("nav-overlay");
+
+      function openDrawer() {
+        drawer?.classList.add("open");
+        overlay?.style.setProperty("display", "block");
+        requestAnimationFrame(() => overlay?.style.setProperty("opacity", "1"));
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeDrawer() {
+        overlay?.style.setProperty("opacity", "0");
+        setTimeout(() => {
+          drawer?.classList.remove("open");
+          overlay?.style.removeProperty("display");
+        }, 200);
+        document.body.style.overflow = "";
+      }
+
+      toggle?.addEventListener("click", () => {
+        drawer?.classList.contains("open") ? closeDrawer() : openDrawer();
+      });
+      overlay?.addEventListener("click", closeDrawer);
+    </script>
   </body>
 </html>

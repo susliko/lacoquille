@@ -1,0 +1,112 @@
+---
+import Base from "../../../../layouts/Base.astro";
+import AdverbDiagram from "../../../../components/AdverbDiagram";
+
+const adverbNodes = [
+  {
+    id: "manner",
+    label: "Manner",
+    examples: ["bien, mal, vite"],
+    href: "/grammar/adverbs/formation",
+  },
+  {
+    id: "time",
+    label: "Time",
+    examples: ["hier, demain"],
+    href: "/grammar/adverbs/placement",
+  },
+  {
+    id: "place",
+    label: "Place",
+    examples: ["ici, là"],
+  },
+  {
+    id: "degree",
+    label: "Degree",
+    examples: ["très, trop"],
+    href: "/grammar/adverbs/degree",
+  },
+  {
+    id: "frequency",
+    label: "Frequency",
+    examples: ["souvent, jamais"],
+    href: "/grammar/adverbs/placement",
+  },
+];
+---
+
+<Base
+  title="Adverbs"
+  breadcrumb={[{ label: "Grammar", href: "/reference/grammar" }, { label: "Adverbs" }]}
+>
+  <article>
+    <div class="hgroup">
+      <h1>Adverbs</h1>
+      <p class="hgroup-rule">Adverbs modify verbs, adjectives, or other adverbs to add meaning.</p>
+    </div>
+
+    <AdverbDiagram client:only="solid-js" nodes={adverbNodes} centerLabel="Adverbs" />
+
+    <section>
+      <h2>What it is</h2>
+      <p>
+        An <strong>adverb</strong> is a word that modifies a verb, an adjective, or another adverb.
+        It answers questions like <em>how?</em>, <em>when?</em>, <em>where?</em>, and <em>to what degree?</em>
+      </p>
+      <p>
+        French adverbs are grammatically invariable — they never change form regardless of gender or number.
+      </p>
+    </section>
+
+    <section>
+      <h2>Five types</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Examples</th>
+            <th>What they modify</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="/reference/grammar/adverbs/placement">Manner</a></td>
+            <td><em>bien, mal, vite, lentement</em></td>
+            <td>How an action is done</td>
+          </tr>
+          <tr>
+            <td><a href="/reference/grammar/adverbs/placement">Time</a></td>
+            <td><em>aujourd'hui, hier, demain, toujours</em></td>
+            <td>When</td>
+          </tr>
+          <tr>
+            <td>Place</td>
+            <td><em>ici, là, partout, quelque part</em></td>
+            <td>Where</td>
+          </tr>
+          <tr>
+            <td><a href="/reference/grammar/adverbs/degree">Degree</a></td>
+            <td><em>très, peu, plus, moins</em></td>
+            <td>How much</td>
+          </tr>
+          <tr>
+            <td><a href="/reference/grammar/adverbs/placement">Frequency</a></td>
+            <td><em>souvent, toujours, parfois, jamais</em></td>
+            <td>How often</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Key topics</h2>
+      <ul>
+        <li><a href="/reference/grammar/adverbs/formation">Adverb formation →</a> — how adverbs are formed from adjectives</li>
+        <li><a href="/reference/grammar/adverbs/placement">Adverb placement →</a> — where adverbs go in a sentence</li>
+        <li><a href="/reference/grammar/adverbs/degree">Degree adverbs →</a> — très, trop, plus, moins and comparisons</li>
+      </ul>
+    </section>
+
+    <a href="/reference/grammar" class="back-link">← Grammar</a>
+  </article>
+</Base>

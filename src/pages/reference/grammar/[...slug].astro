@@ -1,0 +1,53 @@
+---
+import { getCollection, render } from "astro:content";
+import Base from "../../../layouts/Base.astro";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("grammar");
+  return entries.map(entry => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const { title, oneLineRule } = entry.data;
+
+const slugParts = entry.id.split("/");
+
+let backLabel: string;
+let backHref: string;
+
+if (slugParts.length === 1) {
+  backLabel = "Grammar";
+  backHref = "/reference/grammar";
+} else {
+  const parentSlug = slugParts[0];
+  backLabel = parentSlug.replace(/-/g, " ");
+  backHref = `/reference/grammar/${parentSlug}`;
+}
+
+const breadcrumb = slugParts.map((part: string, i: number) => ({
+  label: part === "index" ? slugParts[i - 1] || "Grammar" : part.replace(/-/g, " "),
+  href: i < slugParts.length - 1 ? `/reference/grammar/${slugParts.slice(0, i + 1).join("/")}` : undefined,
+}));
+if (breadcrumb[0]) breadcrumb[0].href = "/reference/grammar";
+---
+
+<Base
+  title={title}
+  breadcrumb={[{ label: "Grammar", href: "/reference/grammar" }, ...breadcrumb.filter(b => b.label !== "Grammar")]}
+  section="reference/grammar"
+>
+  <article>
+    <div class="hgroup">
+      <h1>{title}</h1>
+      {oneLineRule && <p class="hgroup-rule">{oneLineRule}</p>}
+    </div>
+
+    <Content />
+
+    <a href={backHref} class="back-link">← {backLabel}</a>
+  </article>
+</Base>

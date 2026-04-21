@@ -1,33 +1,34 @@
 ---
 import Base from "../layouts/Base.astro";
 
-const topics = [
+const referenceGroups = [
   {
-    id: "article-of-the-day",
-    name: "Article du jour",
-    desc: "A daily Maupassant short story with translation and vocab.",
-    href: "/stories/article-of-the-day",
-    available: true,
+    name: "Verbs",
+    href: "/reference/verbs",
+    desc: "Every French verb tense and mood — their relations, formations, and when to use each one.",
+    subtopics: [],
   },
   {
-    id: "verbs",
-    name: "Verbes",
-    desc: "Tenses, moods, conjugation & the interactive tense diagram.",
-    href: "/verbs",
-    available: true,
+    name: "Grammar",
+    href: "/reference/grammar",
+    desc: "The building blocks: pronouns, articles, adjectives, negation, and more.",
+    subtopics: [
+      { name: "Pronoms", href: "/reference/grammar/pronouns" },
+      { name: "Articles", href: "/reference/grammar/articles" },
+      { name: "Adjectifs", href: "/reference/grammar/adjectives" },
+      { name: "Adverbes", href: "/reference/grammar/adverbs" },
+      { name: "Prépositions", href: "/reference/grammar/prepositions" },
+      { name: "Négation", href: "/reference/grammar/negation" },
+      { name: "Interrogation", href: "/reference/grammar/interrogation" },
+      { name: "Syntaxe", href: "/reference/grammar/syntax" },
+      { name: "Verbes réfléchis", href: "/reference/grammar/reflexive-verbs" },
+    ],
   },
-  { id: "pronouns",     name: "Pronoms",       desc: "Subject, object, reflexive, relative & more.", available: true, href: "/grammar/pronouns" },
-  { id: "adjectives",   name: "Adjectifs",     desc: "Agreement, placement, comparison.",             available: true, href: "/grammar/articles" },
-  { id: "articles",     name: "Articles",      desc: "Definite, indefinite, partitive.",              available: true, href: "/grammar/articles" },
-  { id: "adverbs",      name: "Adverbes",      desc: "Formation, placement, degree.",                 available: true, href: "/grammar/adverbs" },
-  { id: "prepositions", name: "Prépositions",  desc: "à, de & common verb combinations.",             available: true, href: "/grammar/prepositions" },
-  { id: "negation",     name: "Négation",      desc: "ne…pas, ne…plus, ne…jamais & more.",           available: true, href: "/grammar/negation" },
-  { id: "questions",    name: "Interrogation", desc: "Inversion, est-ce que, intonation.",            available: true, href: "/grammar/interrogation" },
-  { id: "syntax",       name: "Syntaxe",       desc: "Word order, sentence structure.",               available: true, href: "/grammar/syntax" },
+  },
 ];
 ---
 
-<Base title="French Grammar Reference">
+<Base title="La Coquille">
   <div class="home-hero">
     <div class="home-hero-bg" aria-hidden="true">GRAMMAIRE</div>
     <div class="home-hero-content">
@@ -40,20 +41,178 @@ const topics = [
     </div>
   </div>
 
-  <div class="topic-grid">
-    {topics.map(topic => (
-      topic.available ? (
-        <a href={topic.href} class="topic-card available">
-          <span class="topic-badge">available</span>
-          <span class="topic-name">{topic.name}</span>
-          <span class="topic-desc">{topic.desc}</span>
-        </a>
-      ) : (
-        <div class="topic-card coming-soon" aria-disabled="true">
-          <span class="topic-name">{topic.name}</span>
-          <span class="topic-desc">{topic.desc}</span>
-        </div>
-      )
-    ))}
+  <div class="home-sections">
+    <a href="/practice" class="home-section-card">
+      <div class="section-header">
+        <span class="section-label">Practice</span>
+        <span class="section-arrow">→</span>
+      </div>
+      <h2 class="section-title">Article du jour</h2>
+      <p class="section-desc">A daily Maupassant short story with translation and vocab.</p>
+    </a>
+
+    <div class="home-reference">
+      <div class="reference-header">
+        <span class="section-label">Reference</span>
+      </div>
+      <div class="reference-groups">
+        {referenceGroups.map(group => (
+          <div class="reference-group">
+            <a href={group.href} class="group-title">
+              <span>{group.name}</span>
+              <span class="group-arrow">→</span>
+            </a>
+            <p class="group-desc">{group.desc}</p>
+            {group.subtopics.length > 0 && (
+              <div class="subtopics">
+                {group.subtopics.map(sub => (
+                  <a href={sub.href} class="subtopic">{sub.name}</a>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
   </div>
 </Base>
+
+<style>
+  .home-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .home-section-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    transition: border-color var(--transition), background var(--transition);
+  }
+  .home-section-card:hover {
+    border-color: var(--gold);
+    background: var(--surface-2);
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+  }
+
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  .section-arrow {
+    font-size: 1rem;
+    color: var(--gold);
+    opacity: 0;
+    transition: opacity var(--transition), transform var(--transition);
+  }
+  .home-section-card:hover .section-arrow {
+    opacity: 1;
+    transform: translateX(4px);
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: var(--text);
+    margin: 0;
+  }
+
+  .section-desc {
+    font-size: 0.85rem;
+    color: var(--text-2);
+    margin: 0;
+  }
+
+  .home-reference {
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .reference-header {
+    padding: 0.75rem 1.25rem;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .reference-groups {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border-subtle);
+  }
+  @media (max-width: 640px) {
+    .reference-groups { grid-template-columns: 1fr; }
+  }
+
+  .reference-group {
+    padding: 1.25rem;
+    background: var(--surface);
+  }
+
+  .group-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 0.35rem;
+    transition: color var(--transition);
+  }
+  .group-title:hover { color: var(--gold); }
+
+  .group-arrow {
+    font-size: 0.9rem;
+    color: var(--gold);
+    opacity: 0;
+    transition: opacity var(--transition);
+  }
+  .group-title:hover .group-arrow { opacity: 1; }
+
+  .group-desc {
+    font-size: 0.8rem;
+    color: var(--text-2);
+    margin: 0 0 0.75rem 0;
+    line-height: 1.4;
+  }
+
+  .subtopics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .subtopic {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    border-radius: 999px;
+    color: var(--text-2);
+    transition: border-color var(--transition), color var(--transition);
+  }
+  .subtopic:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+</style>

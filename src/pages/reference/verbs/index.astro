@@ -1,0 +1,98 @@
+---
+import Base from "../../../layouts/Base.astro";
+import VerbDiagram from "../../../components/VerbDiagram";
+import { getCollection } from "astro:content";
+import diagramData from "../../../content/verbs/diagram.json";
+
+const tenseEntries = await getCollection("tenses");
+const choiceEntries = await getCollection("choice");
+const groupEntries = await getCollection("groups");
+
+const tenseTitles: Record<string, string> = {};
+const tenseRules:  Record<string, string> = {};
+for (const entry of tenseEntries) {
+  tenseTitles[entry.id] = entry.data.title;
+  tenseRules[entry.id]  = entry.data.oneLineRule;
+}
+
+const choicePages = choiceEntries.map(entry => ({
+  slug: entry.id,
+  title: entry.data.title,
+}));
+
+const verbGroups = groupEntries.map(entry => ({
+  slug: entry.id,
+  title: entry.data.title,
+  description: entry.data.description,
+}));
+
+const timeOrder = ["present","near-past","past","far-past","near-future","future","far-future"];
+const sortedTenses = [...tenseEntries].sort((a, b) => {
+  const ai = timeOrder.indexOf(a.data.timePosition);
+  const bi = timeOrder.indexOf(b.data.timePosition);
+  return ai - bi;
+});
+---
+
+<Base
+  title="Verbes"
+  description="Every French verb tense and mood in one interactive diagram."
+  breadcrumb={[{ label: "Verbes", href: "/reference/verbs" }]}
+  section="reference"
+>
+  <div style="margin-bottom: 1.5rem;">
+    <p class="home-eyebrow">Grammaire</p>
+    <h1>Verbes</h1>
+    <p style="color: var(--text-2); margin-top: 0.4rem;">
+      Every French tense and mood — their relations, formations, and when to use each one.
+    </p>
+  </div>
+
+  <VerbDiagram
+    client:only="solid-js"
+    data={diagramData}
+    tenseTitles={tenseTitles}
+    tenseRules={tenseRules}
+  />
+
+  <div class="verbs-index">
+    {verbGroups.length > 0 && (
+      <section>
+        <h2>Verb groups</h2>
+        <ul class="choice-index-list">
+          {verbGroups.map(group => (
+            <li>
+              <a href={`/reference/verbs/groups/${group.slug}`}>{group.title}</a>
+              {group.description && <span class="topic-desc"> — {group.description}</span>}
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <section>
+      <h2>All tenses</h2>
+      <ul class="tense-index-list">
+        {sortedTenses.map(entry => (
+          <li>
+            <a href={`/reference/verbs/tenses/${entry.id}`}>
+              <span class="tense-link-title">{entry.data.title}</span>
+              <span class="tense-link-rule">{entry.data.oneLineRule}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section>
+      <h2>Tense-choice guides</h2>
+      <ul class="choice-index-list">
+        {choicePages.map(page => (
+          <li>
+            <a href={`/reference/verbs/choice/${page.slug}`}>{page.title}</a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  </div>
+</Base>

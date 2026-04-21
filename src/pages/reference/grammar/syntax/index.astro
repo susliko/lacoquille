@@ -1,0 +1,95 @@
+---
+import Base from "../../../../layouts/Base.astro";
+import GrammarDiagram from "../../../../components/GrammarDiagram";
+
+const syntaxNodes = [
+  {
+    id: "double-pronouns",
+    label: "Double Pronouns",
+    sublabel: "MSSA-LL-YE",
+    href: "/grammar/syntax/double-pronouns",
+  },
+  {
+    id: "adjective-order",
+    label: "Adjective Order",
+    sublabel: "BAGS before noun",
+    href: "/grammar/syntax/adjective-order",
+  },
+];
+---
+
+<Base
+  title="Syntax & Word Order"
+  breadcrumb={[{ label: "Grammar", href: "/reference/grammar" }, { label: "Syntax" }]}
+>
+  <article>
+    <div class="hgroup">
+      <h1>Syntax & Word Order</h1>
+      <p class="hgroup-rule">French has strict word order rules that differ from English, especially for pronouns and adjectives.</p>
+    </div>
+
+    <GrammarDiagram client:only="solid-js" nodes={syntaxNodes} centerLabel="Syntax" />
+
+    <section>
+      <h2>Key differences from English</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>French</th>
+            <th>English</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Adjective position</td>
+            <td>Often before noun (BAGS)</td>
+            <td>Almost always before noun</td>
+          </tr>
+          <tr>
+            <td>Pronoun placement</td>
+            <td>Before verb</td>
+            <td>After verb</td>
+          </tr>
+          <tr>
+            <td>Multiple pronouns</td>
+            <td>Strict sequence (MSSA-LL-YE)</td>
+            <td>Natural emphasis order</td>
+          </tr>
+          <tr>
+            <td>Negative sentences</td>
+            <td><em>ne...pas</em> around verb</td>
+            <td><em>doesn't...</em> before verb</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Sub-topics</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Topic</th>
+            <th>Description</th>
+            <th>Link</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Double pronouns</td>
+            <td>When two pronouns stack together: <em>me le</em>, <em>lui en</em></td>
+            <td><a href="/reference/grammar/syntax/double-pronouns">Double pronoun order →</a></td>
+          </tr>
+          <tr>
+            <td>Adjective order</td>
+            <td>Before or after the noun — and why position changes meaning</td>
+            <td><a href="/reference/grammar/syntax/adjective-order">Adjective + noun order →</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <a href="/reference/grammar" class="back-link">← Grammar</a>
+  </article>
+</Base>
