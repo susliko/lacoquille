@@ -63,37 +63,37 @@ export default function ArticleOfTheDay() {
     <div class="article-of-the-day">
       <style>{`
         .article-of-the-day {
-          max-width: 800px;
+          max-width: 1100px;
           margin: 0 auto;
-          padding: 1rem;
+          padding: 1.5rem 2rem;
         }
         .article-header {
-          margin-bottom: 1.5rem;
+          margin-bottom: 2rem;
           border-bottom: 1px solid var(--border);
-          padding-bottom: 1rem;
+          padding-bottom: 1.5rem;
         }
         .article-header h1 {
-          font-size: 1.5rem;
-          margin: 0 0 0.25rem 0;
+          font-size: 2rem;
+          margin: 0 0 0.5rem 0;
         }
         .article-meta {
           color: var(--text-2);
-          font-size: 0.875rem;
+          font-size: 1rem;
         }
         .mode-toggle {
           display: flex;
           gap: 0.5rem;
-          margin-bottom: 1.5rem;
+          margin-bottom: 2rem;
           flex-wrap: wrap;
         }
         .mode-toggle button {
-          padding: 0.5rem 1rem;
+          padding: 0.5rem 1.25rem;
           border: 1px solid var(--border);
           background: var(--surface-2);
           color: var(--text-2);
           border-radius: 6px;
           cursor: pointer;
-          font-size: 0.875rem;
+          font-size: 0.9rem;
         }
         .mode-toggle button.active {
           background: var(--primary);
@@ -108,15 +108,16 @@ export default function ArticleOfTheDay() {
           grid-template-columns: 1fr 1fr;
         }
         .article-column h2 {
-          font-size: 1rem;
+          font-size: 0.875rem;
           color: var(--text-2);
-          margin-bottom: 0.75rem;
+          margin-bottom: 1rem;
           text-transform: uppercase;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.08em;
         }
         .article-column p {
-          line-height: 1.8;
-          margin-bottom: 1rem;
+          line-height: 2;
+          margin-bottom: 1.25rem;
+          font-size: 1.1rem;
         }
         .vocab-highlight {
           background: var(--highlight);
