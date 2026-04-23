@@ -1,5 +1,6 @@
 use axum::{routing::get, Router};
 use std::net::SocketAddr;
+use std::sync::Arc;
 use tower_http::services::ServeDir;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -14,13 +15,19 @@ async fn main() {
 
     let _config = lacq::config::Config::from_env();
 
+    let state = Arc::new(lacq::AppState::new(
+        reqwest::Client::new(),
+        None,
+        "data".to_string(),
+    ));
+
     let app = Router::new()
         .route("/health", get(health))
         .route("/api/article-of-the-day", get(lacq::routes::article::article_of_the_day))
         .route("/api/stories", get(lacq::routes::stories::list_stories))
         .route("/api/stories/:id", get(lacq::routes::stories::get_story))
         .nest_service("/", ServeDir::new("dist"))
-        .with_state(());
+        .with_state(state);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     tracing::info!("Listening on {}", addr);
