@@ -68,6 +68,28 @@ pub fn split_stories<'a>(paragraphs: &'a [&str]) -> Vec<(String, Vec<&'a str>)> 
     stories
 }
 
+pub fn first_story_content<'a>(text: &str) -> String {
+    let paragraphs = split_paragraphs(text);
+    let stories = split_stories(&paragraphs);
+    if stories.len() <= 1 {
+        return text.to_string();
+    }
+    for (title, paras) in &stories[1..] {
+        let is_front_matter = title == "Unknown"
+            || title == "GUY DE MAUPASSANT"
+            || title == "TABLE"
+            || title == "FIN"
+            || title.contains("OUVRAGES")
+            || title.contains("AUTEUR")
+            || title.contains("TIRÉ")
+            || title.contains("DROITS");
+        if !is_front_matter && paras.len() > 3 {
+            return paras.join("\n\n");
+        }
+    }
+    text.to_string()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

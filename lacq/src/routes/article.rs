@@ -13,7 +13,8 @@ pub async fn article_of_the_day(
             axum::http::StatusCode::INTERNAL_SERVER_ERROR
         })?;
 
-    let paragraphs_raw = crate::gutenberg::split_paragraphs(&french_text);
+    let story_text = crate::gutenberg::first_story_content(&french_text);
+    let paragraphs_raw = crate::gutenberg::split_paragraphs(&story_text);
     let excerpt_paras = crate::gutenberg::extract_excerpt(&paragraphs_raw, 350);
     let excerpt_strings: Vec<String> = excerpt_paras.iter().map(|s| s.to_string()).collect();
 
