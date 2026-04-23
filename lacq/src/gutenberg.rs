@@ -1,5 +1,13 @@
 pub fn clean_text(raw: &str) -> String {
-    raw.to_string()
+    let start = raw.find("*** START").map(|i| raw[i..].find('\n').map(|j| i+j+1).unwrap_or(i)).unwrap_or(0);
+    let end = raw.find("*** END").map(|i| i).unwrap_or(raw.len());
+    let mut text = raw[start..end].to_string();
+    text = text.replace("\r\n", "\n").replace("\r", "\n");
+    text = text.replace("\n---", "\n\n").replace("---\n", "\n\n");
+    while text.contains("\n\n\n") {
+        text = text.replace("\n\n\n", "\n\n");
+    }
+    text.trim().to_string()
 }
 
 pub fn split_paragraphs(text: &str) -> Vec<&str> {
@@ -57,6 +65,14 @@ mod tests {
         let input = "Some text without headers";
         let result = clean_text(input);
         assert_eq!(result, input);
+    }
+
+    #[test]
+    fn test_clean_text_strips_gutenberg_markers() {
+        let input = "Some junk\n*** START OF THIS PROJECT GUTENBERG EBOOK ***\n\nReal content here.\n\n*** END OF THIS PROJECT GUTENBERG EBOOK ***\nMore junk";
+        let result = clean_text(input);
+        assert!(result.starts_with("Real content here."));
+        assert!(!result.contains("GUTENBERG"));
     }
 
     #[test]
