@@ -55,5 +55,5 @@ The stem is almost always regular — the only true exception is **être**: stem
 
 ## Common pitfalls
 
-- **Imparfait vs passé composé** — the single most important distinction in French past narration. Imparfait = state/background/habit; PC = event/foreground/one-off. See the [choice guide](/verbs/choice/imparfait-vs-passe-compose).
+- **Imparfait vs passé composé** — the single most important distinction in French past narration. Imparfait = state/background/habit; PC = event/foreground/one-off. See the [choice guide](/reference/verbs/choice/imparfait-vs-passe-compose).
 - **Duration words** (*pendant des années, toujours, souvent, chaque jour*) signal imparfait. **Punctual words** (*soudain, tout à coup, un jour*) signal PC.

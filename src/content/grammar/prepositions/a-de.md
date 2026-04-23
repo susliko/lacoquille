@@ -78,7 +78,7 @@ This is where it gets tricky. Some verbs take **à**, others take **de**, and it
 | **venir de** | de | *Je viens de Lyon.* — I come from Lyon. |
 | **manquer de** | de | *Il manque de patience.* — He's lacking patience. |
 
-See the [verb combinations page](/grammar/prepositions/verb-combinations) for more.
+See the [verb combinations page](/reference/grammar/prepositions/verb-combinations) for more.
 
 ## Common pitfalls
 

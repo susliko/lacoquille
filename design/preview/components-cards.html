@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><style>
+  @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=Plus+Jakarta+Sans:wght@400;500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #fff; padding: 20px; font-family: 'Plus Jakarta Sans', sans-serif; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .card { background: #f7f5f2; border: 1.5px solid #ece8e2; border-radius: 10px; padding: 18px 16px; display: flex; flex-direction: column; gap: 5px; cursor: pointer; transition: all 0.15s; }
+  .card:hover { background: #fff; border-color: #ff4757; transform: translateY(-2px); }
+  .card:hover .name { color: #ff4757; }
+  .badge { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #ff4757; }
+  .name { font-family: 'Bricolage Grotesque', sans-serif; font-size: 1.1rem; font-weight: 700; color: #1a1814; transition: color 0.15s; }
+  .desc { font-size: 0.78rem; color: #6b6560; line-height: 1.4; }
+  .dim { opacity: 0.45; cursor: not-allowed; }
+  .dim:hover { background: #f7f5f2; border-color: #ece8e2; transform: none; }
+  .dim:hover .name { color: #1a1814; }
+</style></head>
+<body>
+  <div class="grid">
+    <div class="card">
+      <div class="badge">● Available</div>
+      <div class="name">Verbes</div>
+      <div class="desc">Tenses, aspects, conjugation</div>
+    </div>
+    <div class="card dim">
+      <div class="name">Pronoms</div>
+      <div class="desc">Personal, relative, demonstrative</div>
+    </div>
+    <div class="card dim">
+      <div class="name">Adjectifs</div>
+      <div class="desc">Agreement, placement, comparison</div>
+    </div>
+    <div class="card dim">
+      <div class="name">Articles</div>
+      <div class="desc">Definite, indefinite, partitive</div>
+    </div>
+    <div class="card dim">
+      <div class="name">Négation</div>
+      <div class="desc">Ne…pas, jamais, rien</div>
+    </div>
+    <div class="card dim">
+      <div class="name">Syntaxe</div>
+      <div class="desc">Word order, clause structure</div>
+    </div>
+  </div>
+</body></html>

@@ -55,20 +55,20 @@ export const MOOD_LABELS: Record<MoodId, string> = {
 export const MOOD_ORDER: MoodId[] = ["indicatif", "conditionnel", "subjonctif", "imperatif"];
 
 export const MOOD_HUE: Record<MoodId, number> = {
-  indicatif:    210,
-  conditionnel: 265,
-  subjonctif:   30,
+  indicatif:    217,
+  conditionnel: 263,
+  subjonctif:   38,
   imperatif:    160,
 };
 
 // Each edge type gets a distinct COLOR — primary differentiator.
 // Dash pattern is kept as a secondary, subtle reinforcement only.
 export const EDGE_COLOR: Record<EdgeType, string> = {
-  "auxiliary-compound": "#4d8eff",  // blue  — "built from" (most common edge)
-  "aspect-pair":        "#f97316",  // orange — ongoing vs completed (most important for learners)
-  "stem-share":         "#c4913a",  // gold  — same stem/form
-  "mood-swap":          "#9d6cf0",  // purple — crosses moods
-  "anteriority":        "#6b8ba4",  // slate  — temporal sequence
+  "auxiliary-compound": "#3d5af1",  // indigo
+  "aspect-pair":        "#ff4757",  // coral
+  "stem-share":         "#ffb703",  // amber
+  "mood-swap":          "#8b5cf6",  // violet
+  "anteriority":        "#94a3b8",  // slate
 };
 
 export const EDGE_DASH: Record<EdgeType, string> = {

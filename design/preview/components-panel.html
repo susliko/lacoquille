@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><style>
+  @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #f7f5f2; padding: 20px; font-family: 'Plus Jakarta Sans', sans-serif; }
+  .panel { position: relative; padding: 18px 20px; background: #fff; border: 1.5px solid #ddd8d0; border-radius: 10px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); animation: in 0.15s ease; }
+  @keyframes in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+  .close { position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1.5px solid #ddd8d0; border-radius: 5px; color: #a09890; font-size: 0.75rem; cursor: pointer; }
+  .type-tag { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #a09890; margin-bottom: 8px; }
+  .title { font-family: 'Bricolage Grotesque', sans-serif; font-size: 1.4rem; font-weight: 700; color: #1a1814; margin-bottom: 4px; letter-spacing: -0.02em; }
+  .rule { font-size: 0.9rem; color: #6b6560; font-style: italic; margin-bottom: 12px; }
+  .conj-row { display: flex; gap: 16px; }
+  .conj-cell { display: flex; gap: 8px; padding: 4px 0; border-bottom: 1.5px solid #ece8e2; font-family: 'JetBrains Mono', monospace; font-size: 0.83rem; }
+  .conj-cell:last-child { border-bottom: none; }
+  .pronoun { color: #a09890; width: 28px; text-align: right; flex-shrink: 0; }
+  .form .ending { color: #ff4757; font-weight: 600; }
+  .learn-more { display: inline-flex; align-items: center; gap: 5px; margin-top: 14px; font-size: 0.8rem; font-weight: 500; color: #6b6560; border: 1.5px solid #ddd8d0; border-radius: 5px; padding: 5px 10px; }
+</style></head>
+<body>
+  <div class="panel">
+    <div class="close">✕</div>
+    <div class="type-tag">Tense · Indicatif · Past</div>
+    <div class="title">Passé composé</div>
+    <div class="rule">Completed action at a specific point in the past.</div>
+    <div class="conj-row">
+      <div style="flex:1;">
+        <div class="conj-cell"><span class="pronoun">je</span><span class="form">j'ai parl<span class="ending">é</span></span></div>
+        <div class="conj-cell"><span class="pronoun">tu</span><span class="form">as parl<span class="ending">é</span></span></div>
+        <div class="conj-cell"><span class="pronoun">il</span><span class="form">a parl<span class="ending">é</span></span></div>
+      </div>
+      <div style="flex:1;">
+        <div class="conj-cell"><span class="pronoun">ns</span><span class="form">avons parl<span class="ending">é</span></span></div>
+        <div class="conj-cell"><span class="pronoun">vs</span><span class="form">avez parl<span class="ending">é</span></span></div>
+        <div class="conj-cell"><span class="pronoun">ils</span><span class="form">ont parl<span class="ending">é</span></span></div>
+      </div>
+    </div>
+    <div class="learn-more">En savoir plus →</div>
+  </div>
+</body></html>

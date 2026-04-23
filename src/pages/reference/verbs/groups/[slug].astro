@@ -18,7 +18,7 @@ const { title, description, relatedVerbs } = entry.data;
 <Base
   title={title}
   breadcrumb={[
-    { label: "Verbes", href: "/verbs" },
+    { label: "Verbes", href: "/reference/verbs" },
     { label: title },
   ]}
 >
@@ -35,7 +35,7 @@ const { title, description, relatedVerbs } = entry.data;
         <h2>Verbs in this group</h2>
         <ul class="related-tenses">
           {relatedVerbs.map((verb: string) => (
-            <li><a href={`/verbs/movement/${verb}`}>{verb}</a></li>
+            <li><a href={`/reference/verbs/movement/${verb}`}>{verb}</a></li>
           ))}
         </ul>
       </section>

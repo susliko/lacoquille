@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #ffffff; padding: 20px; font-family: 'DM Sans', sans-serif; }
+  .row { display: flex; flex-direction: column; gap: 10px; }
+  .edge-item { display: flex; align-items: center; gap: 16px; padding: 10px 12px; background: #f8f9fb; border: 1px solid #e8ecf2; border-radius: 8px; }
+  .edge-line-wrap { width: 64px; flex-shrink: 0; display: flex; align-items: center; }
+  .edge-line { height: 3px; width: 100%; border-radius: 2px; }
+  .meta { display: flex; flex-direction: column; gap: 3px; }
+  .edge-name { font-size: 12px; font-weight: 500; }
+  .edge-desc { font-size: 10px; color: #6b7280; }
+</style></head>
+<body>
+  <div class="row">
+    <div class="edge-item">
+      <div class="edge-line-wrap"><div class="edge-line" style="background:#4d8eff;"></div></div>
+      <div class="meta"><div class="edge-name" style="color:#4d8eff;">auxiliary-compound</div><div class="edge-desc">solid — built from via avoir/être + past participle</div></div>
+    </div>
+    <div class="edge-item">
+      <div class="edge-line-wrap"><div class="edge-line" style="background: repeating-linear-gradient(90deg, #f97316 0 7px, transparent 7px 11px);"></div></div>
+      <div class="meta"><div class="edge-name" style="color:#f97316;">aspect-pair</div><div class="edge-desc">dashed — same time, different view: ongoing vs completed</div></div>
+    </div>
+    <div class="edge-item">
+      <div class="edge-line-wrap"><div class="edge-line" style="background: repeating-linear-gradient(90deg, #c4913a 0 3px, transparent 3px 6px);"></div></div>
+      <div class="meta"><div class="edge-name" style="color:#c4913a;">stem-share</div><div class="edge-desc">dotted — same infinitive stem, different endings</div></div>
+    </div>
+    <div class="edge-item">
+      <div class="edge-line-wrap"><div class="edge-line" style="background: repeating-linear-gradient(90deg, #9d6cf0 0 11px, transparent 11px 16px);"></div></div>
+      <div class="meta"><div class="edge-name" style="color:#9d6cf0;">mood-swap</div><div class="edge-desc">long dash — same time position, different mood</div></div>
+    </div>
+    <div class="edge-item">
+      <div class="edge-line-wrap"><div class="edge-line" style="background: repeating-linear-gradient(90deg, #6b8ba4 0 4px, transparent 4px 7px);"></div></div>
+      <div class="meta"><div class="edge-name" style="color:#6b8ba4;">anteriority</div><div class="edge-desc">short dash — action completed before another</div></div>
+    </div>
+  </div>
+</body></html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #fff; padding: 20px; font-family: 'Plus Jakarta Sans', sans-serif; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .token { display: flex; align-items: center; gap: 10px; }
+  .swatch { flex-shrink: 0; border-radius: 5px; }
+  .lbl { font-size: 11px; font-weight: 600; color: #6b6560; }
+  .val { font-size: 10px; color: #a09890; font-family: monospace; }
+  .sep { width: 1.5px; background: #ece8e2; align-self: stretch; }
+  .group-title { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #a09890; margin-bottom: 10px; }
+  .bg { background: #f7f5f2; border: 1.5px solid #ece8e2; display: flex; align-items: center; justify-content: center; }
+  .spacing-row { display: flex; gap: 6px; align-items: flex-end; }
+  .sp-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+</style></head>
+<body>
+  <div class="group-title">Border Radius</div>
+  <div class="row">
+    <div class="token">
+      <div class="swatch bg" style="width:40px;height:40px;border-radius:5px;"></div>
+      <div><div class="lbl">--radius-sm</div><div class="val">5px</div></div>
+    </div>
+    <div class="sep"></div>
+    <div class="token">
+      <div class="swatch bg" style="width:48px;height:48px;border-radius:10px;"></div>
+      <div><div class="lbl">--radius</div><div class="val">10px</div></div>
+    </div>
+    <div class="sep"></div>
+    <div class="token">
+      <div class="swatch bg" style="width:64px;height:28px;border-radius:999px;"></div>
+      <div><div class="lbl">--radius-pill</div><div class="val">999px</div></div>
+    </div>
+  </div>
+  <div class="group-title" style="margin-top:8px;">Transition · Shadow</div>
+  <div class="row" style="align-items:center;gap:20px;">
+    <div><div class="lbl" style="color:#ff4757;">0.15s ease</div><div class="val">all micro-interactions</div></div>
+    <div class="swatch bg" style="width:80px;height:40px;border-radius:10px;box-shadow:0 4px 24px rgba(0,0,0,0.06);border:none;"></div>
+    <div><div class="val">0 4px 24px rgba(0,0,0,0.06) — panel shadow</div></div>
+  </div>
+  <div class="group-title" style="margin-top:8px;">Spacing Scale</div>
+  <div class="spacing-row">
+    <div class="sp-item"><div style="background:#ff4757;width:4px;height:4px;border-radius:1px;"></div><div class="val">1</div></div>
+    <div class="sp-item"><div style="background:#ff4757;width:8px;height:8px;border-radius:1px;"></div><div class="val">2</div></div>
+    <div class="sp-item"><div style="background:#ff4757;width:12px;height:12px;border-radius:1px;"></div><div class="val">3</div></div>
+    <div class="sp-item"><div style="background:#3d5af1;width:16px;height:16px;border-radius:1px;"></div><div class="val">4</div></div>
+    <div class="sp-item"><div style="background:#3d5af1;width:20px;height:20px;border-radius:1px;"></div><div class="val">5</div></div>
+    <div class="sp-item"><div style="background:#3d5af1;width:24px;height:24px;border-radius:1px;"></div><div class="val">6</div></div>
+    <div class="sp-item"><div style="background:#00c48c;width:32px;height:32px;border-radius:1px;"></div><div class="val">8</div></div>
+    <div class="sp-item"><div style="background:#00c48c;width:40px;height:40px;border-radius:1px;"></div><div class="val">10</div></div>
+    <div class="sp-item"><div style="background:#8b5cf6;width:48px;height:48px;border-radius:1px;"></div><div class="val">12</div></div>
+    <div class="sp-item"><div style="background:#8b5cf6;width:64px;height:64px;border-radius:1px;"></div><div class="val">16</div></div>
+  </div>
+</body></html>

@@ -32,11 +32,11 @@ examples:
 
 **Pronoun order:**
 
-- [Double pronoun order →](/grammar/syntax/double-pronouns) — when two pronouns stack together
+- [Double pronoun order →](/reference/grammar/syntax/double-pronouns) — when two pronouns stack together
 
 **Adjective order:**
 
-- [Adjective + noun order →](/grammar/syntax/adjective-order) — before or after the noun, and why it matters
+- [Adjective + noun order →](/reference/grammar/syntax/adjective-order) — before or after the noun, and why it matters
 
 ## The core principle
 

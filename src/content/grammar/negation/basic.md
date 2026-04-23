@@ -72,7 +72,7 @@ French allows (and often requires) multiple negatives in the same sentence. Unli
 | ne...personne...plus | nobody + no longer | *Personne ne <v data-tense="present-indicatif">vient</v> plus.* — Nobody comes anymore. |
 | ne...aucun(e)...plus | not any + no longer | *Elle n'a aucune nouvelle plus.* — She has no news anymore. |
 
-For a full explanation of combining negatives, see [Double Negation](/grammar/negation/double-negation).
+For a full explanation of combining negatives, see [Double Negation](/reference/grammar/negation/double-negation).
 
 ## Placement with infinitives
 

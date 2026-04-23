@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d1117; padding: 20px; font-family: 'DM Sans', sans-serif; }
+  .grid { display: flex; gap: 12px; flex-wrap: wrap; }
+  .card {
+    flex: 1; min-width: 140px; max-width: 200px;
+    background: #131923; border: 1px solid #1a2438; border-radius: 8px;
+    padding: 14px 14px 12px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .icon-row { display: flex; align-items: center; gap: 10px; }
+  .icon-bg { width: 36px; height: 36px; background: #1e2840; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .name { font-size: 12px; font-weight: 500; color: #ddd8cf; }
+  .desc { font-size: 10px; color: #7a8a9d; line-height: 1.5; }
+  .example { font-size: 10px; color: #374455; font-style: italic; line-height: 1.4; border-top: 1px solid #1a2438; padding-top: 8px; }
+</style></head>
+<body>
+  <div class="grid">
+
+    <!-- COMPLETED -->
+    <div class="card">
+      <div class="icon-row">
+        <div class="icon-bg">
+          <svg width="20" height="20" viewBox="0 0 20 20">
+            <circle cx="10" cy="10" r="7" fill="#c4913a"/>
+          </svg>
+        </div>
+        <div class="name" style="color:#c4913a;">completed</div>
+      </div>
+      <div class="desc">A solid dot — the action is <strong style="color:#ddd8cf;">done</strong>, closed, fully contained.</div>
+      <div class="example">Tenses: passé composé, futur antérieur, conditionnel passé</div>
+    </div>
+
+    <!-- ONGOING -->
+    <div class="card">
+      <div class="icon-row">
+        <div class="icon-bg">
+          <svg width="20" height="20" viewBox="0 0 20 20">
+            <path d="M2 10 Q6 4 10 10 Q14 16 18 10" stroke="#4d8eff" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="name" style="color:#4d8eff;">ongoing</div>
+      </div>
+      <div class="desc">A wave — the action <strong style="color:#ddd8cf;">keeps going</strong>, no clear end in view.</div>
+      <div class="example">Tenses: imparfait (in progress), présent</div>
+    </div>
+
+    <!-- HABITUAL -->
+    <div class="card">
+      <div class="icon-row">
+        <div class="icon-bg">
+          <svg width="20" height="20" viewBox="0 0 20 20">
+            <path d="M2 13 Q6 7 10 13 Q14 19 18 13" stroke="#7a8a9d" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="2 2"/>
+            <path d="M2 7 Q6 1 10 7 Q14 13 18 7" stroke="#7a8a9d" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="2 2"/>
+          </svg>
+        </div>
+        <div class="name" style="color:#7a8a9d;">habitual</div>
+      </div>
+      <div class="desc">A repeated wave — the action <strong style="color:#ddd8cf;">happens again and again</strong>.</div>
+      <div class="example">Tenses: imparfait (habitual), présent (routine)</div>
+    </div>
+
+    <!-- ANTERIOR -->
+    <div class="card">
+      <div class="icon-row">
+        <div class="icon-bg">
+          <svg width="20" height="20" viewBox="0 0 20 20">
+            <!-- left dot = earlier action -->
+            <circle cx="5" cy="10" r="4" fill="#9d6cf0"/>
+            <!-- arrow between -->
+            <line x1="10" y1="10" x2="13" y2="10" stroke="#9d6cf0" stroke-width="1.5"/>
+            <polygon points="13,7 17,10 13,13" fill="#9d6cf0"/>
+          </svg>
+        </div>
+        <div class="name" style="color:#9d6cf0;">anterior</div>
+      </div>
+      <div class="desc">Dot + arrow — one action <strong style="color:#ddd8cf;">happened before</strong> another.</div>
+      <div class="example">Tenses: plus-que-parfait, futur antérieur</div>
+    </div>
+
+  </div>
+</body></html>

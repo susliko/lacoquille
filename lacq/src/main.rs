@@ -1,5 +1,6 @@
 use axum::{routing::get, Router};
 use std::net::SocketAddr;
+use tower_http::services::ServeDir;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
@@ -17,7 +18,9 @@ async fn main() {
         .route("/health", get(health))
         .route("/api/article-of-the-day", get(lacq::routes::article::article_of_the_day))
         .route("/api/stories", get(lacq::routes::stories::list_stories))
-        .route("/api/stories/:id", get(lacq::routes::stories::get_story));
+        .route("/api/stories/:id", get(lacq::routes::stories::get_story))
+        .nest_service("/", ServeDir::new("dist"))
+        .with_state(());
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     tracing::info!("Listening on {}", addr);

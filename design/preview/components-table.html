@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #fff; padding: 20px; font-family: 'Plus Jakarta Sans', sans-serif; }
+  .label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #a09890; margin-bottom: 8px; }
+  .gold-label { font-family: 'JetBrains Mono', monospace; font-size: 0.875rem; color: #ff4757; margin-bottom: 10px; font-weight: 500; }
+  .conj-table { width: 100%; border-collapse: collapse; border: 1.5px solid #ddd8d0; border-radius: 10px; overflow: hidden; }
+  .conj-table th { background: #f7f5f2; font-size: 0.75rem; font-weight: 600; color: #a09890; padding: 6px 10px; text-align: right; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1.5px solid #ece8e2; width: 60px; }
+  .conj-table td { font-family: 'JetBrains Mono', monospace; font-size: 0.875rem; color: #1a1814; padding: 6px 12px; border-bottom: 1.5px solid #ece8e2; }
+  .conj-table tr:last-child td, .conj-table tr:last-child th { border-bottom: none; }
+  .conj-table tr.active th, .conj-table tr.active td { background: rgba(255,71,87,0.06); }
+  .conj-table tr.active td { color: #ff4757; font-weight: 500; }
+  .stem { color: #a09890; }
+  .ending { color: #ff4757; font-weight: 600; }
+</style></head>
+<body>
+  <div class="label">Conjugation Table</div>
+  <div class="gold-label">parler — Passé composé</div>
+  <table class="conj-table">
+    <tbody>
+      <tr><th>je</th><td><span class="stem">j'ai parl</span><span class="ending">é</span></td></tr>
+      <tr><th>tu</th><td><span class="stem">tu as parl</span><span class="ending">é</span></td></tr>
+      <tr class="active"><th>il</th><td><span class="stem">il a parl</span><span class="ending">é</span></td></tr>
+      <tr><th>nous</th><td><span class="stem">nous avons parl</span><span class="ending">é</span></td></tr>
+      <tr><th>vous</th><td><span class="stem">vous avez parl</span><span class="ending">é</span></td></tr>
+      <tr><th>ils</th><td><span class="stem">ils ont parl</span><span class="ending">é</span></td></tr>
+    </tbody>
+  </table>
+</body></html>

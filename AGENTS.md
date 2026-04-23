@@ -3,8 +3,11 @@
 ## Commands
 
 ```sh
-npm run dev      # Dev server at http://localhost:4321/
-npm run build    # Build to ./dist/
+npm run dev      # Frontend dev server at http://localhost:4321/
+npm run dev:all  # Both frontend + backend (lacq/Rust) on port 4321 + 8080
+npm run dev:prod # Production-like: build static, backend serves it on 8080 + live-reload preview
+npm run build    # Build to ./dist/ + verify all internal links
+npm run check:links  # Verify internal links only (requires prior build)
 npm run preview  # Preview build locally
 npx astro check  # Type-check .astro, .tsx, .ts files (run before committing)
 ```
@@ -27,13 +30,28 @@ Node 22+ required.
 - Conjugation data lives in `src/data/conjugations/` (parler, être, avoir, aller, faire, finir, vendre)
 - `VerbDiagram.tsx` is a SolidJS island — **uses `solid-js` imports, NOT React** (tsconfig has `jsxImportSource: "solid-js"`)
 
+## Deployment
+
+Single Fly.io Machine serves both the Astro static frontend and the Rust backend.
+
+The `Dockerfile` is multi-stage: Node 22 builds the frontend, Rust compiles the binary, and Debian slim runs both.
+
+```sh
+fly launch   # First time: creates app + Machine
+fly deploy  # Subsequent deploys
+```
+
+- `fly.toml` — app name, region, port 8080, `/health` health check; `vm` section sets 256MB RAM + 1 shared CPU
+- Backend serves `dist/` at `/` (static files) and routes `/api/*` to Axum handlers
+- App name in `fly.toml` is `lacoquille` — update if needed
+
 ## Article of the Day Backend
 
 The `lacq/` directory is a Rust (Axum) backend server that:
 - Serves `/api/article-of-the-day` with daily Maupassant story
 - Fetches from Gutendex API and Gutenberg for book text
 - Caches translations and story metadata in `lacq/data/`
-- Run with: `cd lacq && cargo run` (port 8080)
+- Run with: `npm run dev:all` (both frontend + backend)
 
 ## Adding tenses
 

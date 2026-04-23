@@ -24,6 +24,7 @@ futures = "0.3"
 sha2 = "0.10"
 url = "2"
 async-trait = "0.1"
+tower-http = { version = "0.6", features = ["fs", "trace"] }
 
 [dev-dependencies]
 wiremock = "0.6"

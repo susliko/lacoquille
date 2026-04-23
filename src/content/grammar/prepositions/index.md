@@ -18,8 +18,8 @@ Prepositions link nouns, pronouns, or verbs to other words. In French, **à** (t
 
 ## Main sections
 
-### [à and de contractions](/grammar/prepositions/a-de)
+### [à and de contractions](/reference/grammar/prepositions/a-de)
 The four key contractions: **au**, **aux**, **du**, **des**
 
-### [Verb combinations](/grammar/prepositions/verb-combinations)
+### [Verb combinations](/reference/grammar/prepositions/verb-combinations)
 Prepositions that follow specific verbs

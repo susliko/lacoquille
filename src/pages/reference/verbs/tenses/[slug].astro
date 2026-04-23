@@ -20,7 +20,7 @@ const { title, oneLineRule, examples, relatedTenses } = entry.data;
   title={title}
   description={oneLineRule}
   breadcrumb={[
-    { label: "Verbes", href: "/verbs" },
+    { label: "Verbes", href: "/reference/verbs" },
     { label: title },
   ]}
 >
@@ -53,7 +53,7 @@ const { title, oneLineRule, examples, relatedTenses } = entry.data;
         <h2>Related tenses</h2>
         <ul class="related-tenses">
           {relatedTenses.map(slug => (
-            <li><a href={`/verbs/tenses/${slug}`}>{slug.replace(/-/g, ' ')}</a></li>
+            <li><a href={`/reference/verbs/tenses/${slug}`}>{slug.replace(/-/g, ' ')}</a></li>
           ))}
         </ul>
       </section>

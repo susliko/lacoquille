@@ -101,4 +101,4 @@ If one negative would work, adding a second is optional but common for emphasis.
 - **rien/jamais/personne + ne** at the start of a sentence requires the full structure
 - **personne** as a subject always takes *ne* on the verb even when alone
 
-For simpler negation patterns, see [Negation Patterns](/grammar/negation/basic).
+For simpler negation patterns, see [Negation Patterns](/reference/grammar/negation/basic).

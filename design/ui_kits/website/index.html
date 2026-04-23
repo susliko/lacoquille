@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Coquille</title>
+<link rel="icon" href="../../assets/favicon.svg">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #ffffff; --surface: #f5f6ff; --surface-2: #ebebff; --surface-3: #dfe0ff;
+  --border: #d1d5f0; --border-subtle: #e8eaf8; --border-bright: #a5abdb;
+  --text: #0f0e2a; --text-2: #6b6f94; --text-muted: #a8aabe;
+  --primary: #4338ca; --primary-soft: rgba(67,56,202,0.09); --primary-glow: rgba(67,56,202,0.2);
+  --indicatif: #2563eb; --conditionnel: #7c3aed; --subjonctif: #d97706; --imperatif: #059669;
+  --font-display: 'Syne', system-ui, sans-serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --radius: 12px; --radius-sm: 7px; --t: 0.18s ease;
+}
+html { font-size: 16px; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); font-weight: 400; line-height: 1.65; min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
+button, input, select { font: inherit; cursor: pointer; }
+img, svg { display: block; max-width: 100%; }
+
+/* ── Polygon hero entry animations ── */
+@keyframes fly0 { from { transform:translate(-40px,-32px); opacity:0 } to { transform:translate(0,0); opacity:1 } }
+@keyframes fly1 { from { transform:translate(0,-52px);    opacity:0 } to { transform:translate(0,0); opacity:1 } }
+@keyframes fly2 { from { transform:translate(52px,-40px); opacity:0 } to { transform:translate(0,0); opacity:1 } }
+@keyframes fly3 { from { transform:translate(60px,0);     opacity:0 } to { transform:translate(0,0); opacity:1 } }
+@keyframes fly4 { from { transform:translate(42px,42px);  opacity:0 } to { transform:translate(0,0); opacity:1 } }
+@keyframes fly5 { from { transform:translate(0,52px);     opacity:0 } to { transform:translate(0,0); opacity:1 } }
+@keyframes fly6 { from { transform:translate(-42px,42px); opacity:0 } to { transform:translate(0,0); opacity:1 } }
+@keyframes fly7 { from { transform:translate(-60px,0);    opacity:0 } to { transform:translate(0,0); opacity:1 } }
+@keyframes flyBrand { from { opacity:0; transform:scale(0.97) } to { opacity:1; transform:scale(1) } }
+
+.pr-0 { animation: fly0      0.7s cubic-bezier(.16,1,.3,1) 0.00s both }
+.pr-1 { animation: fly1      0.7s cubic-bezier(.16,1,.3,1) 0.07s both }
+.pr-2 { animation: fly2      0.7s cubic-bezier(.16,1,.3,1) 0.14s both }
+.pr-3 { animation: fly3      0.7s cubic-bezier(.16,1,.3,1) 0.18s both }
+.pr-4 { animation: fly4      0.7s cubic-bezier(.16,1,.3,1) 0.18s both }
+.pr-5 { animation: fly5      0.7s cubic-bezier(.16,1,.3,1) 0.14s both }
+.pr-6 { animation: fly6      0.7s cubic-bezier(.16,1,.3,1) 0.07s both }
+.pr-7 { animation: fly7      0.7s cubic-bezier(.16,1,.3,1) 0.00s both }
+.pr-brand { animation: flyBrand 0.6s cubic-bezier(.16,1,.3,1) 0.28s both }
+
+.poly-region { transition: filter .15s ease; }
+.poly-region.clickable { cursor: pointer; }
+.poly-region.clickable:active polygon { filter: brightness(1.12); }
+
+/* Toast */
+.toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%);
+  background:var(--text); color:#fff; padding:10px 20px; border-radius:100px;
+  font-family:var(--font-body); font-size:14px; font-weight:500;
+  z-index:999; pointer-events:none; animation: toastIn .2s ease both; }
+@keyframes toastIn { from { opacity:0; transform:translateX(-50%) translateY(10px) } to { opacity:1; transform:translateX(-50%) translateY(0) } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="Nav.jsx"></script>
+<script type="text/babel" src="HomePage.jsx"></script>
+<script type="text/babel" src="VerbsPage.jsx"></script>
+<script type="text/babel" src="TensePage.jsx"></script>
+<script type="text/babel">
+const { useState } = React;
+function App() {
+  const saved = (() => { try { return JSON.parse(localStorage.getItem('lc_route3')||'null'); } catch { return null; } })();
+  const [route, setRouteState] = useState(saved || { page: 'home' });
+  const setRoute = r => { setRouteState(r); localStorage.setItem('lc_route3', JSON.stringify(r)); };
+  return (
+    <div>
+      <SiteNav route={route} setRoute={setRoute} />
+      {route.page==='home'  && <HomePage  setRoute={setRoute} />}
+      {route.page==='verbs' && <VerbsPage setRoute={setRoute} />}
+      {route.page==='tense' && <TensePage setRoute={setRoute} tenseId={route.tenseId} />}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

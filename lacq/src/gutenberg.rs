@@ -1,6 +1,18 @@
 pub fn clean_text(raw: &str) -> String {
-    let start = raw.find("*** START").map(|i| raw[i..].find('\n').map(|j| i+j+1).unwrap_or(i)).unwrap_or(0);
-    let end = raw.find("*** END").map(|i| i).unwrap_or(raw.len());
+    const START_MARKER: &str = "*** START";
+    const END_MARKER: &str = "*** END";
+
+    let start = match raw.find(START_MARKER) {
+        Some(idx) => {
+            let after_marker = idx + START_MARKER.len();
+            match raw[after_marker..].find('\n') {
+                Some(j) => after_marker + j + 1,
+                None => after_marker,
+            }
+        }
+        None => 0,
+    };
+    let end = raw.find(END_MARKER).unwrap_or(raw.len());
     let mut text = raw[start..end].to_string();
     text = text.replace("\r\n", "\n").replace("\r", "\n");
     text = text.replace("\n---", "\n\n").replace("---\n", "\n\n");

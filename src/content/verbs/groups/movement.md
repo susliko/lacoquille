@@ -62,4 +62,4 @@ The choice between these verbs depends on answering specific questions:
 3. Is the motion into or out of an enclosed space? → **entrer** vs **sortir**
 4. Does the sentence emphasize arrival or departure? → **arriver** vs **partir**
 
-See the [Movement Verb Choice Guide](/verbs/choice/movement-verbs) for detailed decision-making guidance.
+See the [Movement Verb Choice Guide](/reference/verbs/choice/movement-verbs) for detailed decision-making guidance.

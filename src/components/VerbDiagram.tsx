@@ -385,19 +385,16 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
         </text>
         {/* Literary lock icon */}
         {isLiterary() && (
-          <text x={x + cardW - 10} y={y + 14}
-            font-size={fontSize.title > 10 ? 9 : 7}
-            opacity={0.55}
-            fill="var(--text-2)"
-          >
-            📚
-          </text>
+          <g opacity={0.55} transform={`translate(${x + cardW - 16}, ${y + 6})`}>
+            <rect x="0" y="4" width="10" height="7" rx="1.5" fill="var(--text-2)" />
+            <path d="M2.5 4V2.5a2.5 2.5 0 0 1 5 0V4" stroke="var(--text-2)" stroke-width="1.5" fill="none" stroke-linecap="round" />
+          </g>
         )}
         {/* Beginner's start label */}
         {isPresent() && (
           <text x={x + cardW / 2} y={y + cardH + 10}
             text-anchor="middle" font-size="7"
-            fill="var(--gold)"
+            fill="var(--amber)"
             opacity={0.7}
           >
             start here
@@ -415,11 +412,14 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
         <p class="legend-section-title">Difficulty</p>
         <div class="legend-grid">
           <div class="legend-item">
-            <span class="legend-dot" style={{ background: "var(--gold)", opacity: "0.6" }} />
+            <span class="legend-dot" style={{ background: "var(--amber)", opacity: "0.6" }} />
             <span>Présent — start here</span>
           </div>
           <div class="legend-item">
-            <span style={{ opacity: "0.65", "font-size": "10px" }}>📚</span>
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true" style={{ opacity: "0.65", display: "inline-block", "vertical-align": "middle" }}>
+              <rect x="3" y="7" width="10" height="8" rx="2" fill="var(--text-2)" />
+              <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="var(--text-2)" stroke-width="1.5" fill="none" stroke-linecap="round" />
+            </svg>
             <span>Literary tense — rare in speech</span>
           </div>
         </div>

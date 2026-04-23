@@ -21,7 +21,7 @@ const guideMap = Object.fromEntries(allChoices.map(e => [e.id, e.data.title]));
 <Base
   title={title}
   breadcrumb={[
-    { label: "Verbes", href: "/verbs" },
+    { label: "Verbes", href: "/reference/verbs" },
     { label: title },
   ]}
 >
@@ -37,7 +37,7 @@ const guideMap = Object.fromEntries(allChoices.map(e => [e.id, e.data.title]));
         <h2>Related tenses</h2>
         <ul class="related-tenses">
           {relatedTenses.map((slug: string) => (
-            <li><a href={`/verbs/tenses/${slug}`}>{slug.replace(/-/g, ' ')}</a></li>
+            <li><a href={`/reference/verbs/tenses/${slug}`}>{slug.replace(/-/g, ' ')}</a></li>
           ))}
         </ul>
       </section>
@@ -48,7 +48,7 @@ const guideMap = Object.fromEntries(allChoices.map(e => [e.id, e.data.title]));
         <h2>Related guides</h2>
         <div class="related-guides-grid">
           {relatedGuides.map((slug: string) => (
-            <a href={`/verbs/choice/${slug}`} class="related-guide-card">
+            <a href={`/reference/verbs/choice/${slug}`} class="related-guide-card">
               <span class="related-guide-title">{guideMap[slug] ?? slug.replace(/-/g, ' ')}</span>
               <span class="related-guide-arrow">→</span>
             </a>

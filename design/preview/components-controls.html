@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #fff; padding: 20px; font-family: 'Plus Jakarta Sans', sans-serif; }
+  .section { margin-bottom: 14px; }
+  .label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #a09890; margin-bottom: 8px; }
+  .pills { display: flex; gap: 3px; }
+  .pill { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; padding: 4px 8px; border-radius: 5px; color: #6b6560; background: #f7f5f2; border: 1.5px solid #ddd8d0; cursor: pointer; }
+  .pill.active { color: #fff; background: #ff4757; border-color: #ff4757; font-weight: 500; }
+  .toggle-row { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #6b6560; margin-bottom: 6px; }
+  .track { width: 30px; height: 17px; border-radius: 999px; border: 1.5px solid; position: relative; flex-shrink: 0; }
+  .thumb { position: absolute; width: 11px; height: 11px; border-radius: 50%; top: 1px; }
+  .track.off { background: #f0ece6; border-color: #ddd8d0; }
+  .track.off .thumb { background: #a09890; left: 1px; }
+  .track.on  { background: rgba(255,71,87,0.1); border-color: #ff4757; }
+  .track.on  .thumb { background: #ff4757; left: 15px; }
+  .controls-bar { background: #f7f5f2; border: 1.5px solid #ddd8d0; border-radius: 10px; padding: 10px 16px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  .ctrl-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #a09890; }
+  .verb-select { background: #fff; border: 1.5px solid #ddd8d0; border-radius: 5px; color: #1a1814; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; padding: 4px 8px; outline: none; }
+</style></head>
+<body>
+  <div class="section">
+    <div class="label">Person Pills</div>
+    <div class="pills">
+      <div class="pill">je</div>
+      <div class="pill">tu</div>
+      <div class="pill active">il</div>
+      <div class="pill">nous</div>
+      <div class="pill">vous</div>
+      <div class="pill">ils</div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="label">Toggle</div>
+    <div class="toggle-row">
+      <div class="track on"><div class="thumb"></div></div>
+      Formes littéraires — on
+    </div>
+    <div class="toggle-row">
+      <div class="track off"><div class="thumb"></div></div>
+      Formes littéraires — off
+    </div>
+  </div>
+  <div class="section">
+    <div class="label">Controls Bar</div>
+    <div class="controls-bar">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="ctrl-label">Verbe</div>
+        <select class="verb-select"><option>parler</option><option>être</option></select>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="ctrl-label">Sujet</div>
+        <div class="pills">
+          <div class="pill">je</div><div class="pill active">il</div><div class="pill">nous</div>
+        </div>
+      </div>
+      <div class="toggle-row" style="margin-left:auto;">
+        <div class="track on"><div class="thumb"></div></div>
+        Littéraire
+      </div>
+    </div>
+  </div>
+</body></html>

@@ -12,7 +12,6 @@ pitfalls:
 relatedTenses:
   - "futur-proche"
   - "present-indicatif"
-  - "venir"
 examples:
   - fr: "Je <v data-tense=\"present-indicatif\">vais</v> à Paris demain."
     en: "I'm going to Paris tomorrow."
@@ -80,6 +79,6 @@ English "was going to" uses past conditional. French uses **imparfait de aller**
 
 ## Related tenses
 
-- [Futur proche](/verbs/tenses/futur-proche) — aller + infinitive
-- [Venir](/verbs/movement/venir) — the opposite direction verb
-- [Present indicatif](/verbs/tenses/present-indicatif) — the base tense
+- [Futur proche](/reference/verbs/tenses/futur-proche) — aller + infinitive
+- [Venir](/reference/verbs/movement/venir) — the opposite direction verb
+- [Present indicatif](/reference/verbs/tenses/present-indicatif) — the base tense

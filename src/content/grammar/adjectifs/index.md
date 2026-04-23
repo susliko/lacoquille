@@ -48,16 +48,16 @@ Some adjectives never change: compound colors (*bleu marine*), noun-turned-color
 ## Adjective topics
 
 ### Agreement & forms
-- **[Adjective agreement →](/grammar/articles/adjective-agreement)** — gender, number, irregular forms
+- **[Adjective agreement →](/reference/grammar/articles/adjective-agreement)** — gender, number, irregular forms
 
 ### Placement
-- **[Adjective placement →](/grammar/articles/adjective-placement)** — before/after noun, BAGS, meaning changes
+- **[Adjective placement →](/reference/grammar/articles/adjective-placement)** — before/after noun, BAGS, meaning changes
 
 ### Special types
-- **[Colors →](/grammar/adjectives/colors)** — agreement patterns, invariable rules
+- **[Colors →](/reference/grammar/adjectifs/colors)** — agreement patterns, invariable rules
 
 ### Comparison
-- **[Comparative & superlative →](/grammar/adjectives/comparison)** — plus...que, le plus, irregular forms
+- **[Comparative & superlative →](/reference/grammar/adjectifs/comparison)** — plus...que, le plus, irregular forms
 
 <style>
   article {
