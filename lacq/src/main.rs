@@ -1,4 +1,3 @@
-use axum::{routing::get, Router};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tower_http::services::ServeDir;
@@ -13,29 +12,31 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let _config = lacq::config::Config::from_env();
+    let config = lacq::config::Config::from_env();
 
-    let state = Arc::new(lacq::AppState::new(
-        reqwest::Client::new(),
-        None,
-        "data".to_string(),
-    ));
+    let http = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .expect("reqwest client");
 
-    let app = Router::new()
-        .route("/health", get(health))
-        .route("/api/article-of-the-day", get(lacq::routes::article::article_of_the_day))
-        .route("/api/stories", get(lacq::routes::stories::list_stories))
-        .route("/api/stories/:id", get(lacq::routes::stories::get_story))
-        .nest_service("/", ServeDir::new("dist"))
-        .with_state(state);
+    let llm = if config.minimax_api_key != "mock-key" && !config.minimax_api_key.is_empty() {
+        Some(Arc::new(lacq::llm::MinimaxProvider::new(
+            config.minimax_api_key,
+            config.minimax_base_url,
+        )) as Arc<dyn lacq::llm::LlmProvider>)
+    } else {
+        None
+    };
+
+    let state = Arc::new(lacq::AppState::new(http, llm, config.data_dir));
+
+    let app = lacq::routes::routes()
+        .with_state(state)
+        .nest_service("/", ServeDir::new("dist"));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     tracing::info!("Listening on {}", addr);
 
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
-}
-
-async fn health() -> &'static str {
-    "OK"
 }

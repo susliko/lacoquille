@@ -4,11 +4,7 @@ pub mod gutenberg;
 pub mod llm;
 pub mod vocab;
 pub mod translation;
-
-pub mod routes {
-    pub mod article;
-    pub mod stories;
-}
+pub mod routes;
 
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;

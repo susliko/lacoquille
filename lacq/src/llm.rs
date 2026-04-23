@@ -93,6 +93,7 @@ impl LlmProvider for MinimaxProvider {
             .and_then(|m| m.as_array())
             .and_then(|arr| arr.last())
             .and_then(|m| m.get("text"))
+            .and_then(|t| t.as_str())
             .map(|t| t.to_string())
             .ok_or_else(|| LlmError { message: "No translation in response".to_string() })
     }
