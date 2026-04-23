@@ -98,72 +98,37 @@ impl BookMeta {
     pub fn curated() -> Vec<Self> {
         vec![
             BookMeta {
-                gutenberg_id: 13609,
-                title: "La Maison Tellier".to_string(),
+                gutenberg_id: 10775, // Le Horla
+                title: "Le Horla".to_string(),
                 collection: "Contes du jour et de la nuit".to_string(),
-                published_year: 1885,
-                english_gutenberg_id: Some(46026),
-            },
-            BookMeta {
-                gutenberg_id: 16168,
-                title: "Boule de Suif".to_string(),
-                collection: "Les Rougon-Macquart".to_string(),
-                published_year: 1880,
-                english_gutenberg_id: Some(7832),
-            },
-            BookMeta {
-                gutenberg_id: 514,
-                title: "Une Partie de Campagne".to_string(),
-                collection: "Contes du jour et de la nuit".to_string(),
-                published_year: 1881,
+                published_year: 1887,
                 english_gutenberg_id: None,
             },
             BookMeta {
-                gutenberg_id: 42430,
-                title: "Le Petit Chose".to_string(),
-                collection: "Divers".to_string(),
-                published_year: 1868,
-                english_gutenberg_id: Some(15654),
-            },
-            BookMeta {
-                gutenberg_id: 11438,
-                title: "La Petite Roque".to_string(),
-                collection: "Nouvelles".to_string(),
-                published_year: 1885,
-                english_gutenberg_id: None,
-            },
-            BookMeta {
-                gutenberg_id: 54755,
-                title: "Mademoiselle Fifi".to_string(),
-                collection: "Contes de la guerre".to_string(),
-                published_year: 1882,
-                english_gutenberg_id: None,
-            },
-            BookMeta {
-                gutenberg_id: 11391,
-                title: "Le Coloquinte".to_string(),
-                collection: "La Maison Tellier".to_string(),
-                published_year: 1880,
-                english_gutenberg_id: None,
-            },
-            BookMeta {
-                gutenberg_id: 54764,
-                title: "Claire de Lune".to_string(),
-                collection: "La Maison Tellier".to_string(),
-                published_year: 1883,
-                english_gutenberg_id: None,
-            },
-            BookMeta {
-                gutenberg_id: 54765,
-                title: "Nuit de Noël".to_string(),
+                gutenberg_id: 14790, // Contes du jour et de la nuit
+                title: "Contes du jour et de la nuit".to_string(),
                 collection: "Contes du jour et de la nuit".to_string(),
                 published_year: 1884,
                 english_gutenberg_id: None,
             },
             BookMeta {
-                gutenberg_id: 54286,
-                title: "Levée en Masse".to_string(),
-                collection: "Souvenirs de guerre".to_string(),
+                gutenberg_id: 10746, // Boule de Suif
+                title: "Boule de Suif".to_string(),
+                collection: "Les Rougon-Macquart".to_string(),
+                published_year: 1880,
+                english_gutenberg_id: None,
+            },
+            BookMeta {
+                gutenberg_id: 12011, // Monsieur Parent
+                title: "Monsieur Parent".to_string(),
+                collection: "Nouvelles".to_string(),
+                published_year: 1885,
+                english_gutenberg_id: None,
+            },
+            BookMeta {
+                gutenberg_id: 11131, // Pierre et Jean
+                title: "Pierre et Jean".to_string(),
+                collection: "Roman".to_string(),
                 published_year: 1888,
                 english_gutenberg_id: None,
             },
