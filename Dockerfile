@@ -5,7 +5,7 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM rust:1.85-alpine AS rust
+FROM rust:1.86-alpine AS rust
 WORKDIR /src/rust
 COPY lacq/Cargo.toml lacq/Cargo.lock ./
 COPY lacq/src ./src
