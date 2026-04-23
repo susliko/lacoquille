@@ -38,7 +38,7 @@ pub async fn get_translation(
         }
     }
 
-    let llm = MockMinimaxProvider;
+    let llm = MockMinimaxProvider::new();
     let translated: String = llm.translate(&text).await?;
     let result = crate::EnglishContent {
         paragraphs: translated.split("\n\n").map(|s| s.to_string()).collect(),
