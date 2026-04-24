@@ -1,4 +1,4 @@
-import { createSignal, createResource, For, Show, createEffect } from "solid-js";
+import { createSignal, createResource, For, Show, createEffect, onMount } from "solid-js";
 
 interface StoryListItem {
   id: string;
@@ -58,8 +58,21 @@ async function fetchStory(id: string): Promise<StoryData> {
 }
 
 export default function TypingRace(props: Props) {
-  const [storyIndex, setStoryIndex] = createSignal(0);
+  const [selectedStoryId, setSelectedStoryId] = createSignal<string | undefined>(undefined);
   const [stories] = createResource(fetchStoryList);
+
+  onMount(() => {
+    const saved = localStorage.getItem('typing-race-story');
+    if (saved && stories()?.some(s => s.id === saved)) {
+      setSelectedStoryId(saved);
+    }
+  });
+
+  const warmUpTts = (storyId: string) => {
+    fetch(`/api/stories/${storyId}/tts-cache`, { method: "POST" });
+  };
+
+  const [storyIndex, setStoryIndex] = createSignal(0);
   const [story, { refetch: refetchStory }] = createResource(
     () => props.storyId ?? stories.data?.[storyIndex()]?.id,
     (id) => fetchStory(id)
@@ -107,14 +120,24 @@ export default function TypingRace(props: Props) {
   const navigatePrev = () => {
     const list = stories();
     if (!list || list.length === 0) return;
-    setStoryIndex((list.length + storyIndex() - 1) % list.length);
+    const newIndex = (list.length + storyIndex() - 1) % list.length;
+    setStoryIndex(newIndex);
+    const newId = list[newIndex].id;
+    setSelectedStoryId(newId);
+    localStorage.setItem('typing-race-story', newId);
+    warmUpTts(newId);
     setShowResults(false);
   };
 
   const navigateNext = () => {
     const list = stories();
     if (!list || list.length === 0) return;
-    setStoryIndex((storyIndex() + 1) % list.length);
+    const newIndex = (storyIndex() + 1) % list.length;
+    setStoryIndex(newIndex);
+    const newId = list[newIndex].id;
+    setSelectedStoryId(newId);
+    localStorage.setItem('typing-race-story', newId);
+    warmUpTts(newId);
     setShowResults(false);
   };
 
