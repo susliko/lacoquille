@@ -1,10 +1,56 @@
 ---
 import Base from "../../layouts/Base.astro";
-import ArticleOfTheDay from "../../components/ArticleOfTheDay";
+import PracticeHub from "../../components/PracticeHub";
 ---
 
-<Base title="Article of the Day" section="practice">
+<Base title="Practice Hub" section="practice">
   <main>
-    <ArticleOfTheDay client:load />
+    <PracticeHub client:only="solid-js" />
   </main>
 </Base>
+
+<style>
+  main {
+    height: calc(100dvh - 64px);
+    overflow: hidden;
+  }
+
+  .practice-hub-root {
+    height: 100%;
+    width: 100%;
+    max-width: 100dvw;
+    overflow: hidden;
+  }
+
+  .practice-hub-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 0;
+    height: 100%;
+    width: 100%;
+  }
+
+  .practice-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1.5rem 1rem;
+    gap: 6px;
+    text-decoration: none;
+    background: var(--card-color, #ccc);
+    transition: filter 0.15s ease;
+    animation-fill-mode: both;
+  }
+
+  .practice-card:active {
+    filter: brightness(1.12);
+  }
+
+  .practice-card-0 { animation: fly0  0.7s cubic-bezier(.16,1,.3,1) 0.00s both }
+  .practice-card-1 { animation: fly1  0.7s cubic-bezier(.16,1,.3,1) 0.07s both }
+  .practice-card-2 { animation: fly5  0.7s cubic-bezier(.16,1,.3,1) 0.14s both }
+  .practice-card-3 { animation: fly6  0.7s cubic-bezier(.16,1,.3,1) 0.07s both }
+</style>
