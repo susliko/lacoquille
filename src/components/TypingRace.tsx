@@ -89,6 +89,28 @@ export default function TypingRace(props: Props) {
   });
 
   const [showResults, setShowResults] = createSignal(false);
+  const [showHistory, setShowHistory] = createSignal(false);
+
+  const saveResult = (storyId: string, wpm: number, accuracy: number) => {
+    const key = `typing-race-history-${storyId}`;
+    const history = JSON.parse(localStorage.getItem(key) || '[]');
+    history.unshift({ storyId, wpm, accuracy, timestamp: new Date().toISOString() });
+    localStorage.setItem(key, JSON.stringify(history.slice(0, 10)));
+
+    const bestKey = `typing-race-best-${storyId}`;
+    const prevBest = parseInt(localStorage.getItem(bestKey) || '0');
+    if (wpm > prevBest) localStorage.setItem(bestKey, wpm.toString());
+  };
+
+  const getHistory = (storyId: string) => {
+    const key = `typing-race-history-${storyId}`;
+    return JSON.parse(localStorage.getItem(key) || '[]');
+  };
+
+  const getPersonalBest = (storyId: string) => {
+    const bestKey = `typing-race-best-${storyId}`;
+    return parseInt(localStorage.getItem(bestKey) || '0');
+  };
 
   const getFullText = () => {
     const data = story();
@@ -243,6 +265,8 @@ export default function TypingRace(props: Props) {
     });
 
     if (finished) {
+      const id = props.storyId ?? stories.data?.[storyIndex()]?.id;
+      if (id) saveResult(id, Math.round((newTypedChars / 5) / ((Date.now() - s.startTime!) / 60000)), Math.round((newTypedChars / newTotalTyped) * 100));
       setTimeout(() => setShowResults(true), 300);
     }
   };
@@ -302,30 +326,62 @@ export default function TypingRace(props: Props) {
         </div>
 
         <Show when={showResults()}>
-          <div class="typing-results-overlay">
-            <div class="typing-results">
-              <h2>Finished!</h2>
-              <div class="typing-results-stats">
-                <div class="typing-result-stat">
-                  <span class="typing-result-value">{calculateWPM()}</span>
-                  <span class="typing-result-label">WPM</span>
-                </div>
-                <div class="typing-result-stat">
-                  <span class="typing-result-value">{calculateAccuracy()}%</span>
-                  <span class="typing-result-label">Accuracy</span>
+          {() => {
+            const id = props.storyId ?? stories.data?.[storyIndex()]?.id ?? '';
+            const currentWPM = calculateWPM();
+            const bestWPM = getPersonalBest(id);
+            const isNewRecord = currentWPM > bestWPM && currentWPM > 0;
+            const history = getHistory(id).slice(0, 5);
+            return (
+              <div class="typing-results-overlay">
+                <div class="typing-results">
+                  <h2>Finished!</h2>
+                  <Show when={isNewRecord}>
+                    <div class="new-record-badge">New record!</div>
+                  </Show>
+                  <div class="typing-results-stats">
+                    <div class="typing-result-stat typing-result-wpm">
+                      <span class="typing-result-value">{currentWPM}</span>
+                      <span class="typing-result-label">WPM</span>
+                      <Show when={bestWPM > 0 && !isNewRecord}>
+                        <span class="personal-best">Best: {bestWPM}</span>
+                      </Show>
+                    </div>
+                    <div class="typing-result-stat">
+                      <span class="typing-result-value">{calculateAccuracy()}%</span>
+                      <span class="typing-result-label">Accuracy</span>
+                    </div>
+                  </div>
+                  <Show when={history.length > 0}>
+                    <div class="typing-history-section">
+                      <button class="history-toggle" onClick={() => setShowHistory(h => !h)}>
+                        History {showHistory() ? '▲' : '▼'}
+                      </button>
+                      <Show when={showHistory()}>
+                        <ul class="typing-history-list">
+                          {history.map((r: any, i: number) => (
+                            <li>
+                              <span class="history-wpm">{r.wpm} WPM</span>
+                              <span class="history-accuracy">{r.accuracy}%</span>
+                              <span class="history-date">{new Date(r.timestamp).toLocaleDateString()}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </Show>
+                    </div>
+                  </Show>
+                  <div class="typing-results-actions">
+                    <button class="typing-result-btn primary" onClick={() => { initTyping(); setTimeout(() => typingInputRef?.focus(), 50); }}>
+                      Try Again
+                    </button>
+                    <button class="typing-result-btn" onClick={() => props.onBack?.()}>
+                      Back to Stories
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div class="typing-results-actions">
-                <button class="typing-result-btn primary" onClick={() => { initTyping(); setTimeout(() => typingInputRef?.focus(), 50); }}>
-                  Try Again
-                </button>
-                <button class="typing-result-btn" onClick={() => props.onBack?.()}>
-                  Back to Stories
-                </button>
-              </div>
-            </div>
-          </div>
-        </Show>
+            );
+          }}</Show>
       </div>
     );
   };
@@ -542,12 +598,30 @@ export default function TypingRace(props: Props) {
           flex-direction: column;
           align-items: center;
         }
+        .typing-result-wpm {
+          position: relative;
+        }
         .typing-result-value {
           font-family: var(--font-display);
           font-size: 2.5rem;
           font-weight: 700;
           color: var(--coral);
           line-height: 1;
+        }
+        .personal-best {
+          font-size: 0.7rem;
+          color: var(--text-muted);
+          margin-top: 0.25rem;
+        }
+        .new-record-badge {
+          background: var(--emerald);
+          color: #fff;
+          padding: 0.25rem 0.75rem;
+          border-radius: 4px;
+          font-size: 0.85rem;
+          font-weight: 600;
+          margin-bottom: 1rem;
+          display: inline-block;
         }
         .typing-result-label {
           font-size: 0.75rem;
@@ -582,6 +656,45 @@ export default function TypingRace(props: Props) {
         }
         .typing-result-btn.primary:hover {
           background: #e63946;
+        }
+        .typing-history-section {
+          margin: 1.5rem 0;
+          text-align: center;
+        }
+        .history-toggle {
+          background: none;
+          border: none;
+          color: var(--text-2);
+          cursor: pointer;
+          font-size: 0.85rem;
+          padding: 0.25rem 0.5rem;
+        }
+        .history-toggle:hover {
+          color: var(--text);
+        }
+        .typing-history-list {
+          list-style: none;
+          padding: 0;
+          margin: 0.75rem 0 0 0;
+          font-size: 0.8rem;
+          color: var(--text-2);
+        }
+        .typing-history-list li {
+          display: flex;
+          gap: 1rem;
+          justify-content: center;
+          padding: 0.25rem 0;
+        }
+        .history-wpm {
+          font-family: var(--font-mono);
+          color: var(--text);
+        }
+        .history-accuracy {
+          color: var(--text-muted);
+        }
+        .history-date {
+          color: var(--text-muted);
+          font-size: 0.75rem;
         }
         .typing-shortcut-hint {
           position: fixed;
