@@ -7,6 +7,13 @@ interface VocabHighlight {
   end_offset: number;
 }
 
+interface StoryListItem {
+  id: string;
+  title: string;
+  source: string;
+  published_year: number;
+}
+
 interface ArticleData {
   story: {
     id: string;
@@ -25,8 +32,16 @@ interface ArticleData {
   date: string;
 }
 
-async function fetchArticle(): Promise<ArticleData> {
-  const res = await fetch(`${window.location.protocol}//${window.location.host}/api/article-of-the-day`);
+async function fetchStoryList(): Promise<StoryListItem[]> {
+  const res = await fetch(`${window.location.protocol}//${window.location.host}/api/stories`);
+  if (!res.ok) throw new Error(`Failed to fetch stories: ${res.status}`);
+  return res.json();
+}
+
+async function fetchArticle(storyId?: string): Promise<ArticleData> {
+  const base = `${window.location.protocol}//${window.location.host}`;
+  const url = storyId ? `${base}/api/stories/${storyId}` : `${base}/api/article-of-the-day`;
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`Failed to fetch article: ${res.status}`);
   return res.json();
 }
@@ -47,7 +62,12 @@ interface TypingState {
 
 export default function ArticleOfTheDay() {
   const [mode, setMode] = createSignal<ViewMode>('side');
-  const [article] = createResource(fetchArticle);
+  const [storyIndex, setStoryIndex] = createSignal(0);
+  const [stories] = createResource(fetchStoryList);
+  const [article, { refetch: refetchArticle }] = createResource(
+    () => stories()?.[storyIndex()]?.id,
+    (storyId) => fetchArticle(storyId)
+  );
 
   // Typing mode state
   const [typingState, setTypingState] = createSignal<TypingState>({
@@ -78,6 +98,28 @@ export default function ArticleOfTheDay() {
       finished: false,
     });
   };
+
+  // Navigation
+  const navigatePrev = () => {
+    const list = stories();
+    if (!list || list.length === 0) return;
+    setStoryIndex((list.length + storyIndex() - 1) % list.length);
+  };
+
+  const navigateNext = () => {
+    const list = stories();
+    if (!list || list.length === 0) return;
+    setStoryIndex((storyIndex() + 1) % list.length);
+  };
+
+  // Reset typing state when story changes
+  createEffect(() => {
+    // Track article data changes
+    article();
+    if (mode() === 'type') {
+      setMode('side');
+    }
+  });
 
   const startTyping = () => {
     initTyping();
@@ -267,6 +309,35 @@ export default function ArticleOfTheDay() {
           margin-bottom: 2rem;
           border-bottom: 1px solid var(--border);
           padding-bottom: 1.5rem;
+        }
+        .article-nav {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          margin-bottom: 0.75rem;
+        }
+        .nav-btn {
+          background: var(--surface-2);
+          border: 1px solid var(--border);
+          color: var(--text-2);
+          width: 36px;
+          height: 36px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 1.2rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all var(--transition);
+        }
+        .nav-btn:hover {
+          background: var(--surface-3);
+          color: var(--text);
+        }
+        .story-position {
+          font-size: 0.9rem;
+          color: var(--text-2);
+          font-family: var(--font-mono);
         }
         .article-header h1 {
           font-size: 2rem;
@@ -538,6 +609,13 @@ export default function ArticleOfTheDay() {
           return (
             <>
               <div class="article-header">
+                <div class="article-nav">
+                  <button class="nav-btn" onClick={navigatePrev} aria-label="Previous story">←</button>
+                  <span class="story-position">
+                    {stories() ? `${storyIndex() + 1} / ${stories()!.length}` : '...'}
+                  </span>
+                  <button class="nav-btn" onClick={navigateNext} aria-label="Next story">→</button>
+                </div>
                 <h1>{data.story.title}</h1>
                 <p class="article-meta">
                   {data.story.source} ({data.story.published_year}) · {data.date}
