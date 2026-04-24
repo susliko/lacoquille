@@ -6,6 +6,9 @@ import etre   from "./etre";
 import avoir  from "./avoir";
 import aller  from "./aller";
 import faire  from "./faire";
+import venir  from "./venir";
+import partir from "./partir";
+import rester from "./rester";
 
 export type { VerbData };
 export type { Person, TenseId, TenseForms } from "./types";
@@ -19,9 +22,12 @@ export const VERBS: Record<string, VerbData> = {
   avoir,
   aller,
   faire,
+  venir,
+  partir,
+  rester,
 };
 
-/** Ordered selector options: group entries first, then irregulars */
+/** Ordered selector options: regular groups first, then movers (être) */
 export const VERB_OPTIONS: { value: string; label: string }[] = [
   { value: "parler", label: "−er  (parler)" },
   { value: "finir",  label: "−ir  (finir)"  },
@@ -30,4 +36,7 @@ export const VERB_OPTIONS: { value: string; label: string }[] = [
   { value: "avoir",  label: "avoir"          },
   { value: "aller",  label: "aller"          },
   { value: "faire",  label: "faire"          },
+  { value: "venir",  label: "← movers (être): venir" },
+  { value: "partir", label: "← movers (être): partir" },
+  { value: "rester", label: "← movers (être): rester" },
 ];

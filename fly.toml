@@ -1,5 +1,5 @@
 app = "lacoquille"
-primary_region = "iad"
+primary_region = "lhr"
 
 [build]
 dockerfile = "Dockerfile"
@@ -12,14 +12,13 @@ memory = "256mb"
 cpu_kind = "shared"
 cpus = 1
 
-[[services]]
-internal_port = 8080
-protocol = "tcp"
-auto_stop_machines = true
-auto_start_machines = true
-min_machines_running = 0
+[http_service]
+  internal_port = 8080
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
 
-  [[services.http_checks]]
+  [[http_service.checks]]
     interval = "10s"
     timeout = "5s"
     path = "/health"

@@ -30,8 +30,11 @@ const forms = verb?.forms[tenseId as TenseId];
       </thead>
       <tbody>
         {PERSONS.map(person => {
-          const form = forms[person];
-          if (form === null) return null;
+          let form = forms[person];
+          if ((form === null || form === undefined) && (person === "elle" || person === "on")) {
+            form = (forms as any)["il"] ?? null;
+          }
+          if (form === null || form === undefined) return null;
           const stem = verb.stem ?? verb.infinitive.slice(0, -2);
           const hasStem = form.startsWith(stem);
           return (

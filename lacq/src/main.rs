@@ -32,7 +32,7 @@ async fn main() {
 
     let app = lacq::routes::routes()
         .with_state(state)
-        .nest_service("/", ServeDir::new("dist"));
+        .nest_service("/", ServeDir::new("dist").append_index_html_on_directories(true));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     tracing::info!("Listening on {}", addr);

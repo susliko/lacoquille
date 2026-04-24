@@ -691,6 +691,72 @@ article {
   border-color: var(--border-bright);
 }
 
+.verb-dropdown {
+  position: relative;
+}
+.verb-dropdown-trigger {
+  all: unset;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+  transition: border-color var(--transition);
+  box-sizing: border-box;
+}
+.verb-dropdown-trigger:hover,
+.verb-dropdown-trigger:focus-visible {
+  border-color: var(--border-bright);
+}
+.verb-dropdown-arrow {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  transition: transform var(--transition);
+}
+.verb-dropdown-trigger[aria-expanded="true"] .verb-dropdown-arrow {
+  transform: rotate(180deg);
+}
+.verb-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 50;
+  min-width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  animation: panel-in 0.15s ease;
+}
+.verb-dropdown-item {
+  all: unset;
+  display: block;
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+  box-sizing: border-box;
+}
+.verb-dropdown-item:hover,
+.verb-dropdown-item:focus-visible {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.verb-dropdown-item.active {
+  color: var(--coral);
+  font-weight: 500;
+}
+
 .person-pills {
   display: flex;
   gap: 3px;

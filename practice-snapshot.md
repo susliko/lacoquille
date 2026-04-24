@@ -1,0 +1,73 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - link "La Coquille" [ref=e3] [cursor=pointer]:
+      - /url: /
+    - generic [ref=e4]: ·
+    - list
+    - list [ref=e5]:
+      - listitem [ref=e6]:
+        - link "Verbs" [ref=e7] [cursor=pointer]:
+          - /url: /reference/verbs
+      - listitem [ref=e8]:
+        - link "Grammar" [ref=e9] [cursor=pointer]:
+          - /url: /reference/grammar
+      - listitem [ref=e10]:
+        - link "Practice" [ref=e11] [cursor=pointer]:
+          - /url: /practice
+  - text: → → →
+  - main [ref=e12]:
+    - main [ref=e13]:
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - heading "Contes du jour et de la nuit" [level=1] [ref=e17]
+          - paragraph [ref=e18]: Contes du jour et de la nuit (1884) · 2026-04-23
+        - generic [ref=e19]:
+          - button "Français" [ref=e20] [cursor=pointer]
+          - button "English" [ref=e21] [cursor=pointer]
+          - button "Side by side" [ref=e22] [cursor=pointer]
+        - generic [ref=e24]:
+          - heading "Français" [level=2] [ref=e25]
+          - paragraph [ref=e26]: "[Illustration]"
+          - paragraph [ref=e27]: GUY DE MAUPASSANT
+          - paragraph [ref=e28]: CONTES DU JOUR ET DE LA NUIT
+          - paragraph [ref=e29]: Illustrations de PAUL COUSTURIER
+          - paragraph [ref=e30]: C. MARPON & E. FLAMMARION
+          - paragraph [ref=e31]: ÉDITEURS
+          - paragraph [ref=e32]: 26 Rue RACINE, à PARIS
+          - paragraph [ref=e33]: CONTES DU JOUR ET DE LA NUIT
+          - paragraph [ref=e34]: Il a été tiré de cet ouvrage 50 exemplaires sur papier de Hollande, tous numérotés.
+          - paragraph [ref=e35]: "* * * * *"
+          - paragraph [ref=e36]: OUVRAGES DU MÊME AUTEUR
+          - paragraph [ref=e37]: "* * * * *"
+          - paragraph [ref=e38]: DES VERS.
+          - paragraph [ref=e39]: LA MAISON TELLIER.
+          - paragraph [ref=e40]: MADEMOISELLE FIFI.
+          - paragraph [ref=e41]: UNE VIE.
+          - paragraph [ref=e42]: LES CONTES DE LA BÉCASSE.
+          - paragraph [ref=e43]: CLAIR DE LUNE.
+          - paragraph [ref=e44]: AU SOLEIL.
+          - paragraph [ref=e45]: MISS HARRIETT.
+          - paragraph [ref=e46]: LES SOEURS RONDOLI.
+          - paragraph [ref=e47]: YVETTE.
+          - paragraph [ref=e48]: "* * * * *"
+          - paragraph [ref=e49]: PARIS.--IMP. C. MARPON ET E. FLAMMARION, RUE RACINE, 26.
+          - paragraph [ref=e50]: "[Illustration]"
+          - paragraph [ref=e51]: GUY DE MAUPASSANT
+          - paragraph [ref=e52]: CONTES DE JOUR ET DE LA NUIT
+          - paragraph [ref=e53]: _Illustrations de P. Cousturier_
+          - paragraph [ref=e54]: PARIS
+          - paragraph [ref=e55]: C. MARPON ET E. FLAMMARION
+          - paragraph [ref=e56]: ÉDITEURS
+          - paragraph [ref=e57]: 26, RUE RACINE, PRÈS L'ODÉON
+          - paragraph [ref=e58]: Tous droits réservés.
+          - paragraph [ref=e59]: "[Illustration]"
+          - paragraph [ref=e60]: LE CRIME AU PÈRE BONIFACE
+          - paragraph [ref=e61]:
+            - text: Ce jour-là le facteur Boniface, en sortant de la maison de poste, constata que sa tournée serait moins lo
+            - generic [ref=e62]: n class="vocab-highlight">ngue q
+            - text: ue de coutume, et il en ressentit une joie vive. Il était chargé de la campagne autour du bourg de Vireville, et, quand il revenait, le soir, de son long pas fatigué, il avait parfois plus de quarante kilomètres dans les jambes.
+          - paragraph [ref=e63]: Donc la distribution serait vite faite; il pourrait même flâner un peu en route et rentrer chez lui vers trois heures de relevée. Quelle chance!
+          - paragraph [ref=e64]: Il sortit du bourg par le chemin de Sennemare et commença sa besogne. On était en juin, dans le mois vert et fleuri, le vrai mois des plaines.
+          - paragraph [ref=e65]:
+            - text: L'homme, vêtu de sa blouse bleue et coiffé d'un képi noir à galon rouge, traversait par des sentiers étroits les champs de colza, d'avoine ou de blé, enseveli jusqu'aux épaules dans les récoltes; et sa tête, passant au-dessus des épis, semblait flotter sur une mer calme et verdoyante qu'une brise légère faisait mollement on
+            - generic [ref=e66]: duler.an class="vocab-highlight">

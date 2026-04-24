@@ -1,6 +1,6 @@
-export type Person = "je" | "tu" | "il" | "nous" | "vous" | "ils";
+export type Person = "je" | "tu" | "il" | "elle" | "on" | "nous" | "vous" | "ils";
 
-export const PERSONS: Person[] = ["je", "tu", "il", "nous", "vous", "ils"];
+export const PERSONS: Person[] = ["je", "tu", "il", "elle", "on", "nous", "vous", "ils"];
 
 export type TenseId =
   | "present-indicatif"
@@ -25,7 +25,7 @@ export type TenseId =
   | "present-progressif";
 
 /** null = this person has no imperative form */
-export type TenseForms = Record<Person, string | null>;
+export type TenseForms = Partial<Record<Person, string | null>>;
 
 export interface VerbData {
   infinitive: string;

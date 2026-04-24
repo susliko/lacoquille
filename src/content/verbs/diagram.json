@@ -22,7 +22,7 @@
       "timePosition": "near-past",
       "aspect": "completed",
       "literary": false,
-      "title": "Passé composé"
+      "title": "Passé comp."
     },
     {
       "id": "plus-que-parfait",
@@ -30,7 +30,7 @@
       "timePosition": "far-past",
       "aspect": "anterior",
       "literary": false,
-      "title": "Plus-que-parfait"
+      "title": "Plus-que-parf."
     },
     {
       "id": "passe-simple",
@@ -46,7 +46,7 @@
       "timePosition": "far-past",
       "aspect": "anterior",
       "literary": true,
-      "title": "Passé antérieur"
+      "title": "Passé antér."
     },
     {
       "id": "futur-simple",
@@ -62,7 +62,7 @@
       "timePosition": "far-future",
       "aspect": "anterior",
       "literary": false,
-      "title": "Futur antérieur"
+      "title": "Fut. antér."
     },
     {
       "id": "conditionnel-present",
@@ -78,7 +78,7 @@
       "timePosition": "far-future",
       "aspect": "anterior",
       "literary": false,
-      "title": "Conditionnel passé"
+      "title": "Cond. passé"
     },
     {
       "id": "subjonctif-present",
@@ -102,7 +102,7 @@
       "timePosition": "past",
       "aspect": "ongoing",
       "literary": true,
-      "title": "Subj. imparfait"
+      "title": "Subj. imp."
     },
     {
       "id": "subjonctif-plus-que-parfait",
@@ -134,7 +134,7 @@
       "timePosition": "near-future",
       "aspect": "completed",
       "literary": false,
-      "title": "Impératif passé"
+      "title": "Imp. passé"
     }
   ],
   "edges": [

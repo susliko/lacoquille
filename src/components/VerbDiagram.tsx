@@ -61,7 +61,8 @@ interface Props {
 // ── Verbal periphrases — computed dynamically ─────────────────
 const PERIPHRASES: Record<string, (inf: string, person: string) => string> = {
   "futur-proche": (inf, person) => {
-    const f = VERBS["aller"]?.forms["present-indicatif"]?.[person as Person];
+    const key = (person === "elle" || person === "on") ? "il" : person;
+    const f = VERBS["aller"]?.forms["present-indicatif"]?.[key as Person];
     return f ? `${f} ${inf}` : "—";
   },
   "passe-recent": (inf, person) => {
@@ -69,10 +70,12 @@ const PERIPHRASES: Record<string, (inf: string, person: string) => string> = {
       je: "viens", tu: "viens", il: "vient",
       nous: "venons", vous: "venez", ils: "viennent",
     };
-    return `${venir[person] ?? "—"} de ${inf}`;
+    const key = (person === "elle" || person === "on") ? "il" : person;
+    return `${venir[key] ?? "—"} de ${inf}`;
   },
   "present-progressif": (inf, person) => {
-    const f = VERBS["être"]?.forms["present-indicatif"]?.[person as Person];
+    const key = (person === "elle" || person === "on") ? "il" : person;
+    const f = VERBS["être"]?.forms["present-indicatif"]?.[key as Person];
     return f ? `${f} en train de ${inf}` : "—";
   },
 };
@@ -125,37 +128,23 @@ function edgePathMobile(from: NodePos, to: NodePos, edge: DiagramEdge): string {
   const dy = to.cy - from.cy;
 
   if (Math.abs(dx) < 4) {
-    // Same column (same mood) → vertical; connect card edges not centers
     const goingDown = dy > 0;
     const startY = goingDown ? from.y + MB_CARD_H : from.y;
     const endY   = goingDown ? to.y               : to.y + MB_CARD_H;
-
-    // X offset by type to separate overlapping same-column lines
     const xOff = edge.type === "auxiliary-compound" ? -6
                : edge.type === "aspect-pair"         ?  6
                : 0;
     const x = from.cx + xOff;
-
-    // Arc to the side if skipping 2+ rows
-    const fromRow = TIME_COLUMNS[from.node.timePosition];
-    const toRow   = TIME_COLUMNS[to.node.timePosition];
-    if (Math.abs(toRow - fromRow) > 1) {
-      const arcLeft = from.x - 14;
-      return `M ${x} ${startY} C ${arcLeft} ${startY}, ${arcLeft} ${endY}, ${x} ${endY}`;
-    }
-
     return `M ${x} ${startY} L ${x} ${endY}`;
   }
 
   if (Math.abs(dy) < 4) {
-    // Same row (same time) → horizontal; connect card edges
     const fx = dx > 0 ? from.x + MB_CARD_W : from.x;
     const tx = dx > 0 ? to.x               : to.x + MB_CARD_W;
     return `M ${fx} ${from.cy} L ${tx} ${to.cy}`;
   }
 
-  // Diagonal
-  return `M ${from.cx} ${from.cy} C ${from.cx} ${to.cy}, ${to.cx} ${from.cy}, ${to.cx} ${to.cy}`;
+  return `M ${from.cx} ${from.cy} L ${to.cx} ${to.cy}`;
 }
 
 // ── Component ─────────────────────────────────────────────────
@@ -163,17 +152,25 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
   const [selectedPerson, setSelectedPerson] = createSignal<string>("je");
   const [selectedVerb,   setSelectedVerb]   = createSignal<string>("parler");
   const [showLiterary,   setShowLiterary]   = createSignal(false);
-  const [activeNode,     setActiveNode]     = createSignal<string | null>(null);
   const [activeEdge,     setActiveEdge]     = createSignal<DiagramEdge | null>(null);
   const [isMobile,       setIsMobile]       = createSignal(
     typeof window !== "undefined" ? window.innerWidth < 768 : false
   );
   const [highlightedTense, _setHighlightedTense] = createSignal<string | null>(null);
+  const [verbDropdownOpen, setVerbDropdownOpen] = createSignal(false);
 
   onMount(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", check);
-    onCleanup(() => window.removeEventListener("resize", check));
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Element;
+      if (!target.closest(".verb-dropdown")) setVerbDropdownOpen(false);
+    };
+    document.addEventListener("click", handleClickOutside);
+    onCleanup(() => {
+      window.removeEventListener("resize", check);
+      document.removeEventListener("click", handleClickOutside);
+    });
   });
 
   // ── Derived ─────────────────────────────────────────────────
@@ -220,102 +217,25 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
 
   function getConjugation(tenseId: string): string {
     const verb   = VERBS[selectedVerb()];
-    const person = selectedPerson();
+    let person = selectedPerson();
     if (!verb) return "—";
     if (tenseId in PERIPHRASES) return PERIPHRASES[tenseId]!(verb.infinitive, person);
     const forms = verb.forms[tenseId as TenseId];
     if (!forms) return "—";
+    if ((person === "elle" || person === "on") && !forms[person as Person]) {
+      person = "il";
+    }
     return forms[person as keyof typeof forms] ?? "—";
   }
-
-  const activeNodeData = createMemo<DiagramNode | null>(() =>
-    activeNode() ? (data.nodes.find(n => n.id === activeNode()) ?? null) : null
-  );
 
   // Short title for diagram cards (diagram.json title wins)
   function nodeTitle(node: DiagramNode): string {
     return (node as any).title ?? tenseTitles[node.id] ?? node.id;
   }
 
-  // Full title for detail panels (content page title wins)
-  function nodePanelTitle(node: DiagramNode): string {
-    return tenseTitles[node.id] ?? (node as any).title ?? node.id;
-  }
-
   function openNode(id: string) {
-    setActiveNode(activeNode() === id ? null : id);
-    setActiveEdge(null);
+    window.location.href = `/verbs/tenses/${id}`;
   }
-
-  // ── Shared panels ────────────────────────────────────────────
-  const Panels = () => (
-    <>
-      <Show when={activeEdge()}>
-        {edge => (
-          <aside class="edge-panel" role="complementary" aria-live="polite">
-            <button class="panel-close" onClick={() => setActiveEdge(null)} aria-label="Close">✕</button>
-            <strong class="panel-type-tag">{edge().type.replace(/-/g, " ")}</strong>
-            <p style={{ color: EDGE_COLOR[edge().type], "font-weight": "500", "margin-bottom": "0.25rem" }}>
-              {EDGE_LABEL[edge().type]}
-            </p>
-            <p style={{ color: "var(--text-2)", "font-size": "0.875rem", margin: "0" }}>
-              {edge().label}
-            </p>
-            <p class="panel-edge-nodes">
-              <a href={`/verbs/tenses/${edge().from}`}>
-                {nodeTitle(data.nodes.find(n => n.id === edge().from)!)}
-              </a>
-              {" ↔ "}
-              <a href={`/verbs/tenses/${edge().to}`}>
-                {nodeTitle(data.nodes.find(n => n.id === edge().to)!)}
-              </a>
-            </p>
-          </aside>
-        )}
-      </Show>
-
-      <Show when={activeNodeData()}>
-        {(nodeData: () => DiagramNode) => {
-          const tenseId = () => nodeData().id;
-          const isPeriph = () => tenseId() in PERIPHRASES;
-          const forms = () => {
-            if (isPeriph()) return null;
-            return VERBS[selectedVerb()]?.forms[tenseId() as TenseId];
-          };
-
-          return (
-            <aside class="node-panel" role="complementary" aria-live="polite">
-              <button class="panel-close" onClick={() => setActiveNode(null)} aria-label="Close">✕</button>
-              <h3 class="panel-title">{nodePanelTitle(nodeData())}</h3>
-              <p class="panel-rule">{tenseRules[tenseId()] ?? ""}</p>
-
-              <table class="panel-conj-table">
-                <tbody>
-                  {PERSONS.map(person => {
-                    const form = isPeriph()
-                      ? (PERIPHRASES[tenseId()]?.(VERBS[selectedVerb()]?.infinitive ?? "", person) ?? "—")
-                      : (forms()?.[person] ?? null);
-                    if (form === null) return null;
-                    const active = () => selectedPerson() === person;
-                    return (
-                      <tr class={active() ? "active-row" : ""} onClick={() => setSelectedPerson(person)} style={{ cursor: "pointer" }}>
-                        <th scope="row">{person}</th>
-                        <td>{form}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-
-              <a href={`/verbs/tenses/${tenseId()}`} class="panel-learn-more">
-                Full reference page →
-              </a>
-            </aside>
-          );
-        }}
-      </Show>
-    </>
-  );
 
   // ── Node card (SVG) — shared renderer with size params ───────
   const NodeCard = (props: {
@@ -325,9 +245,7 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
     fontSize: { title: number; form: number };
   }) => {
     const { node, x, y, cardW, cardH, fontSize } = props;
-    const isActive     = () => activeNode() === node.id;
     const isHighlighted = () => highlightedTense() === node.id;
-    const activated    = () => isActive() || isHighlighted();
     const hue = MOOD_HUE[node.lane as MoodId];
     const isPresent = () => node.id === "present-indicatif";
     const isLiterary = () => node.literary;
@@ -339,7 +257,7 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
         style={{ cursor: "pointer" }}
         role="button" tabIndex={0}
         aria-label={`${nodeTitle(node)}: ${getConjugation(node.id)}`}
-        aria-pressed={isActive()}
+        aria-pressed={isHighlighted()}
         onKeyDown={e => e.key === "Enter" && openNode(node.id)}
       >
         {/* Opaque base — blocks edge lines from showing through */}
@@ -355,9 +273,9 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
         )}
         {/* Color overlay */}
         <rect x={x} y={y} width={cardW} height={cardH} rx="6"
-          fill={activated() ? `hsl(${hue} 55% 45% / 0.18)` : isLiterary() ? "none" : "none"}
-          stroke={activated() ? `hsl(${hue} 65% 55%)` : isLiterary() ? `hsl(${hue} 40% 50% / 0.2)` : `hsl(${hue} 40% 50% / 0.4)`}
-          stroke-width={activated() ? 1.5 : 1}
+          fill={isHighlighted() ? `hsl(${hue} 55% 45% / 0.18)` : isLiterary() ? "none" : "none"}
+          stroke={isHighlighted() ? `hsl(${hue} 65% 55%)` : isLiterary() ? `hsl(${hue} 40% 50% / 0.2)` : `hsl(${hue} 40% 50% / 0.4)`}
+          stroke-width={isHighlighted() ? 1.5 : 1}
           opacity={isLiterary() ? 0.65 : 1}
         />
         {/* Left accent stripe */}
@@ -365,13 +283,14 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
           x1={x + 4} y1={y + 9} x2={x + 4} y2={y + cardH - 9}
           stroke={`hsl(${hue} 65% 55%)`}
           stroke-width="3" stroke-linecap="round"
-          opacity={activated() ? 1 : isLiterary() ? 0.35 : 0.55}
+          opacity={isHighlighted() ? 1 : isLiterary() ? 0.35 : 0.55}
         />
         {/* Tense name */}
         <text x={x + 11} y={y + 14 + fontSize.title * 0.35}
           font-size={String(fontSize.title)} font-weight="600"
           fill={`hsl(${hue} 65% 62%)`}
           opacity={isLiterary() ? 0.7 : 1}
+          style={{ "word-break": "break-word", "max-width": `${cardW - 20}px` }}
         >
           {nodeTitle(node)}
         </text>
@@ -449,9 +368,35 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
     <div class="diagram-controls">
       <div class="control-group">
         <span class="control-label">Verb</span>
-        <select class="verb-select" value={selectedVerb()} onChange={e => setSelectedVerb(e.currentTarget.value)}>
-          {VERB_OPTIONS.map(opt => <option value={opt.value}>{opt.label}</option>)}
-        </select>
+        <div class="verb-dropdown">
+          <button
+            class="verb-dropdown-trigger"
+            type="button"
+            aria-expanded={verbDropdownOpen()}
+            onClick={() => setVerbDropdownOpen(o => !o)}
+          >
+            {VERB_OPTIONS.find(o => o.value === selectedVerb())?.label ?? selectedVerb()}
+            <span class="verb-dropdown-arrow" aria-hidden="true">▾</span>
+          </button>
+          <Show when={verbDropdownOpen()}>
+            <div class="verb-dropdown-menu" role="listbox">
+              {VERB_OPTIONS.map(opt => (
+                <button
+                  class={`verb-dropdown-item${selectedVerb() === opt.value ? " active" : ""}`}
+                  role="option"
+                  aria-selected={selectedVerb() === opt.value}
+                  type="button"
+                  onClick={() => {
+                    setSelectedVerb(opt.value);
+                    setVerbDropdownOpen(false);
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </Show>
+        </div>
       </div>
       <div class="control-group">
         <span class="control-label">Person</span>
@@ -574,7 +519,6 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
             </For>
           </svg>
         </div>
-        <Panels />
         <Legend />
       </Show>
 
@@ -678,7 +622,6 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
             </For>
           </svg>
         </div>
-        <Panels />
         <Legend />
       </Show>
     </div>

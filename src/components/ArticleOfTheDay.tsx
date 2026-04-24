@@ -26,8 +26,7 @@ interface ArticleData {
 }
 
 async function fetchArticle(): Promise<ArticleData> {
-  const url = '/api/article-of-the-day';
-  const res = await fetch(url);
+  const res = await fetch(`${window.location.protocol}//${window.location.host}/api/article-of-the-day`);
   if (!res.ok) throw new Error(`Failed to fetch article: ${res.status}`);
   return res.json();
 }
