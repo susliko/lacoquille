@@ -157,12 +157,48 @@ export default function TypingRace(props: Props) {
 
   const handleTypingKeyDown = (e: KeyboardEvent) => {
     const s = typingState();
-    if (s.finished && e.key !== 'Escape') return;
+    if (s.finished && e.key !== 'Escape' && e.key !== 'Enter') return;
 
     if (e.key === 'Escape') {
       if (props.onBack) {
         props.onBack();
       }
+      return;
+    }
+
+    // Tab = skip current word
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      if (s.finished) return;
+      const text = getFullText();
+      let i = s.currentIndex;
+      const newCharStates = [...s.charStates];
+      let newTypedChars = s.typedChars;
+      // Mark current word chars as correct until space or newline
+      while (i < text.length && text[i] !== ' ' && text[i] !== '\n') {
+        newCharStates[i] = 'correct';
+        newTypedChars++;
+        i++;
+      }
+      // Also skip any trailing spaces/newlines
+      while (i < text.length && (text[i] === ' ' || text[i] === '\n')) {
+        newCharStates[i] = 'correct';
+        newTypedChars++;
+        i++;
+      }
+      setTypingState({
+        ...s,
+        charStates: newCharStates,
+        typedChars: newTypedChars,
+        currentIndex: i,
+      });
+      return;
+    }
+
+    // Enter on results overlay = Try Again
+    if (e.key === 'Enter' && showResults()) {
+      initTyping();
+      setTimeout(() => typingInputRef?.focus(), 50);
       return;
     }
 
@@ -259,6 +295,10 @@ export default function TypingRace(props: Props) {
               ))}
             </div>
           ))}
+        </div>
+
+        <div class="typing-shortcut-hint">
+          <kbd>Tab</kbd> = skip word · <kbd>Esc</kbd> = exit
         </div>
 
         <Show when={showResults()}>
@@ -542,6 +582,22 @@ export default function TypingRace(props: Props) {
         }
         .typing-result-btn.primary:hover {
           background: #e63946;
+        }
+        .typing-shortcut-hint {
+          position: fixed;
+          bottom: 1rem;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: 0.75rem;
+          color: var(--text-muted);
+          opacity: 0.6;
+        }
+        .typing-shortcut-hint kbd {
+          font-family: var(--font-mono);
+          background: var(--surface-2);
+          padding: 0.1em 0.4em;
+          border-radius: 3px;
+          border: 1px solid var(--border);
         }
       `}</style>
 
