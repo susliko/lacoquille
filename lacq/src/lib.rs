@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use crate::config::Config;
 use crate::llm::LlmProvider;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -156,16 +157,18 @@ pub struct AppState {
     pub http: reqwest::Client,
     pub llm: Option<std::sync::Arc<dyn LlmProvider>>,
     pub data_dir: String,
+    pub config: Config,
 }
 
 impl AppState {
-    pub fn new(http: reqwest::Client, llm: Option<Arc<dyn LlmProvider>>, data_dir: String) -> Self {
+    pub fn new(http: reqwest::Client, llm: Option<Arc<dyn LlmProvider>>, data_dir: String, config: Config) -> Self {
         Self {
             curated_books: BookMeta::curated(),
             french_cache: std::sync::Arc::new(tokio::sync::Mutex::new(std::collections::HashMap::new())),
             http,
             llm,
             data_dir,
+            config,
         }
     }
 
