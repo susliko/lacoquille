@@ -90,6 +90,13 @@ export default function TypingRace(props: Props) {
 
   const [showResults, setShowResults] = createSignal(false);
   const [showHistory, setShowHistory] = createSignal(false);
+  const [isMobile, setIsMobile] = createSignal(false);
+
+  onMount(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+  });
 
   const saveResult = (storyId: string, wpm: number, accuracy: number) => {
     const key = `typing-race-history-${storyId}`;
@@ -271,11 +278,67 @@ export default function TypingRace(props: Props) {
     }
   };
 
+  const handleMobileInput = (value: string) => {
+    const s = typingState();
+    if (s.finished) return;
+
+    const text = getFullText();
+
+    // Simple approach: just type the new character
+    const newChar = value[value.length - 1];
+    if (!newChar) return;
+
+    const newCharStates = [...s.charStates];
+    let newTypedChars = s.typedChars;
+    let newErrorCount = s.errorCount;
+    let newTotalTyped = s.totalTyped + 1;
+
+    // Start timer on first character
+    if (s.startTime === null) {
+      setTypingState(prev => ({ ...prev, startTime: Date.now() }));
+    }
+
+    const currentChar = text[s.currentIndex];
+    if (newChar === currentChar) {
+      newCharStates[s.currentIndex] = 'correct';
+      newTypedChars++;
+    } else {
+      newCharStates[s.currentIndex] = 'error';
+      newErrorCount++;
+    }
+
+    const newIndex = s.currentIndex + 1;
+    const finished = newIndex >= text.length;
+
+    setTypingState({
+      typedChars: newTypedChars,
+      errorCount: newErrorCount,
+      totalTyped: newTotalTyped,
+      startTime: s.startTime,
+      charStates: newCharStates,
+      currentIndex: newIndex,
+      finished,
+    });
+
+    if (finished) {
+      const id = props.storyId ?? stories.data?.[storyIndex()]?.id;
+      if (id) saveResult(id, Math.round((newTypedChars / 5) / ((Date.now() - s.startTime!) / 60000)), Math.round((newTypedChars / newTotalTyped) * 100));
+      setTimeout(() => setShowResults(true), 300);
+    }
+  };
+
   let typingInputRef: HTMLInputElement | undefined;
+  let mobileInputRef: HTMLInputElement | undefined;
 
   createEffect(() => {
     if (story() && typingInputRef) {
       setTimeout(() => typingInputRef?.focus(), 100);
+    }
+  });
+
+  createEffect(() => {
+    if (story() && mobileInputRef && isMobile()) {
+      setTimeout(() => mobileInputRef?.focus(), 100);
     }
   });
 
@@ -284,6 +347,7 @@ export default function TypingRace(props: Props) {
     const text = getFullText();
     const paragraphs = story()?.french.paragraphs ?? [];
     const progress = text.length > 0 ? (s.currentIndex / text.length) * 100 : 0;
+    const typedText = () => text.slice(0, s.currentIndex);
 
     let charIndex = 0;
     const paragraphChars = paragraphs.map(para => {
@@ -298,7 +362,23 @@ export default function TypingRace(props: Props) {
 
     return (
       <div class="typing-mode" onKeyDown={handleTypingKeyDown} tabIndex={0} ref={typingInputRef}>
-        <input type="text" class="typing-input" />
+        <Show when={!isMobile()}>
+          <input type="text" class="typing-input" />
+        </Show>
+        <Show when={isMobile()}>
+          <input
+            type="text"
+            class="typing-mobile-input"
+            ref={mobileInputRef}
+            value={typedText()}
+            onInput={(e) => handleMobileInput(e.currentTarget.value)}
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            placeholder="Type here..."
+          />
+        </Show>
 
         <div class="typing-hud">
           <div class="typing-wpm">
@@ -711,6 +791,60 @@ export default function TypingRace(props: Props) {
           padding: 0.1em 0.4em;
           border-radius: 3px;
           border: 1px solid var(--border);
+        }
+        /* Mobile input */
+        .typing-mobile-input {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 60px;
+          font-size: 1.2rem;
+          background: var(--surface-2);
+          border: none;
+          border-top: 1px solid var(--border);
+          padding: 0 1rem;
+          z-index: 400;
+          color: var(--text);
+        }
+        /* Mobile responsive */
+        @media (max-width: 639px) {
+          .typing-race {
+            padding: 1rem;
+          }
+          .story-selector {
+            padding: 2rem 1rem;
+          }
+          .story-selector h2 {
+            font-size: 1.5rem;
+          }
+          .typing-mode {
+            padding: 1rem;
+          }
+          .typing-hud {
+            gap: 1rem;
+            margin-bottom: 1rem;
+          }
+          .typing-wpm-value {
+            font-size: 1.5rem;
+          }
+          .typing-paragraph {
+            font-size: clamp(1rem, 4vw, 1.35rem);
+            line-height: 1.8;
+            margin-bottom: 1rem;
+            padding-left: 0.75rem;
+          }
+          .typing-text-container {
+            max-height: calc(100vh - 280px);
+            padding-right: 0.5rem;
+          }
+          .typing-shortcut-hint {
+            display: none;
+          }
+          .typing-mobile-input {
+            height: 50px;
+            font-size: 1rem;
+          }
         }
       `}</style>
 
