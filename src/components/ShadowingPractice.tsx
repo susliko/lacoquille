@@ -117,6 +117,7 @@ export default function ShadowingPractice() {
     setSentences(sents);
     setCurrentIndex(0);
     resetPractice();
+    preloadNextAudio();
   };
 
   const resetPractice = () => {
@@ -135,10 +136,23 @@ export default function ShadowingPractice() {
     if (id) loadStorySentences(id);
   };
 
+  const preloadNextAudio = () => {
+    const nextIdx = currentIndex() + 1;
+    if (nextIdx < sentences().length) {
+      const text = sentences()[nextIdx];
+      fetch("/api/tts", {
+        method: "POST",
+        body: JSON.stringify({ text }),
+        headers: { "Content-Type": "application/json" },
+      }).catch(() => {}); // fire and forget, ignore errors
+    }
+  };
+
   const prevSentence = () => {
     if (currentIndex() > 0) {
       setCurrentIndex((i) => i - 1);
       resetPractice();
+      preloadNextAudio();
     }
   };
 
@@ -146,6 +160,7 @@ export default function ShadowingPractice() {
     if (currentIndex() < sentences().length - 1) {
       setCurrentIndex((i) => i + 1);
       resetPractice();
+      preloadNextAudio();
     }
   };
 

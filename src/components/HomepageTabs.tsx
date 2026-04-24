@@ -67,7 +67,7 @@ export default function HomepageTabs() {
         class="homepage-tab-panel"
         style={{ display: tab() === "knowledge" ? "block" : "none" }}
       >
-        <div class="poly-grid knowledge-grid">
+        <div class="poly-grid">
           <For each={REGIONS}>
             {(region, i) => (
               <a
@@ -95,7 +95,7 @@ export default function HomepageTabs() {
             {(item, i) => (
               <a
                 href={item.path}
-                class={`practice-card practice-card-${i()}`}
+                class={`poly-card poly-card-${i()}`}
                 style={{ "--card-color": item.color }}
               >
                 <div class="poly-card-name">{item.name}</div>
