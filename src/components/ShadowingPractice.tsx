@@ -1,4 +1,4 @@
-import { createSignal, createResource, For, Show } from "solid-js";
+import { createSignal, createResource, For, Show, onMount } from "solid-js";
 
 interface Story {
   id: string;
@@ -74,6 +74,22 @@ export default function ShadowingPractice() {
   const [isWarmingUp, setIsWarmingUp] = createSignal(false);
   const ttsCache = new Map<string, string>();
 
+  // Audio speed state (persisted) — guard for SSR
+  const [speed, setSpeed] = createSignal<number>(1.0);
+
+  // Restore speed from localStorage on mount (client-side only)
+  onMount(() => {
+    const savedSpeed = localStorage.getItem("shadowing-audio-speed");
+    if (savedSpeed) {
+      setSpeed(parseFloat(savedSpeed));
+    }
+  });
+
+  const handleSpeedChange = (newSpeed: number) => {
+    setSpeed(newSpeed);
+    localStorage.setItem("shadowing-audio-speed", newSpeed.toString());
+  };
+
   // Dictation state
   const [typedText, setTypedText] = createSignal("");
   const [dictationSubmitted, setDictationSubmitted] = createSignal(false);
@@ -141,6 +157,7 @@ export default function ShadowingPractice() {
     if (ttsCache.has(text)) {
       if (audioRef) {
         audioRef.src = ttsCache.get(text)!;
+        audioRef.playbackRate = speed();
         audioRef.play();
       }
       return;
@@ -160,6 +177,7 @@ export default function ShadowingPractice() {
       ttsCache.set(text, url);
       if (audioRef) {
         audioRef.src = url;
+        audioRef.playbackRate = speed();
         audioRef.play();
       }
     } catch (err) {
@@ -336,8 +354,38 @@ export default function ShadowingPractice() {
         .audio-controls {
           display: flex;
           justify-content: center;
+          align-items: center;
           gap: 0.75rem;
           margin-bottom: 2rem;
+          flex-wrap: wrap;
+        }
+
+        .speed-controls {
+          display: flex;
+          gap: 0.5rem;
+        }
+
+        .speed-pill {
+          padding: 0.4rem 0.75rem;
+          border: 1px solid var(--border);
+          background: var(--surface-2);
+          color: var(--text-2);
+          border-radius: var(--radius-pill);
+          cursor: pointer;
+          font-size: 0.8rem;
+          font-weight: 500;
+          transition: all var(--transition);
+        }
+
+        .speed-pill:hover {
+          border-color: var(--coral);
+          color: var(--text);
+        }
+
+        .speed-pill.active {
+          background: var(--coral);
+          color: #fff;
+          border-color: var(--coral);
         }
 
         .play-btn {
@@ -732,6 +780,26 @@ export default function ShadowingPractice() {
               >
                 {isWarmingUp() ? "🔊 Warming up..." : isPlaying() ? "Playing..." : "🔊 Play Audio"}
               </button>
+              <div class="speed-controls">
+                <button
+                  class={`speed-pill ${speed() === 0.5 ? "active" : ""}`}
+                  onClick={() => handleSpeedChange(0.5)}
+                >
+                  0.5x
+                </button>
+                <button
+                  class={`speed-pill ${speed() === 0.75 ? "active" : ""}`}
+                  onClick={() => handleSpeedChange(0.75)}
+                >
+                  0.75x
+                </button>
+                <button
+                  class={`speed-pill ${speed() === 1.0 ? "active" : ""}`}
+                  onClick={() => handleSpeedChange(1.0)}
+                >
+                  1x
+                </button>
+              </div>
             </div>
 
             {/* Dictation mode */}
