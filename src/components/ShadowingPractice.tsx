@@ -1,4 +1,4 @@
-import { createSignal, createResource, For, Show, onMount } from "solid-js";
+import { createSignal, createResource, For, Show } from "solid-js";
 
 interface Story {
   id: string;
@@ -193,20 +193,6 @@ export default function ShadowingPractice() {
       prepareMC();
     }
   };
-
-  // When sentence changes, reset and re-prepare MC
-  const handleIndexChange = (newIndex: number) => {
-    setCurrentIndex(newIndex);
-    resetPractice();
-    if (mode() === "multiple-choice") {
-      prepareMC();
-    }
-  };
-
-  // Watch for story load to set default
-  onMount(() => {
-    // stories resource loads automatically
-  });
 
   // Set default story when stories load
   const defaultStorySet = () => {
