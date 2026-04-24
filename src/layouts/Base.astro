@@ -6,9 +6,10 @@ interface Props {
   description?: string;
   breadcrumb?: { label: string; href?: string }[];
   section?: "reference" | "reference/grammar" | "practice";
+  hideNav?: boolean;
 }
 
-const { title, description = "An interactive French grammar reference.", breadcrumb = [], section } = Astro.props;
+const { title, description = "An interactive French grammar reference.", breadcrumb = [], section, hideNav = false } = Astro.props;
 const pathname = Astro.url.pathname;
 
 function isActive(href: string) {
@@ -30,7 +31,7 @@ function isActive(href: string) {
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
   <body>
-    <nav class="site-nav">
+    <nav class="site-nav" style={hideNav ? "display: none" : ""}>
       <a href="/" class="brand">La <span>Coquille</span></a>
       <span class="sep">·</span>
       <ol class="breadcrumb">
