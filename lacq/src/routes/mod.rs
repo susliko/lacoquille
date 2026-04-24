@@ -13,6 +13,7 @@ pub fn routes() -> Router<Arc<AppState>> {
         .route("/api/article-of-the-day", get(article::article_of_the_day))
         .route("/api/stories", get(stories::list_stories))
         .route("/api/stories/:id", get(stories::get_story))
+        .route("/api/stories/:id/tts-cache", post(stories::tts_cache))
         .route("/api/tts", post(tts::text_to_speech))
 }
 

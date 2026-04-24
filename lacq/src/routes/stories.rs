@@ -1,7 +1,14 @@
-use crate::{AppState, EnglishContent, FrenchContent, StoryMeta};
+use crate::{routes::tts::generate_tts, AppState, EnglishContent, FrenchContent, StoryMeta};
 use axum::{extract::Path, extract::State, Json};
+use sha2::{Sha256, Digest};
 use serde::Serialize;
 use std::sync::Arc;
+
+#[derive(Serialize)]
+pub struct TtsCacheResponse {
+    pub cached_count: usize,
+    pub sentences: Vec<String>,
+}
 
 #[derive(Serialize)]
 pub struct StoryListItem {
@@ -114,5 +121,61 @@ pub async fn get_story(
             vocab_highlights: vocab,
         },
         english,
+    }))
+}
+
+pub async fn tts_cache(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<String>,
+) -> Result<Json<TtsCacheResponse>, axum::http::StatusCode> {
+    let gutenberg_id: u64 = id.parse().map_err(|_| axum::http::StatusCode::BAD_REQUEST)?;
+
+    let book = state.curated_books.iter()
+        .find(|b| b.gutenberg_id == gutenberg_id)
+        .ok_or(axum::http::StatusCode::NOT_FOUND)?;
+
+    let french_text = state.get_french_text(book.gutenberg_id).await
+        .map_err(|e| {
+            tracing::error!("Failed to fetch French text for book {}: {}", book.gutenberg_id, e);
+            axum::http::StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    let story_text = crate::gutenberg::first_story_content(&french_text);
+    let sentence_regex = regex::Regex::new(r"[.!?]+").unwrap();
+    let sentences: Vec<String> = sentence_regex
+        .split(&story_text)
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect();
+
+    let cache_dir = std::path::Path::new(&state.data_dir).join("tts_cache");
+    let mut cached_count = 0;
+    let mut cached_sentences = Vec::new();
+
+    for sentence in sentences {
+        let hash = Sha256::digest(&sentence);
+        let hash_hex = hex::encode(hash);
+        let cache_path = cache_dir.join(format!("{}.mp3", hash_hex));
+
+        if cache_path.exists() {
+            cached_count += 1;
+            cached_sentences.push(sentence);
+            continue;
+        }
+
+        match generate_tts(&state.http, &state.config, &cache_dir, &sentence).await {
+            Ok(_) => {
+                cached_count += 1;
+                cached_sentences.push(sentence);
+            }
+            Err(e) => {
+                tracing::warn!("TTS cache failed for sentence (hash {}): {:?}", hash_hex, e);
+            }
+        }
+    }
+
+    Ok(Json(TtsCacheResponse {
+        cached_count,
+        sentences: cached_sentences,
     }))
 }
