@@ -339,6 +339,21 @@ export default function ArticleOfTheDay() {
           color: var(--text-2);
           font-family: var(--font-mono);
         }
+        .story-select {
+          background: var(--surface-2);
+          border: 1px solid var(--border);
+          color: var(--text-2);
+          height: 36px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 0.9rem;
+          padding: 0 0.5rem;
+          transition: all var(--transition);
+        }
+        .story-select:hover {
+          background: var(--surface-3);
+          color: var(--text);
+        }
         .article-header h1 {
           font-size: 2rem;
           margin: 0 0 0.5rem 0;
@@ -615,6 +630,15 @@ export default function ArticleOfTheDay() {
                     {stories() ? `${storyIndex() + 1} / ${stories()!.length}` : '...'}
                   </span>
                   <button class="nav-btn" onClick={navigateNext} aria-label="Next story">→</button>
+                  <select
+                    class="story-select"
+                    value={storyIndex()}
+                    onChange={(e) => setStoryIndex(Number(e.target.value))}
+                  >
+                    <For each={stories()}>
+                      {(story, i) => <option value={i()}>{story.title}</option>}
+                    </For>
+                  </select>
                 </div>
                 <h1>{data.story.title}</h1>
                 <p class="article-meta">
