@@ -71,6 +71,7 @@ export default function ShadowingPractice() {
 
   // TTS state
   const [isPlaying, setIsPlaying] = createSignal(false);
+  const [isWarmingUp, setIsWarmingUp] = createSignal(false);
   const ttsCache = new Map<string, string>();
 
   // Dictation state
@@ -85,7 +86,15 @@ export default function ShadowingPractice() {
 
   let audioRef: HTMLAudioElement | undefined;
 
+  const warmUpTts = (storyId: string) => {
+    setIsWarmingUp(true);
+    fetch(`/api/stories/${storyId}/tts-cache`, { method: "POST" }).finally(() => {
+      setTimeout(() => setIsWarmingUp(false), 5000);
+    });
+  };
+
   const loadStorySentences = async (id: string) => {
+    warmUpTts(id);
     const detail = await fetchStory(id);
     setStoryDetail(detail);
     const sents = splitSentences(detail.french.paragraphs);
@@ -717,11 +726,11 @@ export default function ShadowingPractice() {
 
             <div class="audio-controls">
               <button
-                class={`play-btn ${isPlaying() ? "loading" : ""}`}
+                class={`play-btn ${isPlaying() || isWarmingUp() ? "loading" : ""}`}
                 onClick={playAudio}
                 disabled={isPlaying() || !currentSentence()}
               >
-                {isPlaying() ? "Playing..." : "🔊 Play Audio"}
+                {isWarmingUp() ? "🔊 Warming up..." : isPlaying() ? "Playing..." : "🔊 Play Audio"}
               </button>
             </div>
 
