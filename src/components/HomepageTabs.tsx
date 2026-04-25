@@ -47,7 +47,15 @@ export default function HomepageTabs() {
           class="homepage-tab-btn"
           classList={{ active: tab() === "knowledge", inactive: tab() !== "knowledge" }}
           onClick={() => setTab("knowledge")}
-          style={{ "font-family": "'DM Serif Display', serif !important" }}
+          style={{
+            "font-family": "'DM Serif Display', serif !important",
+            "font-style": tab() === "knowledge" ? "normal" : "italic",
+            "color": tab() === "knowledge" ? "var(--text)" : "var(--text-muted)",
+            "border": tab() === "knowledge"
+              ? "2px solid var(--text)"
+              : "1.5px dashed var(--border-subtle)",
+            "background": "transparent",
+          }}
         >
           Knowledge
         </button>
@@ -57,7 +65,15 @@ export default function HomepageTabs() {
           class="homepage-tab-btn"
           classList={{ active: tab() === "practice", inactive: tab() !== "practice" }}
           onClick={() => setTab("practice")}
-          style={{ "font-family": "'DM Serif Display', serif !important" }}
+          style={{
+            "font-family": "'DM Serif Display', serif !important",
+            "font-style": tab() === "practice" ? "normal" : "italic",
+            "color": tab() === "practice" ? "var(--text)" : "var(--text-muted)",
+            "border": tab() === "practice"
+              ? "2px solid var(--text)"
+              : "1.5px dashed var(--border-subtle)",
+            "background": "transparent",
+          }}
         >
           Practice
         </button>
