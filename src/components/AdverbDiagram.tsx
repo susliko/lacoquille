@@ -1,4 +1,4 @@
-import { createSignal, For, Show, onMount, onCleanup } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
 
 interface AdverbNode {
   id: string;
@@ -14,15 +14,6 @@ interface Props {
 
 export default function AdverbDiagram(props: Props) {
   const [activeId, setActiveId] = createSignal<string | null>(null);
-  const [isMobile, setIsMobile] = createSignal(
-    typeof window !== "undefined" ? window.innerWidth < 640 : false
-  );
-
-  onMount(() => {
-    const check = () => setIsMobile(window.innerWidth < 640);
-    window.addEventListener("resize", check);
-    onCleanup(() => window.removeEventListener("resize", check));
-  });
 
   function handleClick(id: string, href?: string) {
     if (href) {
@@ -140,7 +131,7 @@ export default function AdverbDiagram(props: Props) {
 
         {/* Active detail panel */}
         <Show when={activeId()}>
-          {() => {
+          {(function() {
             const node = props.nodes.find(n => n.id === activeId());
             if (!node || !node.href) return null;
             return (
@@ -150,7 +141,7 @@ export default function AdverbDiagram(props: Props) {
                 </text>
               </g>
             );
-          }}
+          })()}
         </Show>
       </svg>
 

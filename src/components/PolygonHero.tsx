@@ -1,4 +1,4 @@
-import { createSignal, onMount, For } from "solid-js";
+import { For } from "solid-js";
 
 const REGIONS = [
   { id: "adjectifs", name: "Adjectifs", sub: "accord · ordre",       color: "#d97706" },

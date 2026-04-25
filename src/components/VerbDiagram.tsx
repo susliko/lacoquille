@@ -2,7 +2,7 @@ import { createSignal, createMemo, For, Show, onMount, onCleanup } from "solid-j
 import type { DiagramData, DiagramNode, DiagramEdge, MoodId } from "./GrammarMap/types";
 import {
   TIME_COLUMNS, MOOD_LABELS, MOOD_ORDER, MOOD_HUE,
-  EDGE_COLOR, EDGE_DASH, EDGE_LABEL,
+  EDGE_COLOR, EDGE_DASH,
 } from "./GrammarMap/types";
 import { VERBS, PERSONS, VERB_OPTIONS } from "../data/conjugations/index";
 import type { TenseId, Person } from "../data/conjugations/types";
@@ -148,7 +148,7 @@ function edgePathMobile(from: NodePos, to: NodePos, edge: DiagramEdge): string {
 }
 
 // ── Component ─────────────────────────────────────────────────
-export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
+export default function VerbDiagram({ data, tenseTitles }: Props) {
   const [selectedPerson, setSelectedPerson] = createSignal<string>("je");
   const [selectedVerb,   setSelectedVerb]   = createSignal<string>("parler");
   const [showLiterary,   setShowLiterary]   = createSignal(false);

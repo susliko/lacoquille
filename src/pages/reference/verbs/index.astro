@@ -50,7 +50,7 @@ const sortedTenses = [...tenseEntries].sort((a, b) => {
 
   <VerbDiagram
     client:only="solid-js"
-    data={diagramData}
+    data={diagramData as any}
     tenseTitles={tenseTitles}
     tenseRules={tenseRules}
   />

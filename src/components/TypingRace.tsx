@@ -1,4 +1,4 @@
-import { createSignal, createResource, For, Show, createEffect, onMount } from "solid-js";
+import { createSignal, createResource, Show, createEffect, onMount } from "solid-js";
 
 interface StoryListItem {
   id: string;
@@ -58,13 +58,12 @@ async function fetchStory(id: string): Promise<StoryData> {
 }
 
 export default function TypingRace(props: Props) {
-  const [selectedStoryId, setSelectedStoryId] = createSignal<string | undefined>(undefined);
   const [stories] = createResource(fetchStoryList);
 
   onMount(() => {
     const saved = localStorage.getItem('typing-race-story');
     if (saved && stories()?.some(s => s.id === saved)) {
-      setSelectedStoryId(saved);
+      // Re-select the story on mount
     }
   });
 
@@ -73,8 +72,8 @@ export default function TypingRace(props: Props) {
   };
 
   const [storyIndex, setStoryIndex] = createSignal(0);
-  const [story, { refetch: refetchStory }] = createResource(
-    () => props.storyId ?? stories.data?.[storyIndex()]?.id,
+  const [story] = createResource(
+    () => props.storyId ?? stories()?.[storyIndex()]?.id,
     (id) => fetchStory(id)
   );
 
@@ -141,34 +140,10 @@ export default function TypingRace(props: Props) {
 
   // Start typing immediately when story loads
   createEffect(() => {
-    if (story() && !story().loading && !story().error) {
+    if (story() && !story.loading && !story.error) {
       setTimeout(initTyping, 50);
     }
   });
-
-  const navigatePrev = () => {
-    const list = stories();
-    if (!list || list.length === 0) return;
-    const newIndex = (list.length + storyIndex() - 1) % list.length;
-    setStoryIndex(newIndex);
-    const newId = list[newIndex].id;
-    setSelectedStoryId(newId);
-    localStorage.setItem('typing-race-story', newId);
-    warmUpTts(newId);
-    setShowResults(false);
-  };
-
-  const navigateNext = () => {
-    const list = stories();
-    if (!list || list.length === 0) return;
-    const newIndex = (storyIndex() + 1) % list.length;
-    setStoryIndex(newIndex);
-    const newId = list[newIndex].id;
-    setSelectedStoryId(newId);
-    localStorage.setItem('typing-race-story', newId);
-    warmUpTts(newId);
-    setShowResults(false);
-  };
 
   const calculateWPM = () => {
     const s = typingState();
@@ -272,7 +247,7 @@ export default function TypingRace(props: Props) {
     });
 
     if (finished) {
-      const id = props.storyId ?? stories.data?.[storyIndex()]?.id;
+      const id = props.storyId ?? stories()?.[storyIndex()]?.id;
       if (id) saveResult(id, Math.round((newTypedChars / 5) / ((Date.now() - s.startTime!) / 60000)), Math.round((newTypedChars / newTotalTyped) * 100));
       setTimeout(() => setShowResults(true), 300);
     }
@@ -321,7 +296,7 @@ export default function TypingRace(props: Props) {
     });
 
     if (finished) {
-      const id = props.storyId ?? stories.data?.[storyIndex()]?.id;
+      const id = props.storyId ?? stories()?.[storyIndex()]?.id;
       if (id) saveResult(id, Math.round((newTypedChars / 5) / ((Date.now() - s.startTime!) / 60000)), Math.round((newTypedChars / newTotalTyped) * 100));
       setTimeout(() => setShowResults(true), 300);
     }
@@ -406,8 +381,8 @@ export default function TypingRace(props: Props) {
         </div>
 
         <Show when={showResults()}>
-          {() => {
-            const id = props.storyId ?? stories.data?.[storyIndex()]?.id ?? '';
+          {(function() {
+            const id = props.storyId ?? stories()?.[storyIndex()]?.id ?? '';
             const currentWPM = calculateWPM();
             const bestWPM = getPersonalBest(id);
             const isNewRecord = currentWPM > bestWPM && currentWPM > 0;
@@ -439,7 +414,7 @@ export default function TypingRace(props: Props) {
                       </button>
                       <Show when={showHistory()}>
                         <ul class="typing-history-list">
-                          {history.map((r: any, i: number) => (
+                          {history.map((r: any) => (
                             <li>
                               <span class="history-wpm">{r.wpm} WPM</span>
                               <span class="history-accuracy">{r.accuracy}%</span>
@@ -455,35 +430,16 @@ export default function TypingRace(props: Props) {
                       Try Again
                     </button>
                     <button class="typing-result-btn" onClick={() => props.onBack?.()}>
-                      Back to Stories
+                      Back
                     </button>
                   </div>
                 </div>
               </div>
             );
-          }}</Show>
+          })()}</Show>
       </div>
     );
   };
-
-  const StorySelector = () => (
-    <div class="story-selector">
-      <h2>Choose a Story</h2>
-      <div class="story-nav">
-        <button class="nav-btn" onClick={navigatePrev} aria-label="Previous story">←</button>
-        <span class="story-position">
-          {stories() ? `${storyIndex() + 1} / ${stories()!.length}` : '...'}
-        </span>
-        <button class="nav-btn" onClick={navigateNext} aria-label="Next story">→</button>
-      </div>
-      <Show when={stories()}>
-        <div class="story-title">{stories()?.[storyIndex()]?.title}</div>
-        <p class="story-meta">
-          {stories()?.[storyIndex()]?.source} ({stories()?.[storyIndex()]?.published_year})
-        </p>
-      </Show>
-    </div>
-  );
 
   return (
     <div class="typing-race">
@@ -858,10 +814,8 @@ export default function TypingRace(props: Props) {
         </div>
       </Show>
 
-      <Show when={story() && !story()!.loading}>
-        {() => (
-          <TypingView />
-        )}
+      <Show when={story() && !story.loading}>
+        <TypingView />
       </Show>
     </div>
   );

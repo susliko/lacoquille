@@ -1,4 +1,4 @@
-import { createSignal, createMemo, For, Show, onMount, onCleanup } from "solid-js";
+import { createSignal, createMemo, For, Show } from "solid-js";
 
 interface TaxonomyNode {
   id: string;
@@ -21,15 +21,6 @@ const RING_SPACING = 110;
 
 export default function GrammarDiagram(props: Props) {
   const [activeId, setActiveId] = createSignal<string | null>(props.activeId ?? null);
-  const [isMobile, setIsMobile] = createSignal(
-    typeof window !== "undefined" ? window.innerWidth < 640 : false
-  );
-
-  onMount(() => {
-    const check = () => setIsMobile(window.innerWidth < 640);
-    window.addEventListener("resize", check);
-    onCleanup(() => window.removeEventListener("resize", check));
-  });
 
   function handleNodeClick(id: string, href?: string) {
     if (href) {
@@ -170,8 +161,7 @@ export default function GrammarDiagram(props: Props) {
 
                 {/* Child nodes */}
                 <Show when={hasChildren() && isActive()}>
-                  {() => {
-                    const children = node.children ?? [];
+                  {(function() {
                     const childPositions = getChildPositions(node, x, y, startAngle, 1.2);
                     return (
                       <For each={childPositions}>
@@ -205,7 +195,7 @@ export default function GrammarDiagram(props: Props) {
                         )}
                       </For>
                     );
-                  }}
+                  })()}
                 </Show>
               </g>
             );

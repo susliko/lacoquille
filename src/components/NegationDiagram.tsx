@@ -1,4 +1,4 @@
-import { createSignal, For, onMount, onCleanup } from "solid-js";
+import { createSignal, For } from "solid-js";
 
 interface NegationParticle {
   id: string;

@@ -10,15 +10,6 @@ interface Props {
 }
 
 const { title, description = "An interactive French grammar reference.", breadcrumb = [], section, hideNav = false } = Astro.props;
-const pathname = Astro.url.pathname;
-
-function isActive(href: string) {
-  if (!section) return false;
-  if (section === "reference" && pathname.startsWith("/reference")) return true;
-  if (section === "reference/grammar" && pathname.startsWith("/reference/grammar")) return true;
-  if (section === "practice" && pathname.startsWith("/practice")) return true;
-  return false;
-}
 ---
 
 <!doctype html>

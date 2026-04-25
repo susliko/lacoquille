@@ -63,7 +63,7 @@ export default function ArticleOfTheDay() {
   const [mode, setMode] = createSignal<ViewMode>('side');
   const [storyIndex, setStoryIndex] = createSignal(0);
   const [stories] = createResource(fetchStoryList);
-  const [article, { refetch: refetchArticle }] = createResource(
+  const [article] = createResource(
     () => stories()?.[storyIndex()]?.id,
     (storyId) => fetchArticle(storyId)
   );
@@ -258,7 +258,7 @@ export default function ArticleOfTheDay() {
         </div>
 
         <div class="typing-text-container">
-          {paragraphChars.map((chars, pIdx) => (
+          {paragraphChars.map((chars) => (
             <div class="typing-paragraph">
               {chars.map(({ char, state }) => (
                 <span class={`typing-char typing-char-${state}`}>{char}</span>
@@ -618,7 +618,7 @@ export default function ArticleOfTheDay() {
       </Show>
 
       <Show when={article()}>
-        {() => {
+        {(function() {
           const data = article()!;
           return (
             <>
@@ -698,7 +698,7 @@ export default function ArticleOfTheDay() {
               </Show>
             </>
           );
-        }}
+        })()}
       </Show>
     </div>
   );

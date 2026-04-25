@@ -408,7 +408,7 @@ export default function VocabMining() {
       </Show>
 
       <Show when={article()}>
-        {() => {
+        {(function() {
           const data = article()!;
           // Initialize included set on first load
           if (includedIndices().size === 0 && highlights().length > 0) {
@@ -488,7 +488,7 @@ export default function VocabMining() {
               </div>
             </>
           );
-        }}
+        })()}
       </Show>
     </div>
   );

@@ -64,7 +64,6 @@ export default function ShadowingPractice() {
   const [stories] = createResource(fetchStories);
   const [selectedStoryId, setSelectedStoryId] = createSignal<string | null>(null);
 
-  const [storyDetail, setStoryDetail] = createSignal<StoryDetail | null>(null);
   const [sentences, setSentences] = createSignal<string[]>([]);
   const [currentIndex, setCurrentIndex] = createSignal(0);
   const [mode, setMode] = createSignal<PracticeMode>("dictation");
@@ -112,7 +111,6 @@ export default function ShadowingPractice() {
   const loadStorySentences = async (id: string) => {
     warmUpTts(id);
     const detail = await fetchStory(id);
-    setStoryDetail(detail);
     const sents = splitSentences(detail.french.paragraphs);
     setSentences(sents);
     setCurrentIndex(0);
@@ -700,7 +698,7 @@ export default function ShadowingPractice() {
       </Show>
 
       <Show when={stories()}>
-        {() => {
+        {(function() {
           defaultStorySet();
           return (
             <>
@@ -737,198 +735,141 @@ export default function ShadowingPractice() {
               </div>
             </>
           );
-        }}
+        })()}
       </Show>
 
       <Show when={sentences().length > 0}>
-        {() => (
-          <>
-            <div class="sentence-nav">
-              <button
-                class="nav-btn"
-                onClick={prevSentence}
-                disabled={currentIndex() === 0}
-              >
-                ← Prev
-              </button>
-              <span class="sentence-counter">
-                {currentIndex() + 1} / {sentences().length}
-              </span>
-              <button
-                class="nav-btn"
-                onClick={nextSentence}
-                disabled={currentIndex() === sentences().length - 1}
-              >
-                Next →
-              </button>
-            </div>
+        <>
+          <div class="sentence-nav">
+            <button
+              class="nav-btn"
+              onClick={prevSentence}
+              disabled={currentIndex() === 0}
+            >
+              ← Prev
+            </button>
+            <span class="sentence-counter">
+              {currentIndex() + 1} / {sentences().length}
+            </span>
+            <button
+              class="nav-btn"
+              onClick={nextSentence}
+              disabled={currentIndex() === sentences().length - 1}
+            >
+              Next →
+            </button>
+          </div>
 
-            <div class="french-display">
-              <Show
-                when={
-                  mode() !== "dictation" ||
-                  !dictationSubmitted() ||
-                  typedText()
-                }
-              >
-                <p class="french-sentence">
-                  {mode() === "dictation" && dictationSubmitted()
-                    ? currentSentence()
-                    : currentSentence()}
-                </p>
-              </Show>
-              <Show when={mode() === "dictation" && !dictationSubmitted()}>
-                <p
-                  class="french-sentence"
-                  style={{ "font-style": "italic", color: "var(--text-muted)" }}
-                >
-                  [French text hidden — type what you hear]
-                </p>
-              </Show>
-            </div>
-
-            <div class="audio-controls">
-              <button
-                class={`play-btn ${isPlaying() || isWarmingUp() ? "loading" : ""}`}
-                onClick={playAudio}
-                disabled={isPlaying() || !currentSentence()}
-              >
-                {isWarmingUp() ? "🔊 Warming up..." : isPlaying() ? "Playing..." : "🔊 Play Audio"}
-              </button>
-              <div class="speed-controls">
-                <button
-                  class={`speed-pill ${speed() === 0.5 ? "active" : ""}`}
-                  onClick={() => handleSpeedChange(0.5)}
-                >
-                  0.5x
-                </button>
-                <button
-                  class={`speed-pill ${speed() === 0.75 ? "active" : ""}`}
-                  onClick={() => handleSpeedChange(0.75)}
-                >
-                  0.75x
-                </button>
-                <button
-                  class={`speed-pill ${speed() === 1.0 ? "active" : ""}`}
-                  onClick={() => handleSpeedChange(1.0)}
-                >
-                  1x
-                </button>
-              </div>
-            </div>
-
-            {/* Dictation mode */}
-            <Show when={mode() === "dictation"}>
-              <div class="dictation-area">
-                <div class="dictation-label">
-                  {dictationSubmitted()
-                    ? "Result"
-                    : "Type the sentence you heard"}
-                </div>
-                <Show when={!dictationSubmitted()}>
-                  <input
-                    type="text"
-                    class="dictation-input"
-                    placeholder="Type in French..."
-                    value={typedText()}
-                    onInput={(e) => setTypedText(e.currentTarget.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && typedText().trim()) {
-                        submitDictation();
-                      }
-                    }}
-                  />
-                  <div class="dictation-actions">
-                    <button
-                      class="submit-btn"
-                      onClick={submitDictation}
-                      disabled={!typedText().trim()}
-                    >
-                      Check
-                    </button>
-                  </div>
-                </Show>
-                <Show when={dictationSubmitted()}>
-                  <div
-                    class={`dictation-result ${
-                      accuracy() >= 80 ? "correct" : "incorrect"
-                    }`}
-                  >
-                    <div class="accuracy-badge">{accuracy()}% accurate</div>
-                    <div>
-                      {accuracy() >= 80
-                        ? "Great job!"
-                        : "Keep practicing!"}
-                    </div>
-                    <div class="dictation-original">
-                      Correct: {currentSentence()}
-                    </div>
-                  </div>
-                  <div class="dictation-actions">
-                    <button class="retry-btn" onClick={showTextAndRetry}>
-                      Try again without showing text
-                    </button>
-                  </div>
-                </Show>
-              </div>
+          <div class="french-display">
+            <Show
+              when={
+                mode() !== "dictation" ||
+                !dictationSubmitted() ||
+                typedText()
+              }
+            >
+              <p class="french-sentence">
+                {mode() === "dictation" && dictationSubmitted()
+                  ? currentSentence()
+                  : currentSentence()}
+              </p>
             </Show>
-
-            {/* Multiple choice mode */}
-            <Show when={mode() === "multiple-choice"}>
-              <div class="mc-area">
-                <div class="mc-label">
-                  {mcSubmitted()
-                    ? "Result"
-                    : "Select the correct translation"}
-                </div>
-                <Show when={!mcSubmitted()}>
-                  <div class="mc-options">
-                    <For each={mcOptions()}>
-                      {(option) => (
-                        <button
-                          class={`mc-option ${
-                            selectedOption() === option ? "selected" : ""
-                          }`}
-                          onClick={() => setSelectedOption(option)}
-                          disabled={mcSubmitted()}
-                        >
-                          {option}
-                        </button>
-                      )}
-                    </For>
-                  </div>
-                  <div class="mc-actions">
-                    <button
-                      class="submit-btn"
-                      onClick={submitMC}
-                      disabled={!selectedOption()}
-                    >
-                      Submit
-                    </button>
-                  </div>
-                </Show>
-                <Show when={mcSubmitted()}>
-                  <div
-                    class={`mc-feedback ${
-                      selectedOption() === currentSentence()
-                        ? "correct"
-                        : "incorrect"
-                    }`}
-                  >
-                    <div class="mc-feedback-text">
-                      {selectedOption() === currentSentence()
-                        ? "✓ Correct!"
-                        : "✗ Incorrect"}
-                    </div>
-                    <div class="mc-original">
-                      Correct answer: {currentSentence()}
-                    </div>
-                  </div>
-                </Show>
-              </div>
+            <Show when={mode() === "dictation" && !dictationSubmitted()}>
+              <p
+                class="french-sentence"
+                style={{ "font-style": "italic", color: "var(--text-muted)" }}
+              >
+                [French text hidden — type what you hear]
+              </p>
             </Show>
-          </>
-        )}
+          </div>
+
+          <div class="audio-controls">
+            <button
+              class={`play-btn ${isPlaying() || isWarmingUp() ? "loading" : ""}`}
+              onClick={playAudio}
+              disabled={isPlaying() || !currentSentence()}
+            >
+              {isWarmingUp() ? "🔊 Warming up..." : isPlaying() ? "Playing..." : "🔊 Play Audio"}
+            </button>
+            <div class="speed-controls">
+              <button
+                class={`speed-pill ${speed() === 0.5 ? "active" : ""}`}
+                onClick={() => handleSpeedChange(0.5)}
+              >
+                0.5x
+              </button>
+              <button
+                class={`speed-pill ${speed() === 0.75 ? "active" : ""}`}
+                onClick={() => handleSpeedChange(0.75)}
+              >
+                0.75x
+              </button>
+              <button
+                class={`speed-pill ${speed() === 1.0 ? "active" : ""}`}
+                onClick={() => handleSpeedChange(1.0)}
+              >
+                1x
+              </button>
+            </div>
+          </div>
+
+          {/* Dictation mode */}
+          <Show when={mode() === "dictation"}>
+            <div class="dictation-area">
+              <div class="dictation-label">
+                {dictationSubmitted()
+                  ? "Result"
+                  : "Type the sentence you heard"}
+              </div>
+              <Show when={!dictationSubmitted()}>
+                <input
+                  type="text"
+                  class="dictation-input"
+                  placeholder="Type in French..."
+                  value={typedText()}
+                  onInput={(e) => setTypedText(e.currentTarget.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && typedText().trim()) {
+                      submitDictation();
+                    }
+                  }}
+                />
+                <div class="dictation-actions">
+                  <button
+                    class="submit-btn"
+                    onClick={submitDictation}
+                    disabled={!typedText().trim()}
+                  >
+                    Check
+                  </button>
+                </div>
+              </Show>
+              <Show when={dictationSubmitted()}>
+                <div
+                  class={`dictation-result ${
+                    accuracy() >= 80 ? "correct" : "incorrect"
+                  }`}
+                >
+                  <div class="accuracy-badge">{accuracy()}% accurate</div>
+                  <div>
+                    {accuracy() >= 80
+                      ? "Great job!"
+                      : "Keep practicing!"}
+                  </div>
+                  <div class="dictation-original">
+                    Correct: {currentSentence()}
+                  </div>
+                </div>
+                <div class="dictation-actions">
+                  <button class="retry-btn" onClick={showTextAndRetry}>
+                    Try again without showing text
+                  </button>
+                </div>
+              </Show>
+            </div>
+          </Show>
+        </>
       </Show>
 
       <Show when={!stories.loading && stories()?.length === 0}>
