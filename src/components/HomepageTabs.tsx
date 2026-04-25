@@ -108,7 +108,7 @@ export default function HomepageTabs() {
         class="homepage-tab-panel"
         style={{ display: tab() === "practice" ? "block" : "none" }}
       >
-        <div class="practice-grid">
+        <div class="poly-grid">
           <For each={PRACTICE}>
             {(item, i) => (
               <a
