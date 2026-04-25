@@ -29,7 +29,6 @@ interface ArticleData {
     paragraphs: string[];
     source: string;
   } | null;
-  date: string;
 }
 
 async function fetchStoryList(): Promise<StoryListItem[]> {
@@ -38,9 +37,9 @@ async function fetchStoryList(): Promise<StoryListItem[]> {
   return res.json();
 }
 
-async function fetchArticle(storyId?: string): Promise<ArticleData> {
+async function fetchArticle(storyId: string): Promise<ArticleData> {
   const base = `${window.location.protocol}//${window.location.host}`;
-  const url = storyId ? `${base}/api/stories/${storyId}` : `${base}/api/article-of-the-day`;
+  const url = `${base}/api/stories/${storyId}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Failed to fetch article: ${res.status}`);
   return res.json();
@@ -642,7 +641,7 @@ export default function ArticleOfTheDay() {
                 </div>
                 <h1>{data.story.title}</h1>
                 <p class="article-meta">
-                  {data.story.source} ({data.story.published_year}) · {data.date}
+                  {data.story.source} ({data.story.published_year})
                 </p>
               </div>
 

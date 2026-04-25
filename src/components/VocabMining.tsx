@@ -22,17 +22,18 @@ interface ArticleData {
     paragraphs: string[];
     source: string;
   } | null;
-  date: string;
 }
 
 interface StorySummary {
   id: string;
   title: string;
-  date: string;
+  source: string;
+  published_year: number;
+  level: string;
 }
 
-async function fetchArticle(): Promise<ArticleData> {
-  const res = await fetch(`/api/article-of-the-day`);
+async function fetchArticle(storyId: string): Promise<ArticleData> {
+  const res = await fetch(`/api/stories/${storyId}`);
   if (!res.ok) throw new Error(`Failed to fetch article: ${res.status}`);
   return res.json();
 }
@@ -75,8 +76,11 @@ const mockTranslations: Record<string, string> = {
 };
 
 export default function VocabMining() {
-  const [article, { refetch }] = createResource(fetchArticle);
   const [stories] = createResource(fetchStories);
+  const [article] = createResource(
+    () => stories()?.[0]?.id,
+    (storyId) => fetchArticle(storyId)
+  );
   const [selectedStoryId, setSelectedStoryId] = createSignal<string | null>(null);
 
   // All highlighted words are "mined" — all included by default
@@ -122,7 +126,7 @@ export default function VocabMining() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `lacoquille-vocab-${data.date}.csv`;
+    a.download = `lacoquille-vocab-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -428,7 +432,7 @@ export default function VocabMining() {
                   >
                     <option value={data.story.id}>{data.story.title} (today)</option>
                     <For each={stories()!.filter(s => s.id !== data.story.id)}>
-                      {(s) => <option value={s.id}>{s.title} — {s.date}</option>}
+                      {(s) => <option value={s.id}>{s.title} — {s.published_year}</option>}
                     </For>
                   </select>
                 </div>
