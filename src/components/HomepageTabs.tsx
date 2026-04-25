@@ -47,6 +47,7 @@ export default function HomepageTabs() {
           class="homepage-tab-btn"
           classList={{ active: tab() === "knowledge", inactive: tab() !== "knowledge" }}
           onClick={() => setTab("knowledge")}
+          style={{ "font-family": "'DM Serif Display', serif !important" }}
         >
           Knowledge
         </button>
@@ -56,6 +57,7 @@ export default function HomepageTabs() {
           class="homepage-tab-btn"
           classList={{ active: tab() === "practice", inactive: tab() !== "practice" }}
           onClick={() => setTab("practice")}
+          style={{ "font-family": "'DM Serif Display', serif !important" }}
         >
           Practice
         </button>
