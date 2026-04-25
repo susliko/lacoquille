@@ -45,7 +45,7 @@ export default function HomepageTabs() {
           role="tab"
           aria-selected={tab() === "knowledge"}
           class="homepage-tab-btn"
-          classList={{ active: tab() === "knowledge" }}
+          classList={{ active: tab() === "knowledge", inactive: tab() !== "knowledge" }}
           onClick={() => setTab("knowledge")}
         >
           Knowledge
@@ -54,7 +54,7 @@ export default function HomepageTabs() {
           role="tab"
           aria-selected={tab() === "practice"}
           class="homepage-tab-btn"
-          classList={{ active: tab() === "practice" }}
+          classList={{ active: tab() === "practice", inactive: tab() !== "practice" }}
           onClick={() => setTab("practice")}
         >
           Practice
