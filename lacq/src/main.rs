@@ -13,25 +13,14 @@ async fn main() {
         .init();
 
     let config = lacq::config::Config::from_env();
-    let api_key = config.minimax_api_key.clone();
-    let base_url = config.minimax_base_url.clone();
 
     let http = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))
         .build()
         .expect("reqwest client");
 
-    let llm = if api_key != "mock-key" && !api_key.is_empty() {
-        Some(Arc::new(lacq::llm::MinimaxProvider::new(
-            api_key,
-            base_url,
-        )) as Arc<dyn lacq::llm::LlmProvider>)
-    } else {
-        None
-    };
-
     let data_dir = config.data_dir.clone();
-    let state = Arc::new(lacq::AppState::new(http, llm, data_dir, config));
+    let state = Arc::new(lacq::AppState::new(http, data_dir, config));
 
     let app = lacq::routes::routes()
         .with_state(state)

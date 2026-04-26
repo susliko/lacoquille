@@ -14,6 +14,27 @@ npx astro check  # Type-check .astro, .tsx, .ts files (run before committing)
 
 Node 22+ required.
 
+## Agent-browser testing
+
+**Always use `npm run agent` for browser testing.** Never run servers manually.
+
+> **Note:** Do not use `agent-browser snapshot`, `agent-browser click`, or `agent-browser screenshot` for SolidJS islands — these components hydrate client-side and elements may not exist in the DOM at evaluation time. Click/screenshot also won't work. For SolidJS pages, open the URL, use `--wait 5000` to let it hydrate, then verify via `agent-browser snapshot -i` if elements appear. If they don't, check SSR HTML with `curl` instead.
+
+```sh
+npm run agent
+```
+
+This is a single command that:
+1. Builds the frontend to `dist/`
+2. Symlinks `dist/` → `lacq/dist/` (so the Rust backend can serve it)
+3. Starts the Rust backend on port 8080
+4. Waits for port 8080 to be ready
+5. Opens agent-browser and takes a snapshot
+
+If you need to do further testing after the initial snapshot, use agent-browser commands directly — the Rust backend keeps running.
+
+**Subagents cannot run browser tests** — they spawn without API key access and fail. Do all browser testing in the main session.
+
 ## GitHub Operations
 
 **Use GitHub MCP tools for all repo operations** (not git CLI):

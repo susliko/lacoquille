@@ -1,4 +1,4 @@
-use lacq::{AppState, BookMeta};
+use lacq::{AppState, BookMeta, Config};
 
 #[test]
 fn test_curated_books_has_real_gutenberg_ids() {
@@ -28,15 +28,15 @@ fn test_book_meta_fields() {
 #[tokio::test]
 async fn test_app_state_creates_successfully() {
     let http = reqwest::Client::new();
-    let state = AppState::new(http, None, "data".to_string());
+    let state = AppState::new(http, "data".to_string(), Config::from_env());
     assert_eq!(state.curated_books.len(), 5);
 }
 
 #[tokio::test]
-async fn test_app_state_french_cache_stores_text() {
+async fn test_app_state_text_cache_starts_empty() {
     let http = reqwest::Client::new();
-    let state = AppState::new(http, None, "data".to_string());
-    let cache = state.french_cache.lock().await;
+    let state = AppState::new(http, "data".to_string(), Config::from_env());
+    let cache = state.text_cache.lock().await;
     assert!(cache.is_empty(), "cache should start empty");
 }
 
@@ -72,10 +72,10 @@ fn test_split_paragraphs_splits_on_double_newline() {
 }
 
 #[test]
-fn test_extract_excerpt_stops_before_exceeding_target_too_much() {
+fn test_extract_excerpt_stops_before_exceeding_target() {
     let paras = &["One two three four five.", "Six seven eight nine ten.", "Eleven twelve thirteen fourteen."];
     let result = gutenberg::extract_excerpt(paras, 7);
-    // First para has 5 words (< 7), second para would add 5 more = 10 (> 7), so stops after first
+    // First para: 5 words (≤ 7). Second para would add 5 = 10 (> 7), so stop after first.
     assert_eq!(result.len(), 1);
     assert_eq!(result[0], "One two three four five.");
 }

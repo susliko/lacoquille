@@ -1,821 +1,397 @@
-import { createSignal, createResource, Show, createEffect, onMount } from "solid-js";
+import { createSignal, createMemo, createResource, createEffect, onCleanup, Show } from "solid-js";
 
-interface StoryListItem {
-  id: string;
+interface ArticleData {
   title: string;
   source: string;
   published_year: number;
+  paragraphs: string[];
 }
 
-interface StoryData {
-  story: {
-    id: string;
-    title: string;
-    source: string;
-    published_year: number;
-  };
-  french: {
-    paragraphs: string[];
-    vocab_highlights: VocabHighlight[];
-  };
-  date: string;
-}
-
-interface VocabHighlight {
-  word: string;
-  paragraph_index: number;
-  start_offset: number;
-  end_offset: number;
-}
-
-interface Props {
-  storyId?: string;
-  onBack?: () => void;
-}
-
-type CharState = 'untyped' | 'correct' | 'error';
-
-interface TypingState {
-  typedChars: number;
-  errorCount: number;
-  totalTyped: number;
-  startTime: number | null;
-  charStates: CharState[];
-  currentIndex: number;
-  finished: boolean;
-}
-
-async function fetchStoryList(): Promise<StoryListItem[]> {
-  const res = await fetch(`/api/stories`);
-  if (!res.ok) throw new Error(`Failed to fetch stories: ${res.status}`);
-  return res.json();
-}
-
-async function fetchStory(id: string): Promise<StoryData> {
-  const res = await fetch(`/api/stories/${id}`);
-  if (!res.ok) throw new Error(`Failed to fetch story: ${res.status}`);
-  return res.json();
-}
-
-export default function TypingRace(props: Props) {
-  const [stories] = createResource(fetchStoryList);
-
-  onMount(() => {
-    const saved = localStorage.getItem('typing-race-story');
-    if (saved && stories()?.some(s => s.id === saved)) {
-      // Re-select the story on mount
-    }
+export default function TypingRace() {
+  const [article] = createResource(async () => {
+    const res = await fetch("/api/article-of-the-day");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json() as Promise<ArticleData>;
   });
 
-  const warmUpTts = (storyId: string) => {
-    fetch(`/api/stories/${storyId}/tts-cache`, { method: "POST" });
-  };
+  const [typed, setTyped] = createSignal(0);
+  const [errors, setErrors] = createSignal(0);
+  const [startTime, setStartTime] = createSignal<number | null>(null);
+  const [finished, setFinished] = createSignal(false);
+  const [elapsedSecs, setElapsedSecs] = createSignal(0);
 
-  const [storyIndex, setStoryIndex] = createSignal(0);
-  const [story] = createResource(
-    () => props.storyId ?? stories()?.[storyIndex()]?.id,
-    (id) => fetchStory(id)
-  );
+  const text = createMemo(() => (article()?.paragraphs?.[0] ?? "").split(""));
 
-  const [typingState, setTypingState] = createSignal<TypingState>({
-    typedChars: 0,
-    errorCount: 0,
-    totalTyped: 0,
-    startTime: null,
-    charStates: [],
-    currentIndex: 0,
-    finished: false,
-  });
-
-  const [showResults, setShowResults] = createSignal(false);
-  const [showHistory, setShowHistory] = createSignal(false);
-  const [isMobile, setIsMobile] = createSignal(false);
-
-  onMount(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 640);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-  });
-
-  const saveResult = (storyId: string, wpm: number, accuracy: number) => {
-    const key = `typing-race-history-${storyId}`;
-    const history = JSON.parse(localStorage.getItem(key) || '[]');
-    history.unshift({ storyId, wpm, accuracy, timestamp: new Date().toISOString() });
-    localStorage.setItem(key, JSON.stringify(history.slice(0, 10)));
-
-    const bestKey = `typing-race-best-${storyId}`;
-    const prevBest = parseInt(localStorage.getItem(bestKey) || '0');
-    if (wpm > prevBest) localStorage.setItem(bestKey, wpm.toString());
-  };
-
-  const getHistory = (storyId: string) => {
-    const key = `typing-race-history-${storyId}`;
-    return JSON.parse(localStorage.getItem(key) || '[]');
-  };
-
-  const getPersonalBest = (storyId: string) => {
-    const bestKey = `typing-race-best-${storyId}`;
-    return parseInt(localStorage.getItem(bestKey) || '0');
-  };
-
-  const getFullText = () => {
-    const data = story();
-    if (!data) return '';
-    return data.french.paragraphs.join('\n\n');
-  };
-
-  const initTyping = () => {
-    const text = getFullText();
-    setTypingState({
-      typedChars: 0,
-      errorCount: 0,
-      totalTyped: 0,
-      startTime: null,
-      charStates: Array(text.length).fill('untyped'),
-      currentIndex: 0,
-      finished: false,
-    });
-    setShowResults(false);
-  };
-
-  // Start typing immediately when story loads
+  // Tick elapsed time every 500ms once race starts
   createEffect(() => {
-    if (story() && !story.loading && !story.error) {
-      setTimeout(initTyping, 50);
-    }
+    if (startTime() === null) return;
+    const id = setInterval(() => {
+      if (!finished()) {
+        setElapsedSecs(Math.floor((Date.now() - startTime()!) / 1000));
+      }
+    }, 500);
+    onCleanup(() => clearInterval(id));
   });
 
-  const calculateWPM = () => {
-    const s = typingState();
-    if (!s.startTime || s.typedChars === 0) return 0;
-    const elapsedMinutes = (Date.now() - s.startTime) / 60000;
-    if (elapsedMinutes < 0.01) return 0;
-    return Math.round((s.typedChars / 5) / elapsedMinutes);
-  };
+  // Reset elapsed when race restarts
+  createEffect(() => {
+    if (startTime() === null) setElapsedSecs(0);
+  });
 
-  const calculateAccuracy = () => {
-    const s = typingState();
-    if (s.totalTyped === 0) return 100;
-    return Math.round((s.typedChars / s.totalTyped) * 100);
-  };
+  const wpm = createMemo(() => {
+    const secs = elapsedSecs();
+    const chars = typed();
+    if (secs < 1 || chars === 0) return 0;
+    return Math.round((chars / 5) / (secs / 60));
+  });
 
-  const handleTypingKeyDown = (e: KeyboardEvent) => {
-    const s = typingState();
-    if (s.finished && e.key !== 'Escape' && e.key !== 'Enter') return;
+  const accuracy = createMemo(() => {
+    const t = typed();
+    const e = errors();
+    if (t === 0) return 100;
+    return Math.round(((t - e) / t) * 100);
+  });
 
-    if (e.key === 'Escape') {
-      if (props.onBack) {
-        props.onBack();
-      }
+  const [errorSet, setErrorSet] = createSignal<Set<number>>(new Set());
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    // Allow browser shortcuts with modifiers through
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+    if (finished()) {
+      if (e.key === "Enter") resetRace();
       return;
     }
-
-    // Tab = skip current word
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      if (s.finished) return;
-      const text = getFullText();
-      let i = s.currentIndex;
-      const newCharStates = [...s.charStates];
-      let newTypedChars = s.typedChars;
-      // Mark current word chars as correct until space or newline
-      while (i < text.length && text[i] !== ' ' && text[i] !== '\n') {
-        newCharStates[i] = 'correct';
-        newTypedChars++;
-        i++;
-      }
-      // Also skip any trailing spaces/newlines
-      while (i < text.length && (text[i] === ' ' || text[i] === '\n')) {
-        newCharStates[i] = 'correct';
-        newTypedChars++;
-        i++;
-      }
-      setTypingState({
-        ...s,
-        charStates: newCharStates,
-        typedChars: newTypedChars,
-        currentIndex: i,
-      });
-      return;
-    }
-
-    // Enter on results overlay = Try Again
-    if (e.key === 'Enter' && showResults()) {
-      initTyping();
-      setTimeout(() => typingInputRef?.focus(), 50);
-      return;
-    }
-
-    const text = getFullText();
-    const currentChar = text[s.currentIndex];
-
-    // Start timer on first character
-    if (s.startTime === null && e.key.length === 1) {
-      setTypingState(prev => ({ ...prev, startTime: Date.now() }));
-    }
-
-    if (e.key === 'Backspace') return;
-
+    if (e.key === "Backspace") return;
     if (e.key.length !== 1) return;
 
     e.preventDefault();
 
-    const newCharStates = [...s.charStates];
-    let newTypedChars = s.typedChars;
-    let newErrorCount = s.errorCount;
-    let newTotalTyped = s.totalTyped + 1;
-
-    if (e.key === currentChar) {
-      newCharStates[s.currentIndex] = 'correct';
-      newTypedChars++;
-    } else {
-      newCharStates[s.currentIndex] = 'error';
-      newErrorCount++;
+    if (startTime() === null) {
+      setStartTime(Date.now());
     }
 
-    const newIndex = s.currentIndex + 1;
-    const finished = newIndex >= text.length;
+    const idx = typed();
+    const txt = text();
+    if (idx >= txt.length) {
+      setFinished(true);
+      return;
+    }
 
-    setTypingState({
-      typedChars: newTypedChars,
-      errorCount: newErrorCount,
-      totalTyped: newTotalTyped,
-      startTime: s.startTime,
-      charStates: newCharStates,
-      currentIndex: newIndex,
-      finished,
-    });
+    if (e.key === txt[idx]) {
+      setTyped(idx + 1);
+    } else {
+      setErrorSet((prev) => new Set([...prev, idx]));
+      setErrors(errors() + 1);
+      setTyped(idx + 1);
+    }
 
-    if (finished) {
-      const id = props.storyId ?? stories()?.[storyIndex()]?.id;
-      if (id) saveResult(id, Math.round((newTypedChars / 5) / ((Date.now() - s.startTime!) / 60000)), Math.round((newTypedChars / newTotalTyped) * 100));
-      setTimeout(() => setShowResults(true), 300);
+    if (idx + 1 >= txt.length) {
+      setFinished(true);
     }
   };
 
-  const handleMobileInput = (value: string) => {
-    const s = typingState();
-    if (s.finished) return;
-
-    const text = getFullText();
-
-    // Simple approach: just type the new character
-    const newChar = value[value.length - 1];
-    if (!newChar) return;
-
-    const newCharStates = [...s.charStates];
-    let newTypedChars = s.typedChars;
-    let newErrorCount = s.errorCount;
-    let newTotalTyped = s.totalTyped + 1;
-
-    // Start timer on first character
-    if (s.startTime === null) {
-      setTypingState(prev => ({ ...prev, startTime: Date.now() }));
-    }
-
-    const currentChar = text[s.currentIndex];
-    if (newChar === currentChar) {
-      newCharStates[s.currentIndex] = 'correct';
-      newTypedChars++;
-    } else {
-      newCharStates[s.currentIndex] = 'error';
-      newErrorCount++;
-    }
-
-    const newIndex = s.currentIndex + 1;
-    const finished = newIndex >= text.length;
-
-    setTypingState({
-      typedChars: newTypedChars,
-      errorCount: newErrorCount,
-      totalTyped: newTotalTyped,
-      startTime: s.startTime,
-      charStates: newCharStates,
-      currentIndex: newIndex,
-      finished,
-    });
-
-    if (finished) {
-      const id = props.storyId ?? stories()?.[storyIndex()]?.id;
-      if (id) saveResult(id, Math.round((newTypedChars / 5) / ((Date.now() - s.startTime!) / 60000)), Math.round((newTypedChars / newTotalTyped) * 100));
-      setTimeout(() => setShowResults(true), 300);
-    }
+  const resetRace = () => {
+    setTyped(0);
+    setErrors(0);
+    setErrorSet(new Set());
+    setStartTime(null);
+    setElapsedSecs(0);
+    setFinished(false);
+    (document.activeElement as HTMLElement | null)?.blur();
+    setTimeout(() => containerRef?.focus(), 50);
   };
 
-  let typingInputRef: HTMLInputElement | undefined;
-  let mobileInputRef: HTMLInputElement | undefined;
+  let containerRef: HTMLDivElement | undefined;
 
   createEffect(() => {
-    if (story() && typingInputRef) {
-      setTimeout(() => typingInputRef?.focus(), 100);
+    if (article() && containerRef) {
+      containerRef.focus();
     }
   });
 
-  createEffect(() => {
-    if (story() && mobileInputRef && isMobile()) {
-      setTimeout(() => mobileInputRef?.focus(), 100);
-    }
-  });
+  // Split text into typed and remaining for cursor placement
+  const typedText = createMemo(() => text().slice(0, typed()));
+  const remainingText = createMemo(() => text().slice(typed()));
 
-  const TypingView = () => {
-    const s = typingState();
-    const text = getFullText();
-    const paragraphs = story()?.french.paragraphs ?? [];
-    const progress = text.length > 0 ? (s.currentIndex / text.length) * 100 : 0;
-    const typedText = () => text.slice(0, s.currentIndex);
-
-    let charIndex = 0;
-    const paragraphChars = paragraphs.map(para => {
-      const chars: { char: string; state: CharState }[] = [];
-      for (const c of para) {
-        chars.push({ char: c, state: s.charStates[charIndex] ?? 'untyped' });
-        charIndex++;
-      }
-      charIndex++; // skip the newline between paragraphs
-      return chars;
-    });
-
-    return (
-      <div class="typing-mode" onKeyDown={handleTypingKeyDown} tabIndex={0} ref={typingInputRef}>
-        <Show when={!isMobile()}>
-          <input type="text" class="typing-input" />
-        </Show>
-        <Show when={isMobile()}>
-          <input
-            type="text"
-            class="typing-mobile-input"
-            ref={mobileInputRef}
-            value={typedText()}
-            onInput={(e) => handleMobileInput(e.currentTarget.value)}
-            autocomplete="off"
-            autocorrect="off"
-            autocapitalize="off"
-            spellcheck="false"
-            placeholder="Type here..."
-          />
-        </Show>
-
-        <div class="typing-hud">
-          <div class="typing-wpm">
-            <span class="typing-wpm-value">{calculateWPM()}</span>
-            <span class="typing-wpm-label">WPM</span>
-          </div>
-          <div class="typing-progress-bar">
-            <div class="typing-progress-fill" style={{ width: `${progress}%` }} />
-          </div>
-          <div class="typing-accuracy">{calculateAccuracy()}%</div>
-        </div>
-
-        <div class="typing-text-container">
-          {paragraphChars.map((chars) => (
-            <div class="typing-paragraph">
-              {chars.map(({ char, state }) => (
-                <span class={`typing-char typing-char-${state}`}>{char}</span>
-              ))}
-            </div>
-          ))}
-        </div>
-
-        <div class="typing-shortcut-hint">
-          <kbd>Tab</kbd> = skip word · <kbd>Esc</kbd> = exit
-        </div>
-
-        <Show when={showResults()}>
-          {(function() {
-            const id = props.storyId ?? stories()?.[storyIndex()]?.id ?? '';
-            const currentWPM = calculateWPM();
-            const bestWPM = getPersonalBest(id);
-            const isNewRecord = currentWPM > bestWPM && currentWPM > 0;
-            const history = getHistory(id).slice(0, 5);
-            return (
-              <div class="typing-results-overlay">
-                <div class="typing-results">
-                  <h2>Finished!</h2>
-                  <Show when={isNewRecord}>
-                    <div class="new-record-badge">New record!</div>
-                  </Show>
-                  <div class="typing-results-stats">
-                    <div class="typing-result-stat typing-result-wpm">
-                      <span class="typing-result-value">{currentWPM}</span>
-                      <span class="typing-result-label">WPM</span>
-                      <Show when={bestWPM > 0 && !isNewRecord}>
-                        <span class="personal-best">Best: {bestWPM}</span>
-                      </Show>
-                    </div>
-                    <div class="typing-result-stat">
-                      <span class="typing-result-value">{calculateAccuracy()}%</span>
-                      <span class="typing-result-label">Accuracy</span>
-                    </div>
-                  </div>
-                  <Show when={history.length > 0}>
-                    <div class="typing-history-section">
-                      <button class="history-toggle" onClick={() => setShowHistory(h => !h)}>
-                        History {showHistory() ? '▲' : '▼'}
-                      </button>
-                      <Show when={showHistory()}>
-                        <ul class="typing-history-list">
-                          {history.map((r: any) => (
-                            <li>
-                              <span class="history-wpm">{r.wpm} WPM</span>
-                              <span class="history-accuracy">{r.accuracy}%</span>
-                              <span class="history-date">{new Date(r.timestamp).toLocaleDateString()}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </Show>
-                    </div>
-                  </Show>
-                  <div class="typing-results-actions">
-                    <button class="typing-result-btn primary" onClick={() => { initTyping(); setTimeout(() => typingInputRef?.focus(), 50); }}>
-                      Try Again
-                    </button>
-                    <button class="typing-result-btn" onClick={() => props.onBack?.()}>
-                      Back
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}</Show>
-      </div>
-    );
+  const getCharState = (i: number): string => {
+    if (i >= typed()) return "idle";
+    return errorSet().has(i) ? "error" : "correct";
   };
+
+  // For remaining characters, derive state directly
+  const remainingChars = createMemo(() =>
+    remainingText().map((char, i) => ({ char, idx: typed() + i }))
+  );
 
   return (
-    <div class="typing-race">
+    <div class="tr-root">
       <style>{`
-        .typing-race {
-          max-width: 1100px;
-          margin: 0 auto;
-          padding: 1.5rem 2rem;
-        }
-        .story-selector {
-          text-align: center;
-          padding: 3rem;
-        }
-        .story-selector h2 {
-          font-family: var(--font-display);
-          font-size: 2rem;
-          margin: 0 0 1.5rem 0;
-        }
-        .story-nav {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.75rem;
-          margin-bottom: 1rem;
-        }
-        .nav-btn {
-          background: var(--surface-2);
-          border: 1px solid var(--border);
-          color: var(--text-2);
-          width: 36px;
-          height: 36px;
-          border-radius: 6px;
-          cursor: pointer;
-          font-size: 1.2rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all var(--transition);
-        }
-        .nav-btn:hover {
-          background: var(--surface-3);
-          color: var(--text);
-        }
-        .story-position {
-          font-size: 0.9rem;
-          color: var(--text-2);
-          font-family: var(--font-mono);
-        }
-        .story-title {
-          font-family: var(--font-display);
-          font-size: 1.5rem;
-          margin-bottom: 0.5rem;
-        }
-        .story-meta {
-          color: var(--text-2);
-        }
-        .loading-state, .error-state {
-          text-align: center;
-          padding: 3rem;
-          color: var(--text-2);
-        }
-        .error-state {
-          color: var(--error);
-        }
-        /* Typing mode */
-        .typing-mode {
-          position: fixed;
-          inset: 0;
+        .tr-root {
+          min-height: 100vh;
           background: var(--bg);
-          z-index: 200;
           display: flex;
           flex-direction: column;
           align-items: center;
-          padding: 2rem;
-          outline: none;
-          overflow: hidden;
+          justify-content: flex-start;
+          padding: 2.5rem 1rem 4rem;
+          box-sizing: border-box;
         }
-        .typing-input {
-          position: absolute;
-          opacity: 0;
-          width: 0;
-          height: 0;
+        .tr-title {
+          font-family: var(--font-display);
+          font-size: 1.05rem;
+          font-weight: 600;
+          color: var(--text-2);
+          margin-bottom: 0.2rem;
+          letter-spacing: 0.03em;
         }
-        .typing-hud {
+        .tr-meta {
+          font-size: 0.78rem;
+          color: var(--text-muted);
+          margin-bottom: 2.5rem;
+        }
+        .tr-hud {
           display: flex;
+          gap: 2.5rem;
+          margin-bottom: 2.5rem;
           align-items: center;
-          gap: 1.5rem;
-          margin-bottom: 2rem;
-          width: 100%;
-          max-width: 800px;
         }
-        .typing-wpm {
+        .tr-stat {
           display: flex;
           flex-direction: column;
           align-items: center;
           min-width: 60px;
         }
-        .typing-wpm-value {
+        .tr-stat-value {
           font-family: var(--font-display);
-          font-size: 2rem;
+          font-size: 2.5rem;
           font-weight: 700;
-          color: var(--coral);
+          color: var(--text);
           line-height: 1;
         }
-        .typing-wpm-label {
-          font-size: 0.7rem;
+        .tr-stat-label {
+          font-size: 0.62rem;
           text-transform: uppercase;
-          letter-spacing: 0.1em;
+          letter-spacing: 0.12em;
           color: var(--text-muted);
+          margin-top: 0.25rem;
         }
-        .typing-progress-bar {
-          flex: 1;
-          height: 8px;
-          background: var(--surface-2);
-          border-radius: 4px;
-          overflow: hidden;
-        }
-        .typing-progress-fill {
-          height: 100%;
-          background: var(--emerald);
-          border-radius: 4px;
-          transition: width 0.1s ease;
-        }
-        .typing-accuracy {
-          font-family: var(--font-mono);
-          font-size: 0.9rem;
-          color: var(--text-2);
-          min-width: 50px;
-          text-align: right;
-        }
-        .typing-text-container {
-          max-width: 800px;
+        .tr-text-wrap {
+          position: relative;
+          max-width: 720px;
           width: 100%;
-          max-height: calc(100vh - 200px);
-          overflow-y: auto;
-          padding-right: 1rem;
+          cursor: text;
         }
-        .typing-paragraph {
+        .tr-text-area {
+          outline: none;
+          white-space: pre-wrap;
+          word-break: break-word;
           font-family: var(--font-body);
-          font-size: 1.35rem;
-          line-height: 2;
-          margin-bottom: 1.5rem;
-          padding-left: 1rem;
-          border-left: 3px solid var(--surface-3);
-          transition: border-color 0.2s;
+          font-size: clamp(1.1rem, 3vw, 1.4rem);
+          line-height: 2.1;
+          letter-spacing: 0.01em;
+          padding: 1.25rem 1.5rem;
+          background: var(--surface);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius);
+          position: relative;
+          user-select: none;
         }
-        .typing-char {
-          transition: color 0.05s;
+        .tr-cursor {
+          display: inline-block;
+          width: 2px;
+          height: 1.25em;
+          background: var(--coral);
+          vertical-align: text-bottom;
+          animation: blink 0.85s step-end infinite;
         }
-        .typing-char-untyped {
-          color: var(--text-muted);
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0; }
         }
-        .typing-char-correct {
-          color: var(--text);
-        }
-        .typing-char-error {
-          color: var(--coral);
-          text-decoration: underline;
-          text-decoration-style: wavy;
-        }
-        /* Results overlay */
-        .typing-results-overlay {
+        .tc-idle    { color: var(--text-muted); }
+        .tc-correct { color: #4ade80; }
+        .tc-error   { color: #f87171; text-decoration: underline; text-decoration-style: wavy; }
+        /* Results */
+        .tr-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(0, 0, 0, 0.6);
+          background: rgba(0, 0, 0, 0.55);
           display: flex;
           align-items: center;
           justify-content: center;
-          z-index: 300;
+          z-index: 100;
+          animation: tr-fade-in 0.15s ease;
         }
-        .typing-results {
+        @keyframes tr-fade-in {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        .tr-results {
           background: var(--bg);
-          border-radius: var(--radius);
-          padding: 2.5rem 3rem;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-lg);
+          padding: 2.5rem 3.5rem;
           text-align: center;
-          animation: panel-in 0.2s ease;
+          animation: tr-slide-up 0.2s ease;
         }
-        .typing-results h2 {
+        @keyframes tr-slide-up {
+          from { transform: translateY(14px); opacity: 0; }
+          to   { transform: translateY(0); opacity: 1; }
+        }
+        .tr-results h2 {
           font-family: var(--font-display);
-          font-size: 2rem;
-          margin: 0 0 1.5rem 0;
-          color: var(--text);
+          font-size: 2.25rem;
+          margin: 0 0 2rem;
         }
-        .typing-results-stats {
+        .tr-results-stats {
           display: flex;
-          gap: 2.5rem;
+          gap: 3rem;
           justify-content: center;
           margin-bottom: 2rem;
         }
-        .typing-result-stat {
+        .tr-result-stat {
           display: flex;
           flex-direction: column;
           align-items: center;
         }
-        .typing-result-wpm {
-          position: relative;
-        }
-        .typing-result-value {
+        .tr-result-value {
           font-family: var(--font-display);
-          font-size: 2.5rem;
+          font-size: 3.25rem;
           font-weight: 700;
           color: var(--coral);
           line-height: 1;
         }
-        .personal-best {
-          font-size: 0.7rem;
-          color: var(--text-muted);
-          margin-top: 0.25rem;
-        }
-        .new-record-badge {
-          background: var(--emerald);
-          color: #fff;
-          padding: 0.25rem 0.75rem;
-          border-radius: 4px;
-          font-size: 0.85rem;
-          font-weight: 600;
-          margin-bottom: 1rem;
-          display: inline-block;
-        }
-        .typing-result-label {
-          font-size: 0.75rem;
+        .tr-result-label {
+          font-size: 0.68rem;
           text-transform: uppercase;
           letter-spacing: 0.1em;
           color: var(--text-muted);
-          margin-top: 0.25rem;
+          margin-top: 0.3rem;
         }
-        .typing-results-actions {
-          display: flex;
-          gap: 1rem;
-          justify-content: center;
-        }
-        .typing-result-btn {
-          padding: 0.6rem 1.5rem;
-          border: 1px solid var(--border);
-          background: var(--surface-2);
-          color: var(--text-2);
-          border-radius: 6px;
-          cursor: pointer;
-          font-size: 0.9rem;
-          transition: all var(--transition);
-        }
-        .typing-result-btn:hover {
-          background: var(--surface-3);
-          color: var(--text);
-        }
-        .typing-result-btn.primary {
+        .tr-restart {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.7rem 2.25rem;
           background: var(--coral);
           color: #fff;
-          border-color: var(--coral);
-        }
-        .typing-result-btn.primary:hover {
-          background: #e63946;
-        }
-        .typing-history-section {
-          margin: 1.5rem 0;
-          text-align: center;
-        }
-        .history-toggle {
-          background: none;
           border: none;
-          color: var(--text-2);
+          border-radius: 9999px;
           cursor: pointer;
-          font-size: 0.85rem;
-          padding: 0.25rem 0.5rem;
+          font-size: 1rem;
+          font-weight: 600;
+          transition: background 0.15s, transform 0.1s;
         }
-        .history-toggle:hover {
-          color: var(--text);
-        }
-        .typing-history-list {
-          list-style: none;
-          padding: 0;
-          margin: 0.75rem 0 0 0;
-          font-size: 0.8rem;
-          color: var(--text-2);
-        }
-        .typing-history-list li {
-          display: flex;
-          gap: 1rem;
-          justify-content: center;
-          padding: 0.25rem 0;
-        }
-        .history-wpm {
-          font-family: var(--font-mono);
-          color: var(--text);
-        }
-        .history-accuracy {
-          color: var(--text-muted);
-        }
-        .history-date {
-          color: var(--text-muted);
-          font-size: 0.75rem;
-        }
-        .typing-shortcut-hint {
-          position: fixed;
-          bottom: 1rem;
-          left: 50%;
-          transform: translateX(-50%);
+        .tr-restart:hover  { background: #e63946; transform: translateY(-1px); }
+        .tr-restart:active { transform: translateY(0); }
+        .tr-hint {
+          margin-top: 1.25rem;
           font-size: 0.75rem;
           color: var(--text-muted);
-          opacity: 0.6;
         }
-        .typing-shortcut-hint kbd {
+        .tr-hint kbd {
           font-family: var(--font-mono);
           background: var(--surface-2);
           padding: 0.1em 0.4em;
           border-radius: 3px;
           border: 1px solid var(--border);
         }
-        /* Mobile input */
-        .typing-mobile-input {
-          position: fixed;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: 60px;
-          font-size: 1.2rem;
-          background: var(--surface-2);
-          border: none;
-          border-top: 1px solid var(--border);
-          padding: 0 1rem;
-          z-index: 400;
-          color: var(--text);
+        .tr-loading,
+        .tr-error {
+          text-align: center;
+          padding: 4rem;
+          color: var(--text-2);
         }
-        /* Mobile responsive */
-        @media (max-width: 639px) {
-          .typing-race {
-            padding: 1rem;
-          }
-          .story-selector {
-            padding: 2rem 1rem;
-          }
-          .story-selector h2 {
-            font-size: 1.5rem;
-          }
-          .typing-mode {
-            padding: 1rem;
-          }
-          .typing-hud {
-            gap: 1rem;
-            margin-bottom: 1rem;
-          }
-          .typing-wpm-value {
-            font-size: 1.5rem;
-          }
-          .typing-paragraph {
-            font-size: clamp(1rem, 4vw, 1.35rem);
-            line-height: 1.8;
-            margin-bottom: 1rem;
-            padding-left: 0.75rem;
-          }
-          .typing-text-container {
-            max-height: calc(100vh - 280px);
-            padding-right: 0.5rem;
-          }
-          .typing-shortcut-hint {
-            display: none;
-          }
-          .typing-mobile-input {
-            height: 50px;
-            font-size: 1rem;
-          }
+        .tr-error { color: var(--error); }
+        .tr-tap-hint {
+          margin-top: 1.5rem;
+          font-size: 0.8rem;
+          color: var(--text-muted);
+        }
+        @media (max-width: 600px) {
+          .tr-root { padding: 2rem 1rem 6rem; }
+          .tr-text-area { padding: 1rem; font-size: 1.05rem; }
+          .tr-results { padding: 2rem 1.5rem; }
+          .tr-results-stats { gap: 2rem; }
+          .tr-result-value { font-size: 2.5rem; }
         }
       `}</style>
 
-      <Show when={stories.loading || story.loading}>
-        <div class="loading-state">Loading story...</div>
+      <Show when={article.loading}>
+        <div class="tr-loading">Loading today's story...</div>
       </Show>
 
-      <Show when={stories.error || story.error}>
-        <div class="error-state">
+      <Show when={article.error}>
+        <div class="tr-error">
           Unable to load story. Make sure the lacq server is running on port 8080.
         </div>
       </Show>
 
-      <Show when={story() && !story.loading}>
-        <TypingView />
+      <Show when={article()}>
+        {(data) => (
+          <>
+            <div class="tr-title">{data().title}</div>
+            <div class="tr-meta">{data().source} · {data().published_year}</div>
+
+            <div class="tr-hud">
+              <div class="tr-stat">
+                <span class="tr-stat-value">{wpm()}</span>
+                <span class="tr-stat-label">WPM</span>
+              </div>
+              <div class="tr-stat">
+                <span class="tr-stat-value">{accuracy()}%</span>
+                <span class="tr-stat-label">Accuracy</span>
+              </div>
+            </div>
+
+            <div class="tr-text-wrap">
+              <div
+                class="tr-text-area"
+                ref={containerRef}
+                tabIndex={0}
+                onKeyDown={handleKeyDown}
+              >
+                {/* Typed characters */}
+                {typedText().map((char, i) => (
+                  <span class={`tc-${errorSet().has(i) ? "error" : "correct"}`}>{char}</span>
+                ))}
+                {/* Cursor after typed, before remaining */}
+                <Show when={!finished()}>
+                  <span class="tr-cursor" />
+                </Show>
+                {/* Remaining characters */}
+                {remainingChars().map(({ char }) => (
+                  <span class="tc-idle">{char}</span>
+                ))}
+              </div>
+            </div>
+
+            <p class="tr-tap-hint">click the text · start typing</p>
+
+            <Show when={finished()}>
+              <div class="tr-overlay">
+                <div class="tr-results">
+                  <h2>Done!</h2>
+                  <div class="tr-results-stats">
+                    <div class="tr-result-stat">
+                      <span class="tr-result-value">{wpm()}</span>
+                      <span class="tr-result-label">WPM</span>
+                    </div>
+                    <div class="tr-result-stat">
+                      <span class="tr-result-value">{accuracy()}%</span>
+                      <span class="tr-result-label">Accuracy</span>
+                    </div>
+                  </div>
+                  <button class="tr-restart" onClick={resetRace}>
+                    ↺ Race Again
+                  </button>
+                  <p class="tr-hint">or press <kbd>Enter</kbd></p>
+                </div>
+              </div>
+            </Show>
+          </>
+        )}
       </Show>
     </div>
   );
