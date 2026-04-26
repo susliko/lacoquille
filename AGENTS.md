@@ -89,3 +89,9 @@ The `lacq/` directory is a Rust (Axum) backend server that:
 - Literary tenses (passé simple, subjunctive imperfect, etc.) are toggled via a checkbox in the diagram — filtering is handled by `showLiterary()` signal in VerbDiagram
 - Periphrases (futur proche, passé récent, present progressif) are computed dynamically in VerbDiagram, not stored in conjugation files
 - Mobile layout is transposed: mood=col, time=row; desktop is time=col, mood=row
+
+## Removing UI elements (lessons learned)
+
+**To remove an element from every page:** edit `src/layouts/Base.astro` directly — delete the HTML, don't try to hide it. Conditionally rendering with `hideNav={true}` or `style={...}` is fragile: `style=""` ≠ `style="display: none"`, the element stays in the DOM, and Astro static builds can produce stale output if incremental builds are cached. Always delete the markup, not just hide it.
+
+**After editing Base.astro:** run `npm run build` to verify. Check `dist/` directly (not just curl) to confirm changes are on disk. If a removed page is linked from other pages, create a redirect (`return Astro.redirect("/")`) or the build will fail with broken link errors.

@@ -4,40 +4,5 @@ import HomepageTabs from "../components/HomepageTabs";
 ---
 
 <Base title="La Coquille" hideNav={true}>
-  <HomepageTabs client:only="solid-js" />
+  <HomepageTabs client:load />
 </Base>
-
-<style>
-  /* ── Tab bar ──────────────────────────────────────────────── */
-  .homepage-tabs-root {
-    height: calc(100dvh - 64px);
-    display: flex;
-    flex-direction: column;
-  }
-
-  .homepage-tab-bar {
-    display: flex;
-    gap: 8px;
-    padding: 20px 24px 12px;
-    background: var(--bg);
-    flex-shrink: 0;
-  }
-
-  /* ── Tab panels ───────────────────────────────────────────── */
-  .homepage-tab-panel {
-    flex: 1;
-    overflow: hidden;
-  }
-
-  /* ── Practice grid (3×3, like poly-grid) ─────────────────── */
-  .practice-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    gap: 0;
-    height: calc(100dvh - 64px);
-    width: 100%;
-    max-width: 100dvw;
-    overflow: hidden;
-  }
-</style>

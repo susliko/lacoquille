@@ -1,14 +1,14 @@
-import { createSignal, For } from "solid-js";
+import { createSignal, For, onMount } from "solid-js";
 
-/* ── Knowledge tiles (from PolygonHero) ───────────────────────── */
+/* ── Knowledge tiles ─────────────────────────────────────────── */
 const REGIONS = [
-  { id: "adjectifs", name: "Adjectifs",  sub: "accord · ordre",       color: "#d97706" },
-  { id: "adverbes",  name: "Adverbes",   sub: "formation",             color: "#16a34a" },
-  { id: "articles",  name: "Articles",  sub: "défini · partitif",    color: "#059669" },
+  { id: "adjectifs", name: "Adjectifs",  sub: "accord · ordre",      color: "#d97706" },
+  { id: "adverbes",  name: "Adverbes",   sub: "formation",            color: "#16a34a" },
+  { id: "articles",  name: "Articles",   sub: "défini · partitif",    color: "#059669" },
   { id: "negation",  name: "Négation",  sub: "ne…pas · jamais",      color: "#0891b2" },
   { id: "pronoms",   name: "Pronoms",    sub: "personal · relative",  color: "#7c3aed" },
   { id: "preps",     name: "Prép.",     sub: "à · de · en",          color: "#0d9488" },
-  { id: "syntaxe",   name: "Syntaxe",   sub: "word order",           color: "#6366f1" },
+  { id: "syntaxe",   name: "Syntaxe",   sub: "word order",            color: "#6366f1" },
   { id: "verbs",     name: "Verbes",     sub: "tenses & conjugation", color: "#2563eb" },
 ];
 
@@ -23,19 +23,36 @@ const PATHS: Record<string, string> = {
   adverbes:  "/reference/grammar/adverbs",
 };
 
-
-
-/* ── Practice tiles ────────────────────────────────────────────── */
+/* ── Practice tiles ───────────────────────────────────────────── */
 const PRACTICE = [
-  { id: "article-of-day", name: "Article of Day", sub: "daily Maupassant story",  color: "#ff4757", path: "/stories/article-of-the-day" },
-  { id: "typing",         name: "Typing Race",    sub: "speed conjugate drills",   color: "#ff6b35", path: "/practice/typing" },
-  { id: "shadowing",      name: "Shadowing",      sub: "listen & repeat",          color: "#ff9f43", path: "/practice/shadowing" },
-  { id: "vocabulary",    name: "Vocabulary Mining", sub: "mine texts for words",   color: "#f7b731", path: "/practice/vocabulary" },
+  { id: "typing",    name: "Typing Race",   sub: "speed conjugate drills", color: "#ff6b35", path: "/practice/typing" },
+  { id: "shadowing", name: "Shadowing",     sub: "listen & repeat",       color: "#ff9f43", path: "/practice/shadowing" },
+  { id: "article",   name: "Article of Day", sub: "daily Maupassant story", color: "#ff4757", path: "/stories/article-of-the-day" },
 ];
 
-/* ── Component ─────────────────────────────────────────────────── */
+/* ── Component ────────────────────────────────────────────────── */
 export default function HomepageTabs() {
-  const [tab, setTab] = createSignal<"knowledge" | "practice">("knowledge");
+  const getTab = (): "knowledge" | "practice" => {
+    if (typeof window === "undefined") return "knowledge";
+    const p = new URLSearchParams(window.location.search).get("tab");
+    return p === "practice" ? "practice" : "knowledge";
+  };
+
+  const [tab, setTab] = createSignal<"knowledge" | "practice">(getTab());
+
+  onMount(() => {
+    const handler = () => setTab(getTab());
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  });
+
+  const switchTab = (t: "knowledge" | "practice") => {
+    setTab(t);
+    const url = new URL(window.location.href);
+    if (t === "knowledge") url.searchParams.delete("tab");
+    else url.searchParams.set("tab", "practice");
+    history.replaceState(null, "", url.toString());
+  };
 
   return (
     <div class="homepage-tabs-root">
@@ -44,36 +61,16 @@ export default function HomepageTabs() {
         <button
           role="tab"
           aria-selected={tab() === "knowledge"}
-          class="homepage-tab-btn"
-          classList={{ active: tab() === "knowledge", inactive: tab() !== "knowledge" }}
-          onClick={() => setTab("knowledge")}
-          style={{
-            "font-family": "'DM Serif Display', serif !important",
-            "font-style": tab() === "knowledge" ? "normal" : "italic",
-            "color": tab() === "knowledge" ? "var(--text)" : "var(--text-muted)",
-            "border": tab() === "knowledge"
-              ? "2px solid var(--text)"
-              : "1.5px dashed var(--border-subtle)",
-            "background": "transparent",
-          }}
+          class={`homepage-tab-btn ${tab() === "knowledge" ? "homepage-tab-active" : "homepage-tab-inactive"}`}
+          onClick={() => switchTab("knowledge")}
         >
           Knowledge
         </button>
         <button
           role="tab"
           aria-selected={tab() === "practice"}
-          class="homepage-tab-btn"
-          classList={{ active: tab() === "practice", inactive: tab() !== "practice" }}
-          onClick={() => setTab("practice")}
-          style={{
-            "font-family": "'DM Serif Display', serif !important",
-            "font-style": tab() === "practice" ? "normal" : "italic",
-            "color": tab() === "practice" ? "var(--text)" : "var(--text-muted)",
-            "border": tab() === "practice"
-              ? "2px solid var(--text)"
-              : "1.5px dashed var(--border-subtle)",
-            "background": "transparent",
-          }}
+          class={`homepage-tab-btn ${tab() === "practice" ? "homepage-tab-active" : "homepage-tab-inactive"}`}
+          onClick={() => switchTab("practice")}
         >
           Practice
         </button>
