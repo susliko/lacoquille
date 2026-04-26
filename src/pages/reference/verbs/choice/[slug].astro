@@ -12,7 +12,7 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props;
 const { Content } = await render(entry);
-const { title, relatedTenses, relatedGuides } = entry.data;
+const { title, relatedGuides } = entry.data;
 
 const allChoices = await getCollection("choice");
 const guideMap = Object.fromEntries(allChoices.map(e => [e.id, e.data.title]));
@@ -31,17 +31,6 @@ const guideMap = Object.fromEntries(allChoices.map(e => [e.id, e.data.title]));
     </div>
 
     <Content />
-
-    {relatedTenses && relatedTenses.length > 0 && (
-      <section>
-        <h2>Related tenses</h2>
-        <ul class="related-tenses">
-          {relatedTenses.map((slug: string) => (
-            <li><a href={`/reference/verbs/tenses/${slug}`}>{slug.replace(/-/g, ' ')}</a></li>
-          ))}
-        </ul>
-      </section>
-    )}
 
     {relatedGuides && relatedGuides.length > 0 && (
       <section>
