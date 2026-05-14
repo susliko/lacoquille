@@ -59,7 +59,7 @@ These verbs take **de** before an infinitive or noun:
 |------|---------|-------------|
 | **croire en** | *Je crois en toi.* | I believe in you. |
 | **avoir confiance en** | *J'ai confiance en lui.* | I trust him. |
-| **se méfier de** | *Je me méfie des strangers.* | I distrust strangers. |
+| **se méfier de** | *Je me méfie des étrangers.* | I distrust strangers. |
 
 ## Movement: à vs de vs vers
 

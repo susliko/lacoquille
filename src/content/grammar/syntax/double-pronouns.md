@@ -42,7 +42,6 @@ When a verb requires two objects — a person and a thing — French uses two pr
 | me + le | *Il me **le** donne.* | He gives it to me. |
 | me + la | *Elle me **la** montre.* | She shows it to me. |
 | te + les | *Je te **les** offre.* | I offer them to you. |
-| se + lui | *Il se **lui** présente.* | He introduces himself to him. |
 | nous + le | *Elle nous **le** prête.* | She lends it to us. |
 | vous + les | *Je vous **les** donne.* | I give them to you. |
 | me + y | *Il me **y** envoie.* | He sends me there. |
