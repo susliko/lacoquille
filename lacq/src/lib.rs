@@ -1,11 +1,14 @@
 pub mod config;
 pub mod routes;
 pub mod gutenberg;
+pub mod tokenizer;
 
 pub use config::Config;
 
 use serde::Serialize;
 use std::time::{SystemTime, UNIX_EPOCH};
+use std::sync::Arc;
+use tokio::sync::OnceCell;
 
 #[derive(Clone)]
 pub struct BookMeta {
@@ -74,6 +77,7 @@ pub struct CachedText {
 pub struct AppState {
     pub curated_books: Vec<BookMeta>,
     pub text_cache: std::sync::Arc<tokio::sync::Mutex<std::collections::HashMap<u64, CachedText>>>,
+    pub tokenization_cache: std::sync::Arc<tokio::sync::Mutex<std::collections::HashMap<String, Arc<OnceCell<tokenizer::TokenizedText>>>>>,
     pub http: reqwest::Client,
     pub data_dir: String,
     pub config: Config,
@@ -84,6 +88,7 @@ impl AppState {
         Self {
             curated_books: BookMeta::curated(),
             text_cache: std::sync::Arc::new(tokio::sync::Mutex::new(std::collections::HashMap::new())),
+            tokenization_cache: std::sync::Arc::new(tokio::sync::Mutex::new(std::collections::HashMap::new())),
             http,
             data_dir,
             config,
@@ -102,9 +107,10 @@ impl AppState {
         }
 
         let url = format!("https://www.gutenberg.org/files/{}/{}-0.txt", book_id, book_id);
-        let text = self.http.get(&url).send().await
-            .map_err(|e| format!("failed to fetch {}: {}", url, e))?
-            .text().await
+        let resp = self.http.get(&url).send().await
+            .map_err(|e| format!("failed to fetch {}: {}", url, e))?;
+        let resp = resp.error_for_status().map_err(|e| format!("HTTP error: {}", e))?;
+        let text = resp.text().await
             .map_err(|e| format!("failed to read response: {}", e))?;
 
         let cleaned = crate::gutenberg::clean_text(&text);
@@ -120,6 +126,32 @@ impl AppState {
 
         Ok(cleaned)
     }
+
+    /// Simple non-crypto hash of input text, used to differentiate
+    /// excerpts of the same book.
+    fn text_hash(s: &str) -> u64 {
+        s.bytes().fold(0u64, |acc, b| acc.wrapping_mul(31).wrapping_add(b as u64))
+    }
+
+    pub async fn get_tokenized(&self, book_id: u64, french_text: &str) -> Result<tokenizer::TokenizedText, String> {
+        let cache_key = format!("{}-{}", book_id, Self::text_hash(french_text));
+        let cell: std::sync::Arc<tokio::sync::OnceCell<tokenizer::TokenizedText>> = {
+            let mut cache = self.tokenization_cache.lock().await;
+            cache.entry(cache_key).or_default().clone()
+        };
+
+        cell.get_or_try_init(|| async {
+            if std::env::var("MOCK_TOKENIZED").unwrap_or_default() == "true" {
+                tracing::info!("Using mock tokenized data");
+                return tokenizer::mock_tokenize_async(french_text).await;
+            }
+            let api_key = self.config.translation_api_key()
+                .ok_or_else(|| "No translation API key set (GROQ_API_KEY or GEMINI_API_KEY)")?;
+            tracing::info!("Calling {} API for tokenization", self.config.translation_provider());
+            let result = tokenizer::tokenize(&self.http, &api_key, french_text).await?;
+            Ok(result)
+        }).await.cloned()
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -128,4 +160,26 @@ pub struct ArticleResponse {
     pub source: String,
     pub published_year: i32,
     pub paragraphs: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tokenized: Option<TokenizedPayload>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct TokenizedPayload {
+    pub fr_tokens: Vec<FrToken>,
+    pub en_tokens: Vec<EnToken>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct FrToken {
+    pub text: String,
+    pub translation: String,
+    pub spans: Vec<[usize; 2]>,
+    pub en_indices: Vec<usize>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct EnToken {
+    pub text: String,
+    pub index: usize,
 }

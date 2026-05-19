@@ -1,7 +1,7 @@
 use axum::{extract::State, routing::get, Router};
 use std::sync::Arc;
 
-use crate::{AppState, ArticleResponse, BookMeta};
+use crate::{AppState, ArticleResponse, BookMeta, EnToken, FrToken, TokenizedPayload};
 
 pub fn routes() -> Router<Arc<AppState>> {
     Router::new()
@@ -25,13 +25,44 @@ async fn article_of_the_day(
 
     let story_text = crate::gutenberg::first_story_content(&text);
     let paragraphs_raw = crate::gutenberg::split_paragraphs(&story_text);
-    let excerpt_paras = crate::gutenberg::extract_excerpt(&paragraphs_raw, 350);
+    let excerpt_paras = crate::gutenberg::extract_excerpt(&paragraphs_raw, 100);
     let paragraphs: Vec<String> = excerpt_paras.iter().map(|s| s.to_string()).collect();
+
+    // Combine paragraphs into one text for tokenization
+    let combined_text = paragraphs.join("\n\n");
+
+    // Tokenize via Gemini — fail fast so we see the real error
+    let tokenized = match state.get_tokenized(book.gutenberg_id, &combined_text).await {
+        Ok(t) => {
+            tracing::info!(
+                "Tokenized {} French tokens, {} English tokens",
+                t.fr_tokens.len(),
+                t.en_tokens.len()
+            );
+            Some(TokenizedPayload {
+                fr_tokens: t.fr_tokens.into_iter().map(|ft| FrToken {
+                    text: ft.text,
+                    translation: ft.translation,
+                    spans: ft.spans.into_iter().map(|s| s.into()).collect(),
+                    en_indices: ft.en_indices,
+                }).collect(),
+                en_tokens: t.en_tokens.into_iter().map(|et| EnToken {
+                    text: et.text,
+                    index: et.index,
+                }).collect(),
+            })
+        }
+        Err(e) => {
+            tracing::error!("Tokenization failed: {}", e);
+            None
+        }
+    };
 
     Ok(axum::Json(ArticleResponse {
         title: book.title,
         source: book.collection,
         published_year: book.published_year,
         paragraphs,
+        tokenized,
     }))
 }

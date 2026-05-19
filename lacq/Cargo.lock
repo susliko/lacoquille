@@ -737,6 +737,8 @@ name = "lacq"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "once_cell",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",

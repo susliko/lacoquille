@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "dev:all": "concurrently \"cd lacq && cargo run\" \"astro dev\"",
+    "dev:all": ". ./.envrc && concurrently \"cd lacq && cargo run\" \"astro dev\"",
     "dev:prod": "npm run build && cargo run --manifest-path lacq/Cargo.toml",
     "build": "astro build && node scripts/check-links.mjs",
     "check:links": "astro build && node scripts/check-links.mjs",
@@ -22,6 +22,7 @@
     "solid-js": "^1.9.12"
   },
   "devDependencies": {
+    "@jayjanii/pi-minimax-mcp": "^1.0.4",
     "concurrently": "^9.2.1"
   }
 }
