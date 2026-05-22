@@ -36,7 +36,13 @@ export default function ArticleOfTheDay() {
   const [activeIndices, setActiveIndices] = createSignal<Set<number>>(new Set());
 
   function setActiveIndicesFrom(enIndices: number[]) {
-    setActiveIndices(new Set(enIndices));
+    // Toggle: if all clicked indices are already active, clear them
+    const allActive = enIndices.every(i => activeIndices().has(i));
+    if (allActive) {
+      setActiveIndices(new Set());
+    } else {
+      setActiveIndices(new Set(enIndices));
+    }
   }
 
   function isActive(enIdx: number): boolean {
@@ -109,9 +115,10 @@ export default function ArticleOfTheDay() {
           min-width: 0;
         }
         .article-paragraphs p {
-          line-height: 2;
+          line-height: 1.8;
           margin-bottom: 1.5rem;
           font-size: 1.1rem;
+          white-space: pre-wrap;
         }
         .language-col h2 {
           font-size: 1.25rem;
@@ -141,9 +148,38 @@ export default function ArticleOfTheDay() {
         .fr-token {
           cursor: pointer;
           padding: 0 1px;
+          position: relative;
         }
         .fr-token.active {
           background-color: rgba(59, 130, 246, 0.2);
+        }
+        @media (max-width: 768px) {
+          .article-body {
+            grid-template-columns: 1fr;
+          }
+          .en-col {
+            display: none;
+          }
+          /* Mobile popup tooltip */
+          .fr-token.active::after {
+            content: attr(data-trans);
+            display: block;
+            position: absolute;
+            bottom: calc(100% + 4px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent, #3b82f6);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            z-index: 100;
+            pointer-events: none;
+            max-width: 200px;
+            white-space: normal;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+          }
         }
         .loading-state,
         .error-state {
@@ -153,14 +189,6 @@ export default function ArticleOfTheDay() {
         }
         .error-state {
           color: var(--error);
-        }
-        @media (max-width: 768px) {
-          .article-body {
-            grid-template-columns: 1fr;
-          }
-          .en-col {
-            display: none;
-          }
         }
       `}</style>
 
@@ -182,6 +210,8 @@ export default function ArticleOfTheDay() {
           const tokens = () => data().tokenized?.fr_tokens ?? [];
           const enTokens = () => data().tokenized?.en_tokens ?? [];
           const paras = () => data().paragraphs;
+
+          const combinedText = () => paras().join("\n\n");
 
           return (
             <>
@@ -228,9 +258,9 @@ export default function ArticleOfTheDay() {
                                 <span
                                   class={`fr-token${isActive(t.en_indices[0]) ? " active" : ""}`}
                                   onClick={() => setActiveIndicesFrom(t.en_indices)}
-                                  title={t.translation}
+                                  data-trans={t.translation}
                                 >
-                                  {t.text}{" "}
+                                  {combinedText().slice(...t.spans[0])}{" "}
                                 </span>
                               )}
                             </For>
@@ -256,7 +286,7 @@ export default function ArticleOfTheDay() {
                                     onClick={() => setActiveIndicesFrom([idx])}
                                     title={enTok.text}
                                   >
-                                    {enTok.text}
+                                    {enTok.text}{" "}
                                   </span>
                                 ) : null;
                               }}
