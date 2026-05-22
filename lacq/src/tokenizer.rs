@@ -96,6 +96,11 @@ struct GroqError {
     code: Option<String>,
 }
 
+pub enum TranslationProvider {
+    Groq,
+    Gemini,
+}
+
 fn build_prompt(french_text: &str) -> String {
     format!(
         r#"You are a French language learning assistant. Tokenize this French text for parallel bilingual reading.
@@ -109,7 +114,7 @@ Rules:
     {{
       "text": "the exact French text (word or phrase)",
       "translation": "English meaning",
-      "spans": [[start, end], ...],  // char offsets in original text
+      "spans": [[start, end], ...],  // char offsets in original text (counting from 0, NOT byte offsets — each character is 1 regardless of encoding)
       "enIndices": [N, ...]          // indices into enTokens array
     }}
   ],
@@ -119,6 +124,8 @@ Rules:
 }}
 
 IMPORTANT:
+- sp ans must be VALID: each token's text must EXACTLY match french_text[span[0]:span[1]]
+- If a span is wrong, the token text won't match — always verify spans against the original
 - enIndices must be consecutive and cover the entire English translation in order
 - Output only the JSON — no code fences, no preamble, no commentary
 
@@ -128,7 +135,82 @@ French text:
     )
 }
 
+/// Helper: convert character position to byte position in UTF-8 text.
+fn char_pos_to_byte_pos(text: &str, char_pos: usize) -> usize {
+    text.char_indices()
+        .nth(char_pos)
+        .map(|(b, _)| b)
+        .unwrap_or(text.len())
+}
+
+/// Helper: convert byte position to character position in UTF-8 text.
+fn byte_pos_to_char_pos(text: &str, byte_pos: usize) -> usize {
+    text[..byte_pos.min(text.len())].chars().count()
+}
+
+/// Verify that each token's text matches the span positions in the original text.
+/// If a span is wrong, try to find the correct position. All spans are CHARACTER positions.
+fn repair_spans(text: &str, tokens: &mut Vec<FrenchToken>) {
+    let mut valid_tokens = Vec::new();
+    for mut token in tokens.drain(..) {
+        // The API returns CHARACTER offsets, but we need to validate using char-based positions
+        // text.len() is BYTES, text.chars().count() is CHARACTERS
+        let text_chars = text.chars().count();
+
+        // Try to find the text in the original (char-based)
+        let original_char_pos = token.spans.first().map(|s| s.0[0]).unwrap_or(0);
+        let mut best_pos: Option<usize> = None;
+        let mut best_dist = usize::MAX;
+
+        let mut search_char_pos = 0usize;
+        loop {
+            if let Some(pos) = text[char_pos_to_byte_pos(text, search_char_pos)..].find(&token.text) {
+                let abs_byte = char_pos_to_byte_pos(text, search_char_pos) + pos;
+                let abs_char = byte_pos_to_char_pos(text, abs_byte);
+                let dist = if abs_char >= original_char_pos {
+                    abs_char - original_char_pos
+                } else {
+                    original_char_pos - abs_char
+                };
+                if dist < best_dist {
+                    best_dist = dist;
+                    best_pos = Some(abs_char);
+                }
+                // Continue searching for closer matches (move past this occurrence)
+                let next_byte = abs_byte + token.text.len().max(1);
+                search_char_pos = byte_pos_to_char_pos(text, next_byte.min(text.len()));
+                if search_char_pos >= text_chars { break; }
+            } else {
+                break;
+            }
+        }
+
+        if let Some(char_pos) = best_pos {
+            let end_char = char_pos + token.text.chars().count();
+            if end_char <= text_chars {
+                token.spans = vec![Span([char_pos, end_char])];
+                valid_tokens.push(token);
+            }
+        }
+        // Couldn't repair — drop the token
+    }
+    *tokens = valid_tokens;
+}
+
+/// Dispatch to the appropriate tokenization function based on provider.
 pub async fn tokenize(
+    client: &reqwest::Client,
+    api_key: &str,
+    french_text: &str,
+    provider: TranslationProvider,
+) -> Result<TokenizedText, String> {
+    match provider {
+        TranslationProvider::Groq => tokenize_groq(client, api_key, french_text).await,
+        TranslationProvider::Gemini => tokenize_gemini(client, api_key, french_text).await,
+    }
+}
+
+async fn tokenize_groq(
     client: &reqwest::Client,
     api_key: &str,
     french_text: &str,
@@ -156,7 +238,6 @@ pub async fn tokenize(
     if !resp.status().is_success() {
         let status = resp.status();
         let body_text = resp.text().await.unwrap_or_default();
-        // Try to extract error message from JSON body
         if let Ok(err_resp) = serde_json::from_str::<GroqResponse>(&body_text) {
             if let Some(err) = err_resp.error {
                 return Err(format!(
@@ -195,20 +276,21 @@ pub async fn tokenize(
         .trim_start_matches("```\n")
         .trim_start_matches("```json")
         .trim_start_matches("```")
-        .trim_end_matches("```")
-        .trim();
+        .trim_end_matches("```");
 
-    let parsed: TokenizedText = serde_json::from_str(json_str)
+    let mut parsed: TokenizedText = serde_json::from_str(json_str)
         .map_err(|e| format!(
             "Failed to parse JSON from Groq: {}. Raw: {}",
             e,
             &json_str[..json_str.len().min(300)]
         ))?;
 
-    // Validate enIndices invariant: must be consecutive [0, N) covering all English tokens
+    // Repair broken spans from the LLM (before enIndices validation)
+    repair_spans(french_text, &mut parsed.fr_tokens);
+
+    // Validate enIndices bounds only (may have gaps after repair_spans)
     if !parsed.en_tokens.is_empty() {
         let n = parsed.en_tokens.len();
-        let mut seen = vec![false; n];
         for ft in &parsed.fr_tokens {
             for &idx in &ft.en_indices {
                 if idx >= n {
@@ -217,17 +299,86 @@ pub async fn tokenize(
                         idx, n, ft.text
                     ));
                 }
-                seen[idx] = true;
             }
         }
-        let missing: Vec<usize> = (0..n).filter(|&i| !seen[i]).collect();
-        if !missing.is_empty() {
-            return Err(format!(
-                "enIndices invariant violated: missing indices {:?} — English tokens must be fully covered with no gaps",
-                &missing[..missing.len().min(5)]
-            ));
-        }
     }
+
+    Ok(parsed)
+}
+
+async fn tokenize_gemini(
+    client: &reqwest::Client,
+    api_key: &str,
+    french_text: &str,
+) -> Result<TokenizedText, String> {
+    let url = format!(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key={}",
+        api_key
+    );
+
+    let prompt = build_prompt(french_text);
+    let body = serde_json::json!({
+        "contents": [{
+            "parts": [{ "text": prompt }]
+        }],
+        "generationConfig": {
+            "responseMimeType": "application/json",
+            "temperature": 0.2,
+        }
+    });
+
+    let resp = client
+        .post(&url)
+        .header("Content-Type", "application/json")
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| format!("Gemini request failed: {}", e))?;
+
+    if !resp.status().is_success() {
+        let status = resp.status();
+        let body_text = resp.text().await.unwrap_or_default();
+        return Err(format!(
+            "Gemini API error ({}): {}",
+            status,
+            &body_text[..body_text.len().min(200)]
+        ));
+    }
+
+    #[derive(Deserialize)]
+    struct GeminiResponse {
+        candidates: Vec<GeminiCandidate>,
+    }
+    #[derive(Deserialize)]
+    struct GeminiCandidate {
+        content: GeminiContent,
+    }
+    #[derive(Deserialize)]
+    struct GeminiContent {
+        parts: Vec<GeminiPart>,
+    }
+    #[derive(Deserialize)]
+    struct GeminiPart {
+        text: Option<String>,
+    }
+
+    let gemini_resp: GeminiResponse = resp
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse Gemini response: {}", e))?;
+
+    let text = gemini_resp
+        .candidates
+        .first()
+        .and_then(|c| c.content.parts.first())
+        .and_then(|p| p.text.clone())
+        .ok_or_else(|| "No text in Gemini response".to_string())?;
+
+    let mut parsed: TokenizedText = serde_json::from_str(&text)
+        .map_err(|e| format!("Failed to parse JSON from Gemini: {}", e))?;
+
+    // Repair broken spans from the LLM
+    repair_spans(french_text, &mut parsed.fr_tokens);
 
     Ok(parsed)
 }
@@ -236,17 +387,21 @@ pub async fn mock_tokenize_async(french_text: &str) -> Result<TokenizedText, Str
     let mut fr_tokens = Vec::new();
     let mut en_tokens = Vec::new();
     let mut en_idx = 0usize;
+    let mut char_pos = 0usize;
     let word_regex = Regex::new(r"(\S+)").unwrap();
     for cap in word_regex.captures_iter(french_text) {
         let m = cap.get(1).unwrap();
-        let start = m.start();
-        let end = m.end();
+        let byte_start = m.start();
+        let byte_end = m.end();
         let word = m.as_str();
         let translation = word.to_string();
+        // Convert byte positions to character positions
+        let char_start = french_text[..byte_start].chars().count();
+        let char_end = char_start + word.chars().count();
         fr_tokens.push(FrenchToken {
             text: word.to_string(),
             translation: translation.clone(),
-            spans: vec![Span([start, end])],
+            spans: vec![Span([char_start, char_end])],
             en_indices: vec![en_idx],
         });
         en_tokens.push(EnglishToken {
@@ -254,6 +409,7 @@ pub async fn mock_tokenize_async(french_text: &str) -> Result<TokenizedText, Str
             index: en_idx,
         });
         en_idx += 1;
+        char_pos = char_end;
     }
     Ok(TokenizedText {
         fr_tokens,

@@ -25,7 +25,7 @@ async fn article_of_the_day(
 
     let story_text = crate::gutenberg::first_story_content(&text);
     let paragraphs_raw = crate::gutenberg::split_paragraphs(&story_text);
-    let excerpt_paras = crate::gutenberg::extract_excerpt(&paragraphs_raw, 100);
+    let excerpt_paras = crate::gutenberg::extract_excerpt(&paragraphs_raw, 150);
     let paragraphs: Vec<String> = excerpt_paras.iter().map(|s| s.to_string()).collect();
 
     // Combine paragraphs into one text for tokenization

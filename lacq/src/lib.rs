@@ -148,7 +148,8 @@ impl AppState {
             let api_key = self.config.translation_api_key()
                 .ok_or_else(|| "No translation API key set (GROQ_API_KEY or GEMINI_API_KEY)")?;
             tracing::info!("Calling {} API for tokenization", self.config.translation_provider());
-            let result = tokenizer::tokenize(&self.http, &api_key, french_text).await?;
+            let provider = self.config.translation_provider_enum();
+            let result = tokenizer::tokenize(&self.http, &api_key, french_text, provider).await?;
             Ok(result)
         }).await.cloned()
     }

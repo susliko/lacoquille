@@ -1,5 +1,7 @@
 use std::env;
 
+use crate::tokenizer::TranslationProvider;
+
 #[derive(Clone)]
 pub struct Config {
     pub data_dir: String,
@@ -16,19 +18,33 @@ impl Config {
         }
     }
 
-    /// Returns the translation API key to use, preferring Groq over Gemini.
+    /// Returns the API key matching the active translation provider.
     pub fn translation_api_key(&self) -> Option<String> {
-        self.groq_api_key.clone().or_else(|| self.gemini_api_key.clone())
+        match self.translation_provider_enum() {
+            TranslationProvider::Gemini => self.gemini_api_key.clone(),
+            TranslationProvider::Groq => self.groq_api_key.clone(),
+        }
     }
 
     /// Returns which provider is active for logging.
     pub fn translation_provider(&self) -> &'static str {
-        if self.groq_api_key.is_some() {
-            "Groq"
-        } else if self.gemini_api_key.is_some() {
+        if self.gemini_api_key.is_some() {
             "Gemini"
+        } else if self.groq_api_key.is_some() {
+            "Groq"
         } else {
             "none"
+        }
+    }
+
+    /// Returns the TranslationProvider enum to use for tokenization.
+    pub fn translation_provider_enum(&self) -> TranslationProvider {
+        if self.gemini_api_key.is_some() {
+            TranslationProvider::Gemini
+        } else if self.groq_api_key.is_some() {
+            TranslationProvider::Groq
+        } else {
+            TranslationProvider::Gemini // Default fallback (will fail at runtime without key)
         }
     }
 }
