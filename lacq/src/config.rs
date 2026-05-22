@@ -28,10 +28,10 @@ impl Config {
 
     /// Returns which provider is active for logging.
     pub fn translation_provider(&self) -> &'static str {
-        if self.gemini_api_key.is_some() {
-            "Gemini"
-        } else if self.groq_api_key.is_some() {
+        if self.groq_api_key.is_some() {
             "Groq"
+        } else if self.gemini_api_key.is_some() {
+            "Gemini"
         } else {
             "none"
         }
@@ -39,12 +39,12 @@ impl Config {
 
     /// Returns the TranslationProvider enum to use for tokenization.
     pub fn translation_provider_enum(&self) -> TranslationProvider {
-        if self.gemini_api_key.is_some() {
-            TranslationProvider::Gemini
-        } else if self.groq_api_key.is_some() {
+        if self.groq_api_key.is_some() {
             TranslationProvider::Groq
+        } else if self.gemini_api_key.is_some() {
+            TranslationProvider::Gemini
         } else {
-            TranslationProvider::Gemini // Default fallback (will fail at runtime without key)
+            TranslationProvider::Groq
         }
     }
 }
