@@ -84,14 +84,15 @@ impl Config {
 
     /// Returns the first available TranslationProvider.
     pub fn first_provider(&self) -> Option<TranslationProvider> {
-        if let Some(ref api_key) = self.openrouter_api_key {
-            if !self.openrouter_models.is_empty() {
-                return Some(TranslationProvider::OpenRouter(self.openrouter_models[0].clone()));
-            }
-        }
+        // Groq takes precedence (free, fast, reliable)
         if let Some(ref api_key) = self.groq_api_key {
             if !self.groq_models.is_empty() {
                 return Some(TranslationProvider::Groq(self.groq_models[0].clone()));
+            }
+        }
+        if let Some(ref api_key) = self.openrouter_api_key {
+            if !self.openrouter_models.is_empty() {
+                return Some(TranslationProvider::OpenRouter(self.openrouter_models[0].clone()));
             }
         }
         if let Some(ref api_key) = self.gemini_api_key {
@@ -106,17 +107,17 @@ impl Config {
     pub fn translation_chain(&self) -> Vec<(TranslationProvider, String)> {
         let mut chain = Vec::new();
 
-        // OpenRouter models first (takes precedence)
-        if let Some(ref api_key) = self.openrouter_api_key {
-            for model in &self.openrouter_models {
-                chain.push((TranslationProvider::OpenRouter(model.clone()), api_key.clone()));
-            }
-        }
-
-        // Then Groq models
+        // Groq models first (free, fast, reliable)
         if let Some(ref api_key) = self.groq_api_key {
             for model in &self.groq_models {
                 chain.push((TranslationProvider::Groq(model.clone()), api_key.clone()));
+            }
+        }
+
+        // Then OpenRouter models
+        if let Some(ref api_key) = self.openrouter_api_key {
+            for model in &self.openrouter_models {
+                chain.push((TranslationProvider::OpenRouter(model.clone()), api_key.clone()));
             }
         }
 
@@ -146,8 +147,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_translation_chain_openrouter_first() {
-        // With all keys, OpenRouter comes first
+    #[test]
+    fn test_translation_chain_groq_first() {
+        // With all keys, Groq comes first
         let config = Config {
             data_dir: "data".to_string(),
             openrouter_api_key: Some("test-openrouter".to_string()),
@@ -163,11 +165,11 @@ mod tests {
 
         let chain = config.translation_chain();
         assert!(!chain.is_empty());
-        assert_eq!(chain[0].0.provider_name(), "openrouter");
+        assert_eq!(chain[0].0.provider_name(), "groq");
     }
 
     #[test]
-    fn test_first_provider_openrouter() {
+    fn test_first_provider_groq() {
         let config = Config {
             data_dir: "data".to_string(),
             openrouter_api_key: Some("test-openrouter".to_string()),
@@ -181,8 +183,8 @@ mod tests {
         };
 
         let first = config.first_provider().unwrap();
-        assert_eq!(first.provider_name(), "openrouter");
-        assert_eq!(first.model_name(), "z-ai/glm-4.5-air:free");
+        assert_eq!(first.provider_name(), "groq");
+        assert_eq!(first.model_name(), "llama-3.1-8b-instant");
     }
 
     #[test]
