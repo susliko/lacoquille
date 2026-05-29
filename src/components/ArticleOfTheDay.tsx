@@ -2,8 +2,8 @@ import { createResource, createSignal, For, Show } from "solid-js";
 
 interface FrToken {
   text: string;
-  trailingPunct: string;
-  leadingPunct: string;
+  trailingPunct?: string | null;
+  leadingPunct?: string | null;
   translation: string;
   spans: [number, number][];
   en_indices: number[];

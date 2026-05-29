@@ -207,70 +207,14 @@ fn is_closing_punct(c: char) -> bool {
 
 fn build_prompt(french_text: &str) -> String {
     format!(
-        r#"You are a French language learning assistant. Tokenize this French text for 
-parallel bilingual reading. Every character in the French text MUST appear 
-in exactly one token.
+        r#"Tokenize FR→EN for bilingual reading. JSON format, no markdown:
+{{"frTokens":[{{"text":"word","trailingPunct":",","leadingPunct":"","translation":"eng","spans":[[0,4]],"enIndices":[0]}}],"enTokens":[{{"text":"eng","index":0}}]}}
 
-OUTPUT FORMAT (strict JSON, no markdown):
-{{
-  "frTokens": [
-    {{
-      "text": "word or short phrase WITHOUT punctuation",
-      "trailingPunct": "," or "." or "" etc (the punctuation AFTER this word in original),
-      "leadingPunct": "" or "(" etc (the punctuation BEFORE this word, rare),
-      "translation": "English meaning INCLUDING trailing punctuation",
-      "spans": [[start, end]],  // char offsets in ORIGINAL French text (with punctuation)
-      "enIndices": [N]
-    }}
-  ],
-  "enTokens": [
-    {{ "text": "English word ", "index": N }}
-  ]
-}}
-
-STRICT RULES:
-
-1. SPLIT AT PUNCTUATION
-   - Commas, periods, semicolons, colons, exclamation, question marks are SEPARATORS
-   - "Le chat," → token "Le chat" + trailingPunct ","
-   - "Il vient." → token "Il vient" + trailingPunct "."
-   - "Comment?" → tokens: "Comment", trailingPunct "?"
-
-2. CONTRACTED FORMS ARE SINGLE TOKENS
-   - "d'une" (de + une) → text "d'une"
-   - "au" (à + le) → text "au"
-   - "du" (de + le) → text "du"
-   - "l'homme" (le + homme) → text "l'homme"
-   - "qu'il" (que + il) → text "qu'il"
-
-3. VERB COMPOUNDS MUST BE SINGLE TOKENS
-   - Compound verb forms are ONE token, never split:
-     - "après avoir contourné" → ONE token, translation "after having circled"
-     - "avoir fait" → ONE token, translation "having done"
-     - "être allé" → ONE token, translation "having gone"
-     - "étant parti" → ONE token, translation "having left"
-     - "en chantant" → ONE token, translation "while singing"
-   - This is MANDATORY, not optional
-   - Split at auxiliary + infinitive boundary = WRONG
-
-4. OTHER MULTI-WORD TOKENS (only when translation is non-compositional):
-   - Contractions: d'une, au, l'homme, qu'il
-   - Expressions: peut-être, tout à coup, ne...pas
-
-5. HARD LIMITS:
-   - Max 15 words per token for verb compounds (ignore normal limits)
-   - Max 25 characters per token for other multi-word tokens
-   - Split nothing that should stay together for correct translation
-   
-6. SPANS:
-   - Reference ORIGINAL French text (with punctuation)
-   - Must be exact: text + trailingPunct must equal original_text[start:end]
-   - Character positions, not byte positions
-
-7. TRANSLATIONS:
-   - Must preserve ALL punctuation from French
-   - "Le chat," → translation "The cat," (with comma!)
-   - Translations should be natural English, not literal
+RULES:
+1. Split at punctuation: "Le chat," → text="Le chat" trailingPunct=","
+2. Contractions stay together: d'une, au, du, l'homme
+3. Translation MUST include trailing punctuation: "Le chat," → "The cat," (comma!)
+4. Spans are char offsets in original French text
 
 French text:
 {}"#,

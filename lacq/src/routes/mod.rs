@@ -25,11 +25,13 @@ async fn article_of_the_day(
 
     let story_text = crate::gutenberg::first_story_content(&text);
     let paragraphs_raw = crate::gutenberg::split_paragraphs(&story_text);
-    let excerpt_paras = crate::gutenberg::extract_excerpt(&paragraphs_raw, 200); // ~400 words, safe for Groq 6000 TPM limit
-    let paragraphs: Vec<String> = excerpt_paras.iter().map(|s| s.to_string()).collect();
-
-    // Combine paragraphs into one text for tokenization
-    let combined_text = paragraphs.join("\n\n");
+    let paragraphs = crate::gutenberg::extract_excerpt(&paragraphs_raw, 10); // ~10 words, Groq has 6000 TPM limit
+    
+    // Additional safety: if combined text is too long, truncate to ~300 chars
+    let mut combined_text = paragraphs.join("\n\n");
+    if combined_text.len() > 500 {
+        combined_text.truncate(300);
+    }
 
     // Tokenize with fallback chain
     let (tokenized, tokenization_error) = match state.get_tokenized(book.gutenberg_id, &combined_text).await {
@@ -43,8 +45,8 @@ async fn article_of_the_day(
             let payload = TokenizedPayload {
                 fr_tokens: t.fr_tokens.into_iter().map(|ft| FrToken {
                     text: ft.text,
-                    trailing_punct: ft.trailing_punct,
-                    leading_punct: ft.leading_punct,
+                    trailing_punct: if ft.trailing_punct.is_empty() { None } else { Some(ft.trailing_punct) },
+                    leading_punct: if ft.leading_punct.is_empty() { None } else { Some(ft.leading_punct) },
                     translation: ft.translation,
                     spans: ft.spans.into_iter().map(|s| s.into()).collect(),
                     en_indices: ft.en_indices,

@@ -197,10 +197,10 @@ pub struct TokenizedPayload {
 #[derive(Debug, Clone, Serialize)]
 pub struct FrToken {
     pub text: String,
-    #[serde(skip_serializing_if = "String::is_empty", default)]
-    pub trailing_punct: String,
-    #[serde(skip_serializing_if = "String::is_empty", default)]
-    pub leading_punct: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub trailing_punct: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub leading_punct: Option<String>,
     pub translation: String,
     pub spans: Vec<[usize; 2]>,
     pub en_indices: Vec<usize>,

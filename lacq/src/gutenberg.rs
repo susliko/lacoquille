@@ -34,24 +34,63 @@ pub fn split_paragraphs(text: &str) -> Vec<&str> {
     text.split("\n\n").map(|s| s.trim()).filter(|s| !s.is_empty()).collect()
 }
 
-/// Return ~350 words from the beginning of the text.
-/// Stops once adding the next paragraph would exceed the target by more than a full paragraph.
-pub fn extract_excerpt<'a>(paragraphs: &'a [&str], target_words: usize) -> Vec<&'a str> {
+/// Return ~target_words from the beginning of the text.
+/// Stops once adding the next paragraph would exceed the target.
+pub fn extract_excerpt(paragraphs: &[&str], target_words: usize) -> Vec<String> {
     let mut word_count = 0;
     let mut result = vec![];
+    
     for p in paragraphs {
-        let wc = p.split_whitespace().count();
-        if word_count + wc > target_words && !result.is_empty() {
+        let trimmed = p.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+        
+        let wc = trimmed.split_whitespace().count();
+        
+        // If adding this paragraph would exceed target, stop
+        if word_count + wc > target_words {
+            // Only skip if we already have some content
+            if !result.is_empty() {
+                break;
+            }
+            // If we have nothing yet, truncate this paragraph to fit
+            if wc > target_words {
+                let truncated = truncate_to_words(p, target_words);
+                if !truncated.is_empty() {
+                    result.push(truncated);
+                }
+            }
             break;
         }
+        
         word_count += wc;
-        result.push(*p);
+        result.push(p.to_string());
     }
+    
     // Guard: if every paragraph was tiny, return at least the first one.
     if result.is_empty() && !paragraphs.is_empty() {
-        return vec![paragraphs[0]];
+        return vec![paragraphs[0].to_string()];
     }
     result
+}
+
+/// Truncate text to at most target_words.
+fn truncate_to_words(text: &str, target: usize) -> String {
+    let mut words = 0;
+    let mut end_idx = text.len();
+    
+    for (i, c) in text.char_indices() {
+        if c.is_whitespace() {
+            words += 1;
+            if words >= target {
+                end_idx = i;
+                break;
+            }
+        }
+    }
+    
+    text[..end_idx].trim().to_string()
 }
 
 /// Extract the first real story from a collection. Falls back to the full text.
