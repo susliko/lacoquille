@@ -1,0 +1,16 @@
+# Build artifacts
+dist/
+lacq/target/
+
+# Research outputs (not needed for production)
+outputs/
+papers/
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Git
+.git/

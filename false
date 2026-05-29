@@ -1,0 +1,80 @@
+# v2 Article of the Day Review — 2026-05-25
+
+## Review
+
+### 1. `src/components/ArticleOfTheDay.tsx` — `new Set<number>()` fix ✓
+
+**Change verified:** `getParaEnIndices()` at line 62 now uses:
+```ts
+const indices = new Set<number>();
+t.en_indices.forEach(i => indices.add(i));
+```
+
+Previously this likely reused the outer `activeIndices` signal's Set type (e.g., `new Set(activeIndices())` or similar), which would cause type confusion between `Set<number>` and `Set<string>` or similar. The fix correctly instantiates a fresh `Set<number>` scoped to the paragraph, deduplicates indices, then sorts the result. This is the correct pattern for collecting and deduplicating English token indices per paragraph.
+
+**Correct:** Function-level isolation, proper type, sort after dedup.
+
+### 2. `lacq/tests/article_pipeline.rs` — 3 duplicate tests removed ✓
+
+**Current state:** 7 tests, all passing:
+- test_curated_books_has_real_gutenberg_ids
+- test_book_rotation_is_deterministic
+- test_book_meta_fields
+- test_app_state_creates_successfully
+- test_app_state_text_cache_starts_empty
+- test_clean_text_collapses_multiple_blank_lines
+- test_extract_excerpt_stops_before_exceeding_target
+
+All 7 pass with `cargo test`. No duplicates visible.
+
+**Correct:** Duplicates removed.
+
+### 3. `lacq/src/tokenizer.rs` — new tests + algorithm fix ✓
+
+**Algorithm fix confirmed:** `repair_spans()` at line 169 properly implements the corrected span-repair algorithm:
+- Searches for the token text in the original French text
+- Picks the closest match (minimum character distance from original span)
+- Repairs the span in character coordinates (not byte coordinates)
+- Drops tokens that cannot be repaired (no invalid spans survive)
+
+The conversion helpers `char_pos_to_byte_pos` and `byte_pos_to_char_pos` are correct UTF-8 implementations.
+
+**New tests confirmed (all in `#[cfg(test)]` module, lines ~340–510):**
+- `test_span_deserializer` — Span JSON deserialization (numbers, strings, errors)
+- `test_split_simple_trailing_comma`
+- `test_split_contractions_preserved` — d'une
+- `test_split_elided_article` — l'homme
+- `test_split_parentheses`
+- `test_split_mixed_punctuation`
+- `test_split_empty_input`
+- `test_split_sentence_with_period`
+- `test_split_quotes`
+- `test_split_complex_contraction` — qu'il
+- `test_split_whitespace_only`
+- `test_split_example_from_spec`
+- `test_split_em_dash`
+- `test_split_semicolon`
+- `test_split_colon`
+- `test_split_guillemets`
+- `test_token_full_text_with_leading`
+- `test_mock_tokenize_async`
+- `test_french_token_full_text`
+- `test_translation_provider_display`
+
+All token-splitting edge cases are covered. The punctuation-preservation fix (`is_closing_punct` excludes `'` to keep contractions intact, em-dash as content not separator, colon as content not separator) is correctly implemented.
+
+## Validation
+
+| Command | Result |
+|---------|--------|
+| `cargo build 2>&1 \| grep -E "error\|warning"` | **5 warnings**, 0 errors — warnings are benign (unused `api_key`, unused struct fields) |
+| `cargo test` | **7 passed, 0 failed** |
+| `npm run build 2>&1 \| grep -E "error\|✓"` | **All ✓, 0 errors** |
+
+## Blocker
+
+**None.** All three fixes are correct, tests pass, frontend builds clean.
+
+## Note
+
+The 5 `cargo` warnings (`unused variable: api_key`, `field ... is never read`) are pre-existing code-quality issues unrelated to this PR. They don't affect correctness.

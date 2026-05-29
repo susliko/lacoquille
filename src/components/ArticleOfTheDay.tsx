@@ -37,9 +37,10 @@ async function fetchArticle(): Promise<ArticleData> {
 export default function ArticleOfTheDay() {
   const [article] = createResource(fetchArticle);
   const [activeIndices, setActiveIndices] = createSignal<Set<number>>(new Set());
+  const [tooltipContent, setTooltipContent] = createSignal<string | null>(null);
+  const [tooltipPos, setTooltipPos] = createSignal<{ x: number; y: number } | null>(null);
 
   function setActiveIndicesFrom(enIndices: number[]) {
-    // Toggle: if all clicked indices are already active, clear them
     const allActive = enIndices.every(i => activeIndices().has(i));
     if (allActive) {
       setActiveIndices(new Set<number>());
@@ -61,15 +62,15 @@ export default function ArticleOfTheDay() {
     return offset;
   }
 
-  // Filter tokens that belong to a paragraph
-  // Include tokens that START within the paragraph (even if they span into next paragraph)
-  function getParaTokens(tokens: FrToken[], paras: string[], paraIndex: number): FrToken[] {
-    const start = getParaOffset(paras, paraIndex);
-    const end = start + paras[paraIndex].length;
-    return tokens.filter(t => {
-      const [s] = t.spans[0];
-      return s >= start && s < end;
-    });
+  // Find token that contains a character position (absolute in combined text)
+  function findTokenAtPosition(tokens: FrToken[], position: number): FrToken | undefined {
+    for (const token of tokens) {
+      const [start, end] = token.spans[0];
+      if (position >= start && position < end) {
+        return token;
+      }
+    }
+    return undefined;
   }
 
   // Get en_token indices for a paragraph
@@ -84,6 +85,74 @@ export default function ArticleOfTheDay() {
       }
     }
     return Array.from(indices).sort((a, b) => a - b);
+  }
+
+  // Find token for a word in the paragraph (matches by text content)
+  function findTokenForWord(
+    tokens: FrToken[],
+    paraOffset: number,
+    word: string,
+    wordStartInPara: number
+  ): FrToken | undefined {
+    const absStart = paraOffset + wordStartInPara;
+    const absEnd = absStart + word.length;
+
+    for (const token of tokens) {
+      const [tokenStart, tokenEnd] = token.spans[0];
+      // Match if token spans overlap with the word position
+      // and the token text matches the word (ignoring punctuation)
+      const tokenText = token.text;
+      if (tokenText === word &&
+          tokenStart >= paraOffset &&
+          tokenStart < paraOffset + tokens[0].spans[0][0] + 1000) { // rough para end
+        return token;
+      }
+    }
+    // Fallback: find by position
+    return findTokenAtPosition(tokens, absStart);
+  }
+
+  // Render paragraph by splitting into words and whitespace, wrapping words with tokens
+  function renderParagraph(
+    para: string,
+    paraOffset: number,
+    tokens: FrToken[]
+  ): any {
+    // Split into words and whitespace (preserve whitespace)
+    const parts = para.split(/(\s+)/);
+    let posInPara = 0;
+
+    return parts.map((part, partIdx) => {
+      if (part.match(/^\s+$/)) {
+        // Whitespace - just return it and advance position
+        posInPara += part.length;
+        return part;
+      }
+
+      // Word - find token for it
+      const absPos = paraOffset + posInPara;
+      const token = findTokenAtPosition(tokens, absPos);
+
+      posInPara += part.length;
+
+      if (token && token.text === part) {
+        return (
+          <span
+            class={`fr-token${isActive(token.en_indices[0]) ? " active" : ""}`}
+            onClick={(e) => {
+              setActiveIndicesFrom(token.en_indices);
+              setTooltipContent(token.translation);
+              setTooltipPos({ x: e.clientX, y: e.clientY });
+            }}
+          >
+            {part}
+          </span>
+        );
+      }
+
+      // No token found - render plain text
+      return part;
+    });
   }
 
   return (
@@ -201,6 +270,30 @@ export default function ArticleOfTheDay() {
         .error-state {
           color: var(--error);
         }
+        .tooltip {
+          position: fixed;
+          background: var(--accent, #3b82f6);
+          color: white;
+          padding: 6px 10px;
+          border-radius: 6px;
+          font-size: 0.9rem;
+          z-index: 1000;
+          pointer-events: none;
+          max-width: 250px;
+          white-space: normal;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+          transform: translate(-50%, -100%);
+          margin-top: -8px;
+        }
+        .tooltip::after {
+          content: '';
+          position: absolute;
+          top: 100%;
+          left: 50%;
+          transform: translateX(-50%);
+          border: 6px solid transparent;
+          border-top-color: var(--accent, #3b82f6);
+        }
       `}</style>
 
       <Show when={article.loading}>
@@ -221,8 +314,6 @@ export default function ArticleOfTheDay() {
           const tokens = () => data().tokenized?.fr_tokens ?? [];
           const enTokens = () => data().tokenized?.en_tokens ?? [];
           const paras = () => data().paragraphs;
-
-          const combinedText = () => paras().join("\n\n");
 
           return (
             <>
@@ -267,32 +358,10 @@ export default function ArticleOfTheDay() {
                     <h2>Français</h2>
                     <For each={paras()}>
                       {(para, i) => {
-                        const paraTokens = () => getParaTokens(tokens(), paras(), i());
-                        // Build a map of offset -> token
-                        const tokenMap = () => {
-                          const m = new Map<number, FrToken>();
-                          for (const t of paraTokens()) {
-                            m.set(t.spans[0][0], t);
-                          }
-                          return m;
-                        };
+                        const paraOffset = () => getParaOffset(paras(), i());
                         return (
                           <p class="article-paragraphs">
-                            {/* Render character by character, wrapping token starts */}
-                            {Array.from(para).map((char, j) => {
-                              const token = tokenMap().get(j);
-                              return token ? (
-                                <span
-                                  class={`fr-token${isActive(token.en_indices[0]) ? " active" : ""}`}
-                                  onClick={() => setActiveIndicesFrom(token.en_indices)}
-                                  data-trans={token.translation}
-                                >
-                                  {token.text}
-                                </span>
-                              ) : (
-                                char
-                              );
-                            })}
+                            {renderParagraph(para, paraOffset(), tokens())}
                           </p>
                         );
                       }}
@@ -325,6 +394,18 @@ export default function ArticleOfTheDay() {
                       }}
                     </For>
                   </div>
+                </div>
+              </Show>
+
+              <Show when={tooltipContent()}>
+                <div
+                  class="tooltip"
+                  style={{
+                    left: `${tooltipPos()?.x ?? 0}px`,
+                    top: `${tooltipPos()?.y ?? 0}px`
+                  }}
+                >
+                  {tooltipContent()}
                 </div>
               </Show>
             </>

@@ -207,39 +207,31 @@ fn is_closing_punct(c: char) -> bool {
 
 fn build_prompt(french_text: &str) -> String {
     format!(
-        r#"Tokenize FR→EN word-by-word for bilingual reading. JSON format, no markdown.
+        r#"Tokenize FR→EN for bilingual reading. Translate naturally, including multi-word phrases.
 
 Output format:
-{{"frTokens":[{{"text":"word","trailingPunct":",","leadingPunct":"","translation":"eng","spans":[[0,4]],"enIndices":[0]}}],"enTokens":[{{"text":"eng","index":0}}]}}
+{{"frTokens":[{{"text":"phrase","trailingPunct":".","leadingPunct":"","translation":"phrase.","spans":[[0,6]],"enIndices":[0]}}],"enTokens":[{{"text":"phrase.","index":0}}]}}
 
-CRITICAL RULES:
-1. ONE TOKEN PER WORD: Split EVERY word into its own token. Never group multiple words.
-   - CORRECT: "Le chat dort" → ["Le","chat","dort"]
-   - WRONG: "Le chat dort" → ["Le chat dort"]
-2. Split at punctuation: "Le chat," → text="Le chat" trailingPunct=","
-3. Contractions stay together: "d'une", "au", "du", "l'homme" (keep as ONE token)
-4. Translation MUST include trailing punctuation: "Le chat," → "The cat," (comma!)
-5. Spans are char offsets in original French text (byte positions)
+IMPORTANT RULES:
+1. Natural phrase boundaries: translate multi-word units together when natural ("Le petit" → "The little")
+2. Contractions stay together: "d'une", "au", "du", "l'homme"
+3. Spans are CHARACTER offsets in the original French text
+4. Translation MUST include trailing punctuation: "Le chat," → "The cat," (keep comma!)
+5. Translation should read naturally in English
 
-TRANSLATION RULES:
-- Translate each word to its natural English equivalent
-- Infinitive verbs: "prouver" → "prove" (full verb form, not just "to")
-- Prepositions translate separately: "pour" → "to", "de" → "of", "à" → "to"
-
-EXAMPLES OF CORRECT TOKENIZATION:
-Input: "Il dut prouver."
+EXAMPLES:
+Input: "La fortune."
 Tokens:
-{{"text":"Il","trailingPunct":"","leadingPunct":"","translation":"He","spans":[[0,2]],"enIndices":[0]}}
-{{"text":"dut","trailingPunct":"","leadingPunct":"","translation":"had to","spans":[[3,6]],"enIndices":[1]}}
-{{"text":"prouver","trailingPunct":".","leadingPunct":"","translation":"prove.","spans":[[7,14]],"enIndices":[2]}}
+{{"text":"La fortune","trailingPunct":".","leadingPunct":"","translation":"The fortune.","spans":[[0,11]],"enIndices":[0]}}
 
-Input: "Il alla jusqu'à croire."
+Input: "Le petit Georges, à quatre pattes."
 Tokens:
-{{"text":"Il","trailingPunct":"","leadingPunct":"","translation":"He","spans":[[0,2]],"enIndices":[0]}}
-{{"text":"alla","trailingPunct":"","leadingPunct":"","translation":"went","spans":[[3,6]],"enIndices":[1]}}
-{{"text":"jusqu","trailingPunct":"","leadingPunct":"","translation":"until","spans":[[7,11]],"enIndices":[2]}}
-{{"text":"à","trailingPunct":"","leadingPunct":"","translation":"to","spans":[[12,13]],"enIndices":[3]}}
-{{"text":"croire","trailingPunct":".","leadingPunct":"","translation":"believe.","spans":[[14,20]],"enIndices":[4]}}
+{{"text":"Le","trailingPunct":"","leadingPunct":"","translation":"The","spans":[[0,2]],"enIndices":[0]}}
+{{"text":"petit","trailingPunct":"","leadingPunct":"","translation":"little","spans":[[3,8]],"enIndices":[1]}}
+{{"text":"Georges","trailingPunct":",","leadingPunct":"","translation":"Georges,","spans":[[9,16]],"enIndices":[2]}}
+{{"text":"à","trailingPunct":"","leadingPunct":"","translation":"at","spans":[[18,19]],"enIndices":[3]}}
+{{"text":"quatre","trailingPunct":"","leadingPunct":"","translation":"four","spans":[[20,26]],"enIndices":[4]}}
+{{"text":"pattes","trailingPunct":".","leadingPunct":"","translation":"paws.","spans":[[27,33]],"enIndices":[5]}}
 
 French text:
 {}"#,

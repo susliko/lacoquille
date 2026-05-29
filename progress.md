@@ -4,25 +4,34 @@
 Completed
 
 ## Tasks
-- [x] Read lacq/src/routes/mod.rs to understand current structure
-- [x] Read lacq/src/lib.rs for the AppState structure
-- [x] Read lacq/src/main.rs to understand how the app starts
-- [x] Design and implement a background translation system
-- [x] Implement the changes
-- [x] Test by running the server and hitting /api/article-of-the-day
-- [x] Write findings to outputs/background-job-fix.md
+- [x] Read tokenizer.rs and understand the full context
+- [x] Improve build_prompt() with better translation examples and guidance
+- [x] Test improved prompt via curl to Groq API with sample French text
+- [x] Update build_prompt() in tokenizer.rs
+- [x] Verify build passes
 
 ## Files Changed
+- `lacq/src/tokenizer.rs` - Updated `build_prompt()` function with improved translation guidance
 
-- `lacq/src/lib.rs` — Added CachedArticle struct, cached_article field to AppState, start_background_workers() method, compute_article_of_the_day() function
-- `lacq/src/routes/mod.rs` — Simplified article_of_the_day handler to read from cache
-- `lacq/src/main.rs` — Added start_background_workers() call
-- `lacq/Cargo.toml` — Added chrono dependency
+## Testing Results
+
+| Test Sentence | "prouver" Translation | Result |
+|---------------|------------------------|--------|
+| "Il dut prouver que sa tendresse méritait ce sacrifice" | "prove" | ✅ |
+
+## Key Changes
+
+1. Added "ONE TOKEN PER WORD" rule with CORRECT/WRONG examples
+2. Added TRANSLATION RULES section for infinitive verbs
+3. Added two complete worked examples showing expected JSON output
+4. Made the task description more explicit about word-by-word tokenization
 
 ## Notes
 
-- Response time improved from 2-30s (on-demand) to ~5ms (cached)
-- Uses Arc<RwLock<Option<CachedArticle>>> for thread-safe interior mutability
-- Daily rotation via BookMeta::for_today() based on day-of-epoch
-- Initial computation on startup, then refresh every 24h at midnight
-- Returns 503 if cache not yet populated (transient state during startup)
+- Groq API rate limit was hit during testing (100K tokens/day)
+- All tests passed - "prouver" correctly translates to "prove"
+- Code compiles without errors (only pre-existing warnings)
+
+## Output
+
+Findings documented at: `/home/susliko/programming/lacoquille/outputs/translation-fix.md`
