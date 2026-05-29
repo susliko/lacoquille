@@ -25,13 +25,15 @@ async fn article_of_the_day(
 
     let story_text = crate::gutenberg::first_story_content(&text);
     let paragraphs_raw = crate::gutenberg::split_paragraphs(&story_text);
-    let paragraphs = crate::gutenberg::extract_excerpt(&paragraphs_raw, 10); // ~10 words, Groq has 6000 TPM limit
+    let paragraphs = crate::gutenberg::extract_excerpt(&paragraphs_raw, 120); // ~120 words for 2-3 paragraphs
     
-    // Additional safety: if combined text is too long, truncate to ~300 chars
-    let mut combined_text = paragraphs.join("\n\n");
-    if combined_text.len() > 500 {
-        combined_text.truncate(300);
-    }
+    // Safety: truncate combined text to avoid exceeding token limits
+    let combined_text = paragraphs.join("\n\n");
+    let combined_text = if combined_text.len() > 1200 {
+        combined_text[..1200].to_string()
+    } else {
+        combined_text
+    };
 
     // Tokenize with fallback chain
     let (tokenized, tokenization_error) = match state.get_tokenized(book.gutenberg_id, &combined_text).await {
