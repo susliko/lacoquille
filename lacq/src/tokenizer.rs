@@ -207,14 +207,39 @@ fn is_closing_punct(c: char) -> bool {
 
 fn build_prompt(french_text: &str) -> String {
     format!(
-        r#"Tokenize FR→EN for bilingual reading. JSON format, no markdown:
+        r#"Tokenize FR→EN word-by-word for bilingual reading. JSON format, no markdown.
+
+Output format:
 {{"frTokens":[{{"text":"word","trailingPunct":",","leadingPunct":"","translation":"eng","spans":[[0,4]],"enIndices":[0]}}],"enTokens":[{{"text":"eng","index":0}}]}}
 
-RULES:
-1. Split at punctuation: "Le chat," → text="Le chat" trailingPunct=","
-2. Contractions stay together: d'une, au, du, l'homme
-3. Translation MUST include trailing punctuation: "Le chat," → "The cat," (comma!)
-4. Spans are char offsets in original French text
+CRITICAL RULES:
+1. ONE TOKEN PER WORD: Split EVERY word into its own token. Never group multiple words.
+   - CORRECT: "Le chat dort" → ["Le","chat","dort"]
+   - WRONG: "Le chat dort" → ["Le chat dort"]
+2. Split at punctuation: "Le chat," → text="Le chat" trailingPunct=","
+3. Contractions stay together: "d'une", "au", "du", "l'homme" (keep as ONE token)
+4. Translation MUST include trailing punctuation: "Le chat," → "The cat," (comma!)
+5. Spans are char offsets in original French text (byte positions)
+
+TRANSLATION RULES:
+- Translate each word to its natural English equivalent
+- Infinitive verbs: "prouver" → "prove" (full verb form, not just "to")
+- Prepositions translate separately: "pour" → "to", "de" → "of", "à" → "to"
+
+EXAMPLES OF CORRECT TOKENIZATION:
+Input: "Il dut prouver."
+Tokens:
+{{"text":"Il","trailingPunct":"","leadingPunct":"","translation":"He","spans":[[0,2]],"enIndices":[0]}}
+{{"text":"dut","trailingPunct":"","leadingPunct":"","translation":"had to","spans":[[3,6]],"enIndices":[1]}}
+{{"text":"prouver","trailingPunct":".","leadingPunct":"","translation":"prove.","spans":[[7,14]],"enIndices":[2]}}
+
+Input: "Il alla jusqu'à croire."
+Tokens:
+{{"text":"Il","trailingPunct":"","leadingPunct":"","translation":"He","spans":[[0,2]],"enIndices":[0]}}
+{{"text":"alla","trailingPunct":"","leadingPunct":"","translation":"went","spans":[[3,6]],"enIndices":[1]}}
+{{"text":"jusqu","trailingPunct":"","leadingPunct":"","translation":"until","spans":[[7,11]],"enIndices":[2]}}
+{{"text":"à","trailingPunct":"","leadingPunct":"","translation":"to","spans":[[12,13]],"enIndices":[3]}}
+{{"text":"croire","trailingPunct":".","leadingPunct":"","translation":"believe.","spans":[[14,20]],"enIndices":[4]}}
 
 French text:
 {}"#,
