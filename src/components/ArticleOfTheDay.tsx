@@ -86,11 +86,6 @@ export default function ArticleOfTheDay() {
     return Array.from(indices).sort((a, b) => a - b);
   }
 
-  // Render a token with its punctuation
-  function renderToken(token: FrToken): string {
-    return `${token.leadingPunct || ''}${token.text}${token.trailingPunct || ''}`;
-  }
-
   return (
     <div class="article-of-the-day">
       <style>{`
@@ -273,19 +268,31 @@ export default function ArticleOfTheDay() {
                     <For each={paras()}>
                       {(para, i) => {
                         const paraTokens = () => getParaTokens(tokens(), paras(), i());
+                        // Build a map of offset -> token
+                        const tokenMap = () => {
+                          const m = new Map<number, FrToken>();
+                          for (const t of paraTokens()) {
+                            m.set(t.spans[0][0], t);
+                          }
+                          return m;
+                        };
                         return (
                           <p class="article-paragraphs">
-                            <For each={paraTokens()}>
-                              {(t) => (
+                            {/* Render character by character, wrapping token starts */}
+                            {Array.from(para).map((char, j) => {
+                              const token = tokenMap().get(j);
+                              return token ? (
                                 <span
-                                  class={`fr-token${isActive(t.en_indices[0]) ? " active" : ""}`}
-                                  onClick={() => setActiveIndicesFrom(t.en_indices)}
-                                  data-trans={t.translation}
+                                  class={`fr-token${isActive(token.en_indices[0]) ? " active" : ""}`}
+                                  onClick={() => setActiveIndicesFrom(token.en_indices)}
+                                  data-trans={token.translation}
                                 >
-                                  {renderToken(t)}{" "}
+                                  {token.text}
                                 </span>
-                              )}
-                            </For>
+                              ) : (
+                                char
+                              );
+                            })}
                           </p>
                         );
                       }}
