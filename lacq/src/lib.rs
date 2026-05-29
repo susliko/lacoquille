@@ -8,7 +8,8 @@ pub use config::Config;
 use serde::Serialize;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::sync::Arc;
-use tokio::sync::OnceCell;
+use tokio::sync::{OnceCell, RwLock};
+use tokio::time::Duration;
 
 #[derive(Clone)]
 pub struct BookMeta {
@@ -73,6 +74,11 @@ pub struct CachedText {
     pub fetched_at: std::time::Instant,
 }
 
+pub struct CachedArticle {
+    pub response: ArticleResponse,
+    pub computed_at: std::time::Instant,
+}
+
 #[derive(Clone)]
 pub struct AppState {
     pub curated_books: Vec<BookMeta>,
@@ -81,6 +87,9 @@ pub struct AppState {
     pub http: reqwest::Client,
     pub data_dir: String,
     pub config: Config,
+    /// Pre-computed article-of-the-day, refreshed daily.
+    /// The Option is Some once initial computation completes.
+    pub cached_article: Arc<RwLock<Option<CachedArticle>>>,
 }
 
 impl AppState {
@@ -92,6 +101,7 @@ impl AppState {
             http,
             data_dir,
             config,
+            cached_article: Arc::new(RwLock::new(None)),
         }
     }
 
@@ -172,6 +182,34 @@ impl AppState {
             Err(format!("All providers failed. Last error: {}", last_error))
         }).await.cloned()
     }
+
+    /// Spawns background workers:
+    /// 1. Immediate computation of today's article
+    /// 2. Daily refresh at midnight (using tokio::time::interval)
+    pub fn start_background_workers(self: &Arc<Self>) {
+        let state = Arc::clone(self);
+        tokio::spawn(async move {
+            // Initial computation
+            compute_article_of_the_day(&state).await;
+
+            // Schedule refresh at next midnight
+            let now = chrono::Local::now();
+            let next_midnight = (now.date_naive() + chrono::Duration::days(1))
+                .and_hms_opt(0, 0, 0)
+                .unwrap();
+            let secs_until_midnight = (next_midnight - now.naive_local()).num_seconds().max(1) as u64;
+            tracing::info!("Article background worker: scheduling first refresh in {} seconds (at midnight)", secs_until_midnight);
+            tokio::time::sleep(Duration::from_secs(secs_until_midnight)).await;
+
+            // Then refresh every 24 hours
+            let mut interval = tokio::time::interval(Duration::from_secs(86400));
+            loop {
+                interval.tick().await;
+                tracing::info!("Article background worker: refreshing article-of-the-day");
+                compute_article_of_the_day(&state).await;
+            }
+        });
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -210,4 +248,80 @@ pub struct FrToken {
 pub struct EnToken {
     pub text: String,
     pub index: usize,
+}
+
+/// Background job: fetch, translate, and cache the article-of-the-day.
+pub async fn compute_article_of_the_day(state: &Arc<AppState>) {
+    let book = BookMeta::for_today();
+
+    match state.get_french_text(book.gutenberg_id).await {
+        Ok(text) => {
+            let story_text = crate::gutenberg::first_story_content(&text);
+            let paragraphs_raw = crate::gutenberg::split_paragraphs(&story_text);
+            let paragraphs = crate::gutenberg::extract_excerpt(&paragraphs_raw, 120);
+
+            // Safety: truncate combined text to avoid exceeding token limits
+            let combined_text = paragraphs.join("\n\n");
+            let combined_text = if combined_text.len() > 1200 {
+                combined_text[..1200].to_string()
+            } else {
+                combined_text
+            };
+
+            let (tokenized, tokenization_error) = match state.get_tokenized(book.gutenberg_id, &combined_text).await {
+                Ok(t) => {
+                    tracing::info!(
+                        "Tokenized {} French tokens, {} English tokens",
+                        t.fr_tokens.len(),
+                        t.en_tokens.len()
+                    );
+                    let provider_used = t.provider_used.clone();
+                    let payload = TokenizedPayload {
+                        fr_tokens: t.fr_tokens.into_iter().map(|ft| FrToken {
+                            text: ft.text,
+                            trailing_punct: if ft.trailing_punct.is_empty() { None } else { Some(ft.trailing_punct) },
+                            leading_punct: if ft.leading_punct.is_empty() { None } else { Some(ft.leading_punct) },
+                            translation: ft.translation,
+                            spans: ft.spans.into_iter().map(|s| s.into()).collect(),
+                            en_indices: ft.en_indices,
+                        }).collect(),
+                        en_tokens: t.en_tokens.into_iter().map(|et| EnToken {
+                            text: et.text,
+                            index: et.index,
+                        }).collect(),
+                        provider: provider_used,
+                    };
+                    (Some(payload), None)
+                }
+                Err(e) => {
+                    tracing::error!("Tokenization failed after all providers: {}", e);
+                    (None, Some(format!("Translation temporarily unavailable. Showing French text only.")))
+                }
+            };
+
+            let book_title = book.title.clone();
+
+            let response = ArticleResponse {
+                title: book_title.clone(),
+                source: book.collection,
+                published_year: book.published_year,
+                paragraphs,
+                tokenized,
+                tokenization_error,
+            };
+
+            {
+                let mut cached = state.cached_article.write().await;
+                *cached = Some(CachedArticle {
+                    response,
+                    computed_at: std::time::Instant::now(),
+                });
+            }
+
+            tracing::info!("Article-of-the-day cached: {}", book_title);
+        }
+        Err(e) => {
+            tracing::error!("Failed to fetch French text for {}: {}", book.gutenberg_id, e);
+        }
+    }
 }

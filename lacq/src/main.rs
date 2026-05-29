@@ -23,8 +23,11 @@ async fn main() {
     let state = Arc::new(lacq::AppState::new(http, data_dir, config));
 
     let app = lacq::routes::routes()
-        .with_state(state)
+        .with_state(Arc::clone(&state))
         .nest_service("/", ServeDir::new("dist").append_index_html_on_directories(true));
+
+    // Start background workers for article-of-the-day computation
+    state.start_background_workers();
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
     tracing::info!("Listening on {}", addr);
