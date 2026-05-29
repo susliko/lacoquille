@@ -25,23 +25,26 @@ async fn article_of_the_day(
 
     let story_text = crate::gutenberg::first_story_content(&text);
     let paragraphs_raw = crate::gutenberg::split_paragraphs(&story_text);
-    let excerpt_paras = crate::gutenberg::extract_excerpt(&paragraphs_raw, 150);
+    let excerpt_paras = crate::gutenberg::extract_excerpt(&paragraphs_raw, 200); // ~400 words, safe for Groq 6000 TPM limit
     let paragraphs: Vec<String> = excerpt_paras.iter().map(|s| s.to_string()).collect();
 
     // Combine paragraphs into one text for tokenization
     let combined_text = paragraphs.join("\n\n");
 
-    // Tokenize via Gemini — fail fast so we see the real error
-    let tokenized = match state.get_tokenized(book.gutenberg_id, &combined_text).await {
+    // Tokenize with fallback chain
+    let (tokenized, tokenization_error) = match state.get_tokenized(book.gutenberg_id, &combined_text).await {
         Ok(t) => {
             tracing::info!(
                 "Tokenized {} French tokens, {} English tokens",
                 t.fr_tokens.len(),
                 t.en_tokens.len()
             );
-            Some(TokenizedPayload {
+            let provider_used = t.provider_used.clone();
+            let payload = TokenizedPayload {
                 fr_tokens: t.fr_tokens.into_iter().map(|ft| FrToken {
                     text: ft.text,
+                    trailing_punct: ft.trailing_punct,
+                    leading_punct: ft.leading_punct,
                     translation: ft.translation,
                     spans: ft.spans.into_iter().map(|s| s.into()).collect(),
                     en_indices: ft.en_indices,
@@ -50,11 +53,16 @@ async fn article_of_the_day(
                     text: et.text,
                     index: et.index,
                 }).collect(),
-            })
+                provider: provider_used,
+            };
+            if let Some(ref provider) = payload.provider {
+                tracing::info!("Translation provider: {}", provider);
+            }
+            (Some(payload), None)
         }
         Err(e) => {
-            tracing::error!("Tokenization failed: {}", e);
-            None
+            tracing::error!("Tokenization failed after all providers: {}", e);
+            (None, Some(format!("Translation temporarily unavailable. Showing French text only.")))
         }
     };
 
@@ -64,5 +72,6 @@ async fn article_of_the_day(
         published_year: book.published_year,
         paragraphs,
         tokenized,
+        tokenization_error,
     }))
 }

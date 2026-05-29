@@ -2,6 +2,8 @@ import { createResource, createSignal, For, Show } from "solid-js";
 
 interface FrToken {
   text: string;
+  trailingPunct: string;
+  leadingPunct: string;
   translation: string;
   spans: [number, number][];
   en_indices: number[];
@@ -23,6 +25,7 @@ interface ArticleData {
   published_year: number;
   paragraphs: string[];
   tokenized?: Tokenized;
+  tokenization_error?: string;
 }
 
 async function fetchArticle(): Promise<ArticleData> {
@@ -39,7 +42,7 @@ export default function ArticleOfTheDay() {
     // Toggle: if all clicked indices are already active, clear them
     const allActive = enIndices.every(i => activeIndices().has(i));
     if (allActive) {
-      setActiveIndices(new Set());
+      setActiveIndices(new Set<number>());
     } else {
       setActiveIndices(new Set(enIndices));
     }
@@ -83,6 +86,11 @@ export default function ArticleOfTheDay() {
     return Array.from(indices).sort((a, b) => a - b);
   }
 
+  // Render a token with its punctuation
+  function renderToken(token: FrToken): string {
+    return `${token.leadingPunct || ''}${token.text}${token.trailingPunct || ''}`;
+  }
+
   return (
     <div class="article-of-the-day">
       <style>{`
@@ -104,6 +112,14 @@ export default function ArticleOfTheDay() {
           color: var(--text-2);
           font-size: 1rem;
           margin: 0;
+        }
+        .tokenization-error {
+          background: var(--warning, #fef3c7);
+          color: var(--warning-text, #92400e);
+          padding: 0.75rem 1rem;
+          border-radius: 0.5rem;
+          margin-bottom: 1.5rem;
+          font-size: 0.9rem;
         }
         .article-body {
           display: grid;
@@ -222,6 +238,12 @@ export default function ArticleOfTheDay() {
                 </p>
               </header>
 
+              <Show when={data().tokenization_error}>
+                <div class="tokenization-error">
+                  {data().tokenization_error}
+                </div>
+              </Show>
+
               <Show
                 when={hasTokens()}
                 fallback={
@@ -260,7 +282,7 @@ export default function ArticleOfTheDay() {
                                   onClick={() => setActiveIndicesFrom(t.en_indices)}
                                   data-trans={t.translation}
                                 >
-                                  {combinedText().slice(...t.spans[0])}{" "}
+                                  {renderToken(t)}{" "}
                                 </span>
                               )}
                             </For>

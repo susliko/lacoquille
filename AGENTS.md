@@ -90,6 +90,40 @@ The `lacq/` directory is a Rust (Axum) backend server that:
 - Periphrases (futur proche, passé récent, present progressif) are computed dynamically in VerbDiagram, not stored in conjugation files
 - Mobile layout is transposed: mood=col, time=row; desktop is time=col, mood=row
 
+## Debugging and process management (lessons learned)
+
+### Never wait blindly for servers
+
+Backend servers (`lacq`, `cargo run`, etc.) run forever — they **won't finish**. Never chain `&` with curl in the same command like `cargo run & sleep 3 && curl ...`. The `sleep` will finish before the server is ready, causing timeouts and confusing failures.
+
+**Instead: use the `process` tool to start background servers.**
+
+```sh
+# START once (do this first):
+process action=start command="cargo run" name="lacq-server"
+
+# Then TEST repeatedly (do this as many times as needed):
+curl -s http://localhost:8080/api/article-of-the-day | jq .
+
+```
+
+See `pi-processes` skill for details on the process tool.
+
+### Never use `sleep` with long arbitrary waits
+
+1. Check process status with `process action=output` immediately after starting
+2. Use quick `curl` tests without `sleep`
+3. If a curl returns empty, check `curl ... | wc -c` and process logs before waiting
+4. If tokenization times out, check that you're using `gemini-3.1-flash-lite` (not 3.5-flash which has different rate limits)
+5. Test API changes directly with curl before assuming they work in the app
+
+### Quick server verification
+```sh
+# After starting dev server, immediately check it's up
+curl -s http://localhost:8080/health
+# Don't do: sleep 10 && curl ... - just check right away
+```
+
 ## Removing UI elements (lessons learned)
 
 **To remove an element from every page:** edit `src/layouts/Base.astro` directly — delete the HTML, don't try to hide it. Conditionally rendering with `hideNav={true}` or `style={...}` is fragile: `style=""` ≠ `style="display: none"`, the element stays in the DOM, and Astro static builds can produce stale output if incremental builds are cached. Always delete the markup, not just hide it.

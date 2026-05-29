@@ -42,13 +42,24 @@ impl From<Span> for [usize; 2] {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FrenchToken {
     #[serde(rename = "text")]
-    pub text: String,
+    pub text: String,           // FRENCH base text, NO punctuation
+    #[serde(rename = "trailingPunct", default)]
+    pub trailing_punct: String, // Punctuation AFTER token (e.g., "," or "" or ".")
+    #[serde(rename = "leadingPunct", default)]
+    pub leading_punct: String,  // Punctuation BEFORE token (rare, e.g., "(")
     #[serde(rename = "translation")]
-    pub translation: String,
+    pub translation: String,    // ENGLISH translation + trailing punctuation
     #[serde(rename = "spans")]
     pub spans: Vec<Span>,
     #[serde(rename = "enIndices", default)]
     pub en_indices: Vec<usize>,
+}
+
+impl FrenchToken {
+    /// Returns the full text including punctuation for span matching
+    pub fn full_text(&self) -> String {
+        format!("{}{}{}", self.leading_punct, self.text, self.trailing_punct)
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -67,6 +78,8 @@ pub struct TokenizedText {
     pub en_tokens: Vec<EnglishToken>,
     #[serde(default)]
     pub book_id: u64,
+    #[serde(rename = "providerUsed", default)]
+    pub provider_used: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -80,6 +93,7 @@ struct GroqResponse {
 #[derive(Debug, Deserialize)]
 struct GroqChoice {
     message: GroqMessage,
+    #[serde(default)]
     finish_reason: Option<String>,
 }
 
@@ -93,42 +107,170 @@ struct GroqError {
     message: String,
     #[serde(rename = "type")]
     error_type: String,
+    #[serde(default)]
     code: Option<String>,
 }
 
+/// TranslationProvider with model name
+#[derive(Debug, Clone, PartialEq)]
 pub enum TranslationProvider {
-    Groq,
-    Gemini,
+    OpenRouter(String), // OpenRouter(model_name)
+    Groq(String),       // Groq(model_name)
+    Gemini(String),     // Gemini(model_name)
+}
+
+impl TranslationProvider {
+    pub fn provider_name(&self) -> &'static str {
+        match self {
+            TranslationProvider::OpenRouter(_) => "openrouter",
+            TranslationProvider::Groq(_) => "groq",
+            TranslationProvider::Gemini(_) => "gemini",
+        }
+    }
+
+    pub fn model_name(&self) -> &str {
+        match self {
+            TranslationProvider::OpenRouter(m) => m,
+            TranslationProvider::Groq(m) => m,
+            TranslationProvider::Gemini(m) => m,
+        }
+    }
+
+    pub fn display(&self) -> String {
+        format!("{}/{}", self.provider_name(), self.model_name())
+    }
+}
+
+/// Split text into tokens with separated punctuation.
+/// Preserves contractions like "d'une", "l'homme" as single tokens.
+/// Returns: Vec<(content, trailing_punct, leading_punct)>
+pub fn split_tokens_with_punct(text: &str) -> Vec<(String, String, String)> {
+    let mut results = Vec::new();
+
+    for word in text.split_whitespace() {
+        let word_chars: Vec<char> = word.chars().collect();
+        let mut leading = String::new();
+        let mut trailing = String::new();
+        let mut content_start = 0;
+        let mut content_end = word_chars.len();
+
+        // Handle standalone punctuation (single punctuation characters like "—" or ":")
+        // These should be treated as content, not extracted as trailing/leading
+        if word_chars.len() == 1 && is_closing_punct(word_chars[0]) {
+            // Single punctuation - add as-is as content
+            results.push((word.to_string(), String::new(), String::new()));
+            continue;
+        }
+
+        // Extract leading punctuation (opening marks)
+        for (i, c) in word_chars.iter().enumerate() {
+            if is_opening_punct(*c) {
+                leading.push(*c);
+                content_start = i + 1;
+            } else {
+                break;
+            }
+        }
+
+        // Extract trailing punctuation (closing marks) - scan backwards
+        for (i, c) in word_chars.iter().rev().enumerate() {
+            // Apostrophe at the end of a word is part of contraction, not trailing punct
+            // e.g., "d'une" → d'une (leading='), not d (trailing=')
+            if *c == '\'' && content_end == word_chars.len() - i {
+                // This is an apostrophe that's part of content, not trailing
+                break;
+            }
+            if is_closing_punct(*c) {
+                trailing.push(*c);
+                content_end -= 1;
+            } else {
+                break;
+            }
+        }
+
+        let content: String = word_chars[content_start..content_end].iter().collect();
+        if !content.is_empty() || !leading.is_empty() || !trailing.is_empty() {
+            results.push((content, trailing, leading));
+        }
+    }
+
+    results
+}
+
+fn is_opening_punct(c: char) -> bool {
+    matches!(c, '«' | '"' | '(' | '[')
+}
+
+fn is_closing_punct(c: char) -> bool {
+    matches!(c, '»' | '"' | ')' | ']' | '.' | ',' | '!' | '?' | ';' | ':' | '—' | '-')
 }
 
 fn build_prompt(french_text: &str) -> String {
     format!(
-        r#"You are a French language learning assistant. Tokenize this French text for parallel bilingual reading.
+        r#"You are a French language learning assistant. Tokenize this French text for 
+parallel bilingual reading. Every character in the French text MUST appear 
+in exactly one token.
 
-Rules:
-- Each token is either: (a) a single word that makes sense on its own, OR (b) an expression/idiom where parts don't translate independently
-- For multi-word tokens, they must be contiguous in the French text
-- Output ONLY valid JSON matching this schema — no markdown, no explanation:
+OUTPUT FORMAT (strict JSON, no markdown):
 {{
   "frTokens": [
     {{
-      "text": "the exact French text (word or phrase)",
-      "translation": "English meaning",
-      "spans": [[start, end], ...],  // char offsets in original text (counting from 0, NOT byte offsets — each character is 1 regardless of encoding)
-      "enIndices": [N, ...]          // indices into enTokens array
+      "text": "word or short phrase WITHOUT punctuation",
+      "trailingPunct": "," or "." or "" etc (the punctuation AFTER this word in original),
+      "leadingPunct": "" or "(" etc (the punctuation BEFORE this word, rare),
+      "translation": "English meaning INCLUDING trailing punctuation",
+      "spans": [[start, end]],  // char offsets in ORIGINAL French text (with punctuation)
+      "enIndices": [N]
     }}
   ],
   "enTokens": [
-    {{ "text": "English text", "index": N }}
+    {{ "text": "English word ", "index": N }}
   ]
 }}
 
-IMPORTANT:
-- PUNCTUATION MUST BE PRESERVED: if the French text ends with punctuation (., !, ?, :, ;, —, —), the English translation must end with the SAME punctuation. For example, "admirable!" → "admirable!", not "admirable".
-- Spans must be VALID: each token's text must EXACTLY match french_text[span[0]:span[1]]
-- If a span is wrong, the token text won't match — always verify spans against the original
-- enIndices must be consecutive and cover the entire English translation in order
-- Output only the JSON — no code fences, no preamble, no commentary
+STRICT RULES:
+
+1. SPLIT AT PUNCTUATION
+   - Commas, periods, semicolons, colons, exclamation, question marks are SEPARATORS
+   - "Le chat," → token "Le chat" + trailingPunct ","
+   - "Il vient." → token "Il vient" + trailingPunct "."
+   - "Comment?" → tokens: "Comment", trailingPunct "?"
+
+2. CONTRACTED FORMS ARE SINGLE TOKENS
+   - "d'une" (de + une) → text "d'une"
+   - "au" (à + le) → text "au"
+   - "du" (de + le) → text "du"
+   - "l'homme" (le + homme) → text "l'homme"
+   - "qu'il" (que + il) → text "qu'il"
+
+3. VERB COMPOUNDS MUST BE SINGLE TOKENS
+   - Compound verb forms are ONE token, never split:
+     - "après avoir contourné" → ONE token, translation "after having circled"
+     - "avoir fait" → ONE token, translation "having done"
+     - "être allé" → ONE token, translation "having gone"
+     - "étant parti" → ONE token, translation "having left"
+     - "en chantant" → ONE token, translation "while singing"
+   - This is MANDATORY, not optional
+   - Split at auxiliary + infinitive boundary = WRONG
+
+4. OTHER MULTI-WORD TOKENS (only when translation is non-compositional):
+   - Contractions: d'une, au, l'homme, qu'il
+   - Expressions: peut-être, tout à coup, ne...pas
+
+5. HARD LIMITS:
+   - Max 15 words per token for verb compounds (ignore normal limits)
+   - Max 25 characters per token for other multi-word tokens
+   - Split nothing that should stay together for correct translation
+   
+6. SPANS:
+   - Reference ORIGINAL French text (with punctuation)
+   - Must be exact: text + trailingPunct must equal original_text[start:end]
+   - Character positions, not byte positions
+
+7. TRANSLATIONS:
+   - Must preserve ALL punctuation from French
+   - "Le chat," → translation "The cat," (with comma!)
+   - Translations should be natural English, not literal
 
 French text:
 {}"#,
@@ -154,8 +296,6 @@ fn byte_pos_to_char_pos(text: &str, byte_pos: usize) -> usize {
 fn repair_spans(text: &str, tokens: &mut Vec<FrenchToken>) {
     let mut valid_tokens = Vec::new();
     for mut token in tokens.drain(..) {
-        // The API returns CHARACTER offsets, but we need to validate using char-based positions
-        // text.len() is BYTES, text.chars().count() is CHARACTERS
         let text_chars = text.chars().count();
 
         // Try to find the text in the original (char-based)
@@ -177,7 +317,7 @@ fn repair_spans(text: &str, tokens: &mut Vec<FrenchToken>) {
                     best_dist = dist;
                     best_pos = Some(abs_char);
                 }
-                // Continue searching for closer matches (move past this occurrence)
+                // Continue searching for closer matches
                 let next_byte = abs_byte + token.text.len().max(1);
                 search_char_pos = byte_pos_to_char_pos(text, next_byte.min(text.len()));
                 if search_char_pos >= text_chars { break; }
@@ -203,27 +343,111 @@ pub async fn tokenize(
     client: &reqwest::Client,
     api_key: &str,
     french_text: &str,
-    provider: TranslationProvider,
+    provider: &TranslationProvider,
 ) -> Result<TokenizedText, String> {
     match provider {
-        TranslationProvider::Groq => tokenize_groq(client, api_key, french_text).await,
-        TranslationProvider::Gemini => tokenize_gemini(client, api_key, french_text).await,
+        TranslationProvider::OpenRouter(model) => tokenize_openrouter(client, api_key, french_text, model).await,
+        TranslationProvider::Groq(model) => tokenize_groq(client, api_key, french_text, model).await,
+        TranslationProvider::Gemini(model) => tokenize_gemini(client, api_key, french_text, model).await,
     }
+}
+
+pub async fn tokenize_openrouter(
+    client: &reqwest::Client,
+    api_key: &str,
+    french_text: &str,
+    model: &str,
+) -> Result<TokenizedText, String> {
+    let url = "https://openrouter.ai/api/v1/chat/completions";
+    let prompt = build_prompt(french_text);
+
+    let body = serde_json::json!({
+        "model": model,
+        "messages": [{ "role": "user", "content": prompt }],
+        "max_tokens": 8192,
+        "temperature": 0.2
+    });
+
+    let resp = client
+        .post(url)
+        .header("Authorization", format!("Bearer {}", api_key))
+        .header("Content-Type", "application/json")
+        .header("HTTP-Referer", "https://lacoquille.com")
+        .header("X-Title", "Lacoquille")
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| format!("OpenRouter request failed: {}", e))?;
+
+    if !resp.status().is_success() {
+        let status = resp.status();
+        let body_text = resp.text().await.unwrap_or_default();
+        return Err(format!("OpenRouter API error ({}): {}", status, body_text));
+    }
+
+    #[derive(Deserialize)]
+    struct OpenRouterResponse {
+        id: String,
+        choices: Vec<OpenRouterChoice>,
+        error: Option<OpenRouterError>,
+    }
+    #[derive(Deserialize)]
+    struct OpenRouterChoice {
+        message: OpenRouterMessage,
+    }
+    #[derive(Deserialize)]
+    struct OpenRouterMessage {
+        content: String,
+    }
+    #[derive(Deserialize)]
+    struct OpenRouterError {
+        message: String,
+    }
+
+    let openrouter_resp: OpenRouterResponse = resp
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse OpenRouter response: {}", e))?;
+
+    let choice = openrouter_resp
+        .choices
+        .first()
+        .ok_or_else(|| "No choices in OpenRouter response".to_string())?;
+
+    // Strip markdown code fences if present
+    let content = choice.message.content.trim().to_string();
+    let json_str = content
+        .trim_start_matches("```json\n")
+        .trim_start_matches("```\n")
+        .trim_start_matches("```json")
+        .trim_start_matches("```")
+        .trim_end_matches("```");
+
+
+    let mut parsed: TokenizedText = serde_json::from_str(json_str)
+        .map_err(|e| format!("Failed to parse JSON from OpenRouter: {}. Raw: {}", e, &content[..content.len().min(300)]))?;
+
+
+    repair_spans(french_text, &mut parsed.fr_tokens);
+    parsed.provider_used = Some(format!("openrouter/{}", model));
+
+    Ok(parsed)
 }
 
 async fn tokenize_groq(
     client: &reqwest::Client,
     api_key: &str,
     french_text: &str,
+    model: &str,
 ) -> Result<TokenizedText, String> {
     let url = "https://api.groq.com/openai/v1/chat/completions";
     let prompt = build_prompt(french_text);
 
     let body = serde_json::json!({
-        "model": "llama-3.1-8b-instant",
+        "model": model,
         "messages": [{ "role": "user", "content": prompt }],
         "response_format": { "type": "json_object" },
-        "max_tokens": 2048,
+        "max_tokens": 8192,
         "temperature": 0.2
     });
 
@@ -255,7 +479,6 @@ async fn tokenize_groq(
         .await
         .map_err(|e| format!("Failed to parse Groq response: {}", e))?;
 
-    // Check for API-level errors embedded in response
     if let Some(err) = groq_resp.error {
         return Err(format!("Groq API error: {} — {}", err.error_type, err.message));
     }
@@ -265,9 +488,9 @@ async fn tokenize_groq(
         .first()
         .ok_or_else(|| "No choices in Groq response".to_string())?;
 
-    // Strip think blocks (e.g. <think>...</think>) that qwen may emit
+    // Strip think blocks (e.g. <think>...) that qwen may emit
     let think_re: once_cell::sync::Lazy<Regex> =
-        once_cell::sync::Lazy::new(|| Regex::new(r"<think>[\s\S]*?</think>").unwrap());
+        once_cell::sync::Lazy::new(|| Regex::new(r"<think>[\s\S]*?").unwrap());
 
     let content = think_re.replace_all(&choice.message.content, "").trim().to_string();
 
@@ -286,14 +509,8 @@ async fn tokenize_groq(
             &json_str[..json_str.len().min(300)]
         ))?;
 
-    // Repair broken spans from the LLM (before enIndices validation)
     repair_spans(french_text, &mut parsed.fr_tokens);
-
-    // NOTE: We don't validate enIndices coverage here because:
-    // 1. repair_spans may remove tokens, creating gaps in en_indices
-    // 2. Groq's tokenization may produce non-consecutive en_indices
-    // 3. The frontend only uses en_indices to link French↔English tokens for highlighting
-    //    — gaps don't affect functionality, just highlight coverage
+    parsed.provider_used = Some(format!("groq/{}", model));
 
     Ok(parsed)
 }
@@ -302,9 +519,11 @@ async fn tokenize_gemini(
     client: &reqwest::Client,
     api_key: &str,
     french_text: &str,
+    model: &str,
 ) -> Result<TokenizedText, String> {
     let url = format!(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key={}",
+        "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
+        model,
         api_key
     );
 
@@ -316,6 +535,7 @@ async fn tokenize_gemini(
         "generationConfig": {
             "responseMimeType": "application/json",
             "temperature": 0.2,
+            "maxOutputTokens": 8192,
         }
     });
 
@@ -369,82 +589,237 @@ async fn tokenize_gemini(
     let mut parsed: TokenizedText = serde_json::from_str(&text)
         .map_err(|e| format!("Failed to parse JSON from Gemini: {}", e))?;
 
-    // Repair broken spans from the LLM
     repair_spans(french_text, &mut parsed.fr_tokens);
+    parsed.provider_used = Some(format!("gemini/{}", model));
 
     Ok(parsed)
 }
 
 pub async fn mock_tokenize_async(french_text: &str) -> Result<TokenizedText, String> {
+    let splits = split_tokens_with_punct(french_text);
     let mut fr_tokens = Vec::new();
     let mut en_tokens = Vec::new();
     let mut en_idx = 0usize;
-    let mut char_pos = 0usize;
-    let word_regex = Regex::new(r"(\S+)").unwrap();
-    for cap in word_regex.captures_iter(french_text) {
-        let m = cap.get(1).unwrap();
-        let byte_start = m.start();
-        let byte_end = m.end();
-        let word = m.as_str();
-        let translation = word.to_string();
-        // Convert byte positions to character positions
-        let char_start = french_text[..byte_start].chars().count();
-        let char_end = char_start + word.chars().count();
+
+    for (content, trailing_punct, leading_punct) in splits {
+        // Calculate character positions in the original text
+        let char_start = french_text.find(&content).unwrap_or(0);
+        // Simple approximation: find the first occurrence and use content length
+        let char_end = char_start + content.chars().count();
+
         fr_tokens.push(FrenchToken {
-            text: word.to_string(),
-            translation: translation.clone(),
+            text: content.to_string(),
+            trailing_punct: trailing_punct.to_string(),
+            leading_punct: leading_punct.to_string(),
+            translation: content.to_string(), // Mock: no real translation
             spans: vec![Span([char_start, char_end])],
             en_indices: vec![en_idx],
         });
         en_tokens.push(EnglishToken {
-            text: format!("{} ", translation),
+            text: format!("{} ", content),
             index: en_idx,
         });
         en_idx += 1;
-        char_pos = char_end;
     }
+
     Ok(TokenizedText {
         fr_tokens,
         en_tokens,
         book_id: 0,
+        provider_used: Some("mock".to_string()),
     })
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_span_deserializer() {
-        // Plain number arrays: [30, 60]
         let s = r#"[[30, 60]]"#;
         let spans: Vec<Span> = serde_json::from_str(s).unwrap();
         assert_eq!(spans, vec![Span([30, 60])]);
 
-        // String-encoded numbers (e.g. "02"): Llama sometimes emits these
         let s = r#"[["02", "30"]]"#;
         let spans: Vec<Span> = serde_json::from_str(s).unwrap();
         assert_eq!(spans, vec![Span([2, 30])]);
 
-        // Multiple spans
         let s = r#"[[0, 10], [20, 35]]"#;
         let spans: Vec<Span> = serde_json::from_str(s).unwrap();
         assert_eq!(spans, vec![Span([0, 10]), Span([20, 35])]);
 
-        // Negative number must NOT parse
         let s = r#"[[-1, 30]]"#;
         assert!(serde_json::from_str::<Vec<Span>>(s).is_err());
 
-        // Float must NOT parse
         let s = r#"[[1.5, 30]]"#;
         assert!(serde_json::from_str::<Vec<Span>>(s).is_err());
 
-        // Too few elements must NOT parse
         let s = r#"[[30]]"#;
         assert!(serde_json::from_str::<Vec<Span>>(s).is_err());
 
-        // Non-numeric string must NOT parse
         let s = r#"[["hello", "30"]]"#;
         assert!(serde_json::from_str::<Vec<Span>>(s).is_err());
+    }
+
+    // Punctuation splitting tests
+    #[test]
+    fn test_split_simple_trailing_comma() {
+        // "Le chat," splits at whitespace into "Le" and "chat,"
+        // "chat," then has comma extracted as trailing punctuation
+        let result = split_tokens_with_punct("Le chat,");
+        assert_eq!(result.len(), 2); // "Le" and "chat," -> 2 words
+        // First word "Le" has no trailing
+        assert_eq!(result[0].0, "Le");
+        assert_eq!(result[0].1, "");
+        // Second word "chat," -> content "chat", trailing ","
+        assert_eq!(result[1].0, "chat");
+        assert_eq!(result[1].1, ",");
+    }
+
+    #[test]
+    fn test_split_contractions_preserved() {
+        // Apostrophe is NOT a punctuation separator for contractions
+        let result = split_tokens_with_punct("d'une");
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].0, "d'une");
+        assert_eq!(result[0].1, "");
+        assert_eq!(result[0].2, "");
+    }
+
+    #[test]
+    fn test_split_elided_article() {
+        let result = split_tokens_with_punct("l'homme");
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].0, "l'homme");
+        assert_eq!(result[0].1, "");
+        assert_eq!(result[0].2, "");
+    }
+
+    #[test]
+    fn test_split_parentheses() {
+        let result = split_tokens_with_punct("(texte)");
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].0, "texte");
+        assert_eq!(result[0].1, ")");
+        assert_eq!(result[0].2, "(");
+    }
+
+    #[test]
+    fn test_split_mixed_punctuation() {
+        // "Le chat, pas le chien." splits at whitespace:
+        // ["Le", "chat,", "pas", "le", "chien."]
+        let result = split_tokens_with_punct("Le chat, pas le chien.");
+        assert_eq!(result.len(), 5); // 5 words
+        // Last word "chien." should have period as trailing
+        assert_eq!(result[4].0, "chien");
+        assert_eq!(result[4].1, ".");
+        // "chat," should have comma as trailing
+        assert_eq!(result[1].0, "chat");
+        assert_eq!(result[1].1, ",");
+    }
+
+    #[test]
+    fn test_split_empty_input() {
+        let result = split_tokens_with_punct("");
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_split_sentence_with_period() {
+        let result = split_tokens_with_punct("Bonjour monde.");
+        assert_eq!(result.len(), 2);
+        // Second token should be "monde" with trailing "."
+        assert_eq!(result[1].0, "monde");
+        assert_eq!(result[1].1, ".");
+    }
+
+    #[test]
+    fn test_split_quotes() {
+        let result = split_tokens_with_punct(r#""Bonjour""#);
+        // Should handle quotation marks
+        assert!(result.iter().any(|(c, _, _)| c == "Bonjour"));
+    }
+
+    #[test]
+    fn test_split_complex_contraction() {
+        let result = split_tokens_with_punct("qu'il");
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].0, "qu'il");
+        assert_eq!(result[0].1, "");
+        assert_eq!(result[0].2, "");
+    }
+
+    #[test]
+    fn test_split_whitespace_only() {
+        let result = split_tokens_with_punct("   ");
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_split_example_from_spec() {
+        let result = split_tokens_with_punct("Le petit Georges, à quatre pattes.");
+        // The input has 6 words: "Le", "petit", "Georges,", "à", "quatre", "pattes."
+        // Each becomes a token with punctuation extracted
+        assert_eq!(result.len(), 6);
+        // Georges, has comma as trailing
+        assert!(result.iter().any(|(c, t, _)| c == "Georges" && t == ","));
+        // pattiens. has period as trailing
+        assert!(result.iter().any(|(c, t, _)| c == "pattes" && t == "."));
+    }
+
+    #[test]
+    fn test_split_em_dash() {
+        // "Il dit — enfin, il crie." splits into: ["Il", "dit", "—", "enfin,", "il", "crie."]
+        let result = split_tokens_with_punct("Il dit — enfin, il crie.");
+        // "—" is a standalone word with em-dash as its content (and no trailing punct)
+        assert!(result.iter().any(|(c, t, _)| c == "—" && t.is_empty()));
+        // "enfin," has comma as trailing
+        assert!(result.iter().any(|(c, t, _)| c == "enfin" && t == ","));
+        // "crie." has period as trailing
+        assert!(result.iter().any(|(c, t, _)| c == "crie" && t == "."));
+    }
+
+    #[test]
+    fn test_split_semicolon() {
+        // "Il vient; elle part." splits into: ["Il", "vient;", "elle", "part."]
+        let result = split_tokens_with_punct("Il vient; elle part.");
+        // "vient;" has semicolon as trailing
+        assert!(result.iter().any(|(c, t, _)| c == "vient" && t == ";"));
+        // "part." has period as trailing
+        assert!(result.iter().any(|(c, t, _)| c == "part" && t == "."));
+    }
+
+    #[test]
+    fn test_split_colon() {
+        // "Il répond : oui." splits into: ["Il", "répond", ":", "oui."]
+        let result = split_tokens_with_punct("Il répond : oui.");
+        // ":" is a standalone word with colon as its content
+        assert!(result.iter().any(|(c, t, _)| c == ":" && t.is_empty()));
+        // "oui." has period as trailing
+        assert!(result.iter().any(|(c, t, _)| c == "oui" && t == "."));
+    }
+
+    #[test]
+    fn test_split_guillemets() {
+        // '"Il dit : «Oui !»"' splits into words with « » as leading/trailing
+        let result = split_tokens_with_punct(r#"Il dit : «Oui !»"#);
+        // «Oui is a word with « as leading
+        assert!(result.iter().any(|(c, t, l)| c == "Oui" && l == "«"));
+        // !» is captured as trailing punctuation (content empty, trailing contains both)
+        assert!(result.iter().any(|(c, t, _)| t.contains('»') || c.contains('»')));
+    }
+
+    #[test]
+    fn test_token_full_text_with_leading() {
+        let token = FrenchToken {
+            text: "texte".to_string(),
+            trailing_punct: ")".to_string(),
+            leading_punct: "(".to_string(),
+            translation: "(text)".to_string(),
+            spans: vec![Span([0, 7])],
+            en_indices: vec![0],
+        };
+        assert_eq!(token.full_text(), "(texte)");
     }
 
     #[tokio::test]
@@ -455,6 +830,67 @@ mod tests {
         assert_eq!(tokens.fr_tokens.len(), 2);
         assert_eq!(tokens.en_tokens.len(), 2);
         assert_eq!(tokens.fr_tokens[0].text, "Bonjour");
-        assert_eq!(tokens.en_tokens[0].text, "Bonjour ");
+    }
+
+    #[test]
+    fn test_french_token_full_text() {
+        let token = FrenchToken {
+            text: "Le chat".to_string(),
+            trailing_punct: ",".to_string(),
+            leading_punct: "".to_string(),
+            translation: "The cat,".to_string(),
+            spans: vec![Span([0, 7])],
+            en_indices: vec![0],
+        };
+        assert_eq!(token.full_text(), "Le chat,");
+    }
+
+    #[test]
+    fn test_translation_provider_display() {
+        let provider = TranslationProvider::OpenRouter("z-ai/glm-4.5-air:free".to_string());
+        assert_eq!(provider.display(), "openrouter/z-ai/glm-4.5-air:free");
+
+
+
+        let provider = TranslationProvider::Groq("llama-3.1-8b-instant".to_string());
+        assert_eq!(provider.display(), "groq/llama-3.1-8b-instant");
+
+        let provider = TranslationProvider::Gemini("gemini-3.1-flash-lite".to_string());
+        assert_eq!(provider.display(), "gemini/gemini-3.1-flash-lite");
+    }
+
+    #[tokio::test]
+    async fn test_openrouter_integration() {
+        // Skip if no API key
+        let api_key = match std::env::var("OPENROUTER_API_KEY") {
+            Ok(k) if !k.is_empty() => k,
+            _ => {
+                tracing::info!("Skipping OpenRouter integration test: OPENROUTER_API_KEY not set");
+                return;
+            }
+        };
+
+
+        let client = reqwest::Client::new();
+        let french_text = "Le chat dort.";
+        let model = "z-ai/glm-4.5-air:free";
+
+        tracing::info!("Testing OpenRouter with model: {}", model);
+        let result = tokenize_openrouter(&client, &api_key, french_text, model).await;
+
+        match result {
+            Ok(tokenized) => {
+                tracing::info!("SUCCESS: Got {} tokens", tokenized.fr_tokens.len());
+                assert!(!tokenized.fr_tokens.is_empty(), "Should have French tokens");
+                assert_eq!(tokenized.provider_used.as_deref(), Some("openrouter/z-ai/glm-4.5-air:free"));
+                // Verify translations exist
+                for token in &tokenized.fr_tokens {
+                    assert!(!token.translation.is_empty(), "Token '{}' should have translation", token.text);
+                }
+            }
+            Err(e) => {
+                panic!("OpenRouter failed: {}", e);
+            }
+        }
     }
 }

@@ -133,6 +133,7 @@ impl AppState {
         s.bytes().fold(0u64, |acc, b| acc.wrapping_mul(31).wrapping_add(b as u64))
     }
 
+    /// Tokenize with fallback through the provider chain.
     pub async fn get_tokenized(&self, book_id: u64, french_text: &str) -> Result<tokenizer::TokenizedText, String> {
         let cache_key = format!("{}-{}", book_id, Self::text_hash(french_text));
         let cell: std::sync::Arc<tokio::sync::OnceCell<tokenizer::TokenizedText>> = {
@@ -145,12 +146,30 @@ impl AppState {
                 tracing::info!("Using mock tokenized data");
                 return tokenizer::mock_tokenize_async(french_text).await;
             }
-            let api_key = self.config.translation_api_key()
-                .ok_or_else(|| "No translation API key set (GROQ_API_KEY or GEMINI_API_KEY)")?;
-            tracing::info!("Calling {} API for tokenization", self.config.translation_provider());
-            let provider = self.config.translation_provider_enum();
-            let result = tokenizer::tokenize(&self.http, &api_key, french_text, provider).await?;
-            Ok(result)
+
+            let chain = self.config.translation_chain();
+            if chain.is_empty() {
+                return Err("No translation providers configured (set OPENROUTER_API_KEY, GROQ_API_KEY, or GEMINI_API_KEY)".to_string());
+            }
+
+            let mut last_error = String::new();
+
+            for (provider, api_key) in &chain {
+                for attempt in 0..self.config.retries() {
+                    match tokenizer::tokenize(&self.http, api_key, french_text, provider).await {
+                        Ok(result) => {
+                            tracing::info!("Tokenization succeeded with {}", provider.display());
+                            return Ok(result);
+                        }
+                        Err(e) => {
+                            last_error = e.clone();
+                            tracing::warn!("Attempt {} failed for {}: {}", attempt, provider.display(), e);
+                        }
+                    }
+                }
+            }
+
+            Err(format!("All providers failed. Last error: {}", last_error))
         }).await.cloned()
     }
 }
@@ -163,17 +182,25 @@ pub struct ArticleResponse {
     pub paragraphs: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tokenized: Option<TokenizedPayload>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tokenization_error: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
 pub struct TokenizedPayload {
     pub fr_tokens: Vec<FrToken>,
     pub en_tokens: Vec<EnToken>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub provider: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
 pub struct FrToken {
     pub text: String,
+    #[serde(skip_serializing_if = "String::is_empty", default)]
+    pub trailing_punct: String,
+    #[serde(skip_serializing_if = "String::is_empty", default)]
+    pub leading_punct: String,
     pub translation: String,
     pub spans: Vec<[usize; 2]>,
     pub en_indices: Vec<usize>,

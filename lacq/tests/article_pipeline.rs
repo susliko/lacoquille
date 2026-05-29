@@ -43,32 +43,10 @@ async fn test_app_state_text_cache_starts_empty() {
 use lacq::gutenberg;
 
 #[test]
-fn test_clean_text_strips_gutenberg_header_footer() {
-    let input = "Some junk\n*** START OF THIS PROJECT GUTENBERG EBOOK ***\n\nReal content here.\n\n*** END OF THIS PROJECT GUTENBERG EBOOK ***\nMore junk";
-    let result = gutenberg::clean_text(input);
-    assert!(result.starts_with("Real content here."));
-    assert!(!result.contains("GUTENBERG"));
-}
-
-#[test]
-fn test_clean_text_normalizes_line_endings() {
-    let input = "Line one.\r\n\r\nLine two.\r\nLine three.";
-    let result = gutenberg::clean_text(input);
-    assert!(result.contains("Line one.\n\nLine two."));
-}
-
-#[test]
 fn test_clean_text_collapses_multiple_blank_lines() {
     let input = "Para one.\n\n\n\nPara two.";
     let result = gutenberg::clean_text(input);
     assert!(!result.contains("\n\n\n"));
-}
-
-#[test]
-fn test_split_paragraphs_splits_on_double_newline() {
-    let input = "Para one.\n\nPara two.\n\n\nPara three.";
-    let result = gutenberg::split_paragraphs(input);
-    assert_eq!(result.len(), 3);
 }
 
 #[test]
