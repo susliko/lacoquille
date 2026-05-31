@@ -15,7 +15,7 @@ async fn main() {
     let config = lacq::config::Config::from_env();
 
     let http = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(120))
+        .timeout(std::time::Duration::from_secs(config.timeout_secs()))
         .build()
         .expect("reqwest client");
 

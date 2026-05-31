@@ -1,4 +1,4 @@
-import { createResource, createSignal, For, Show } from "solid-js";
+import { createMemo, createResource, createSignal, For, Show } from "solid-js";
 
 interface FrToken {
   text: string;
@@ -28,131 +28,97 @@ interface ArticleData {
   tokenization_error?: string;
 }
 
+// The article is computed by a background job on the server. On a cold start
+// the endpoint returns 503 until the first computation finishes, so we poll.
 async function fetchArticle(): Promise<ArticleData> {
-  const res = await fetch("/api/article-of-the-day");
-  if (!res.ok) throw new Error(`Failed to fetch article: ${res.status}`);
-  return res.json();
+  const maxAttempts = 30;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const res = await fetch("/api/article-of-the-day");
+    if (res.ok) return res.json();
+    if (res.status === 503) {
+      await new Promise((r) => setTimeout(r, 2000));
+      continue;
+    }
+    throw new Error(`Failed to fetch article: ${res.status}`);
+  }
+  throw new Error("Today's story is still being prepared. Please refresh in a moment.");
+}
+
+// Character offset of paragraph `i` within `paragraphs.join("\n\n")` — the same
+// text the backend tokenized, so token char-spans index into it.
+function paraStart(paras: string[], i: number): number {
+  let offset = 0;
+  for (let k = 0; k < i; k++) offset += paras[k].length + 2; // +2 for "\n\n"
+  return offset;
+}
+
+type FrPart = { text: string; gi?: number };
+
+// Render a paragraph as its original text with token spans overlaid as
+// clickable regions. Text in the gaps between tokens (punctuation, whitespace)
+// is emitted verbatim, so nothing — commas, periods, dashes — is ever dropped,
+// regardless of how the model populated trailingPunct/leadingPunct.
+function buildFrParts(
+  paraText: string,
+  paraOffset: number,
+  tokenIdxs: number[],
+  tokens: FrToken[],
+): FrPart[] {
+  const parts: FrPart[] = [];
+  let cursor = 0;
+  for (const gi of tokenIdxs) {
+    const span = tokens[gi]?.spans?.[0];
+    if (!span) continue;
+    const s = span[0] - paraOffset;
+    const e = Math.min(span[1] - paraOffset, paraText.length);
+    // Skip spans that fall outside this paragraph or overlap an earlier token.
+    if (s < cursor || s >= paraText.length || e <= s) continue;
+    if (s > cursor) parts.push({ text: paraText.slice(cursor, s) });
+    parts.push({ text: paraText.slice(s, e), gi });
+    cursor = e;
+  }
+  if (cursor < paraText.length) parts.push({ text: paraText.slice(cursor) });
+  return parts;
+}
+
+// Assign each token (by its index in fr_tokens) to a paragraph, using the
+// character span the backend computed against `paragraphs.join("\n\n")`.
+// Tokens stay in their original order; if a span can't be matched we carry the
+// token into the current paragraph so nothing is ever dropped.
+function groupTokensByParagraph(tokens: FrToken[], paras: string[]): number[][] {
+  const groups: number[][] = paras.map(() => []);
+  if (paras.length === 0) return groups;
+
+  const ranges: [number, number][] = [];
+  let offset = 0;
+  for (const p of paras) {
+    const start = offset;
+    const end = offset + p.length;
+    ranges.push([start, end]);
+    offset = end + 2; // "\n\n" separator
+  }
+
+  let current = 0;
+  tokens.forEach((tok, gi) => {
+    const pos = tok.spans?.[0]?.[0];
+    if (typeof pos === "number") {
+      const found = ranges.findIndex(([s, e]) => pos >= s && pos < e);
+      if (found !== -1) current = found;
+    }
+    groups[current].push(gi);
+  });
+  return groups;
 }
 
 export default function ArticleOfTheDay() {
   const [article] = createResource(fetchArticle);
-  const [activeIndices, setActiveIndices] = createSignal<Set<number>>(new Set());
+  // The single currently-highlighted token (index into fr_tokens), or null.
+  const [activeIdx, setActiveIdx] = createSignal<number | null>(null);
   const [tooltipContent, setTooltipContent] = createSignal<string | null>(null);
   const [tooltipPos, setTooltipPos] = createSignal<{ x: number; y: number } | null>(null);
 
-  function setActiveIndicesFrom(enIndices: number[]) {
-    const allActive = enIndices.every(i => activeIndices().has(i));
-    if (allActive) {
-      setActiveIndices(new Set<number>());
-    } else {
-      setActiveIndices(new Set(enIndices));
-    }
-  }
-
-  function isActive(enIdx: number): boolean {
-    return activeIndices().has(enIdx);
-  }
-
-  // Get combined text offset for a paragraph
-  function getParaOffset(paras: string[], paraIndex: number): number {
-    let offset = 0;
-    for (let i = 0; i < paraIndex; i++) {
-      offset += paras[i].length + 2; // +2 for "\n\n" separator
-    }
-    return offset;
-  }
-
-  // Find token that contains a character position (absolute in combined text)
-  function findTokenAtPosition(tokens: FrToken[], position: number): FrToken | undefined {
-    for (const token of tokens) {
-      const [start, end] = token.spans[0];
-      if (position >= start && position < end) {
-        return token;
-      }
-    }
-    return undefined;
-  }
-
-  // Get en_token indices for a paragraph
-  function getParaEnIndices(tokens: FrToken[], paras: string[], paraIndex: number): number[] {
-    const start = getParaOffset(paras, paraIndex);
-    const end = start + paras[paraIndex].length;
-    const indices = new Set<number>();
-    for (const t of tokens) {
-      const [s] = t.spans[0];
-      if (s >= start && s < end) {
-        t.en_indices.forEach(i => indices.add(i));
-      }
-    }
-    return Array.from(indices).sort((a, b) => a - b);
-  }
-
-  // Find token for a word in the paragraph (matches by text content)
-  function findTokenForWord(
-    tokens: FrToken[],
-    paraOffset: number,
-    word: string,
-    wordStartInPara: number
-  ): FrToken | undefined {
-    const absStart = paraOffset + wordStartInPara;
-    const absEnd = absStart + word.length;
-
-    for (const token of tokens) {
-      const [tokenStart, tokenEnd] = token.spans[0];
-      // Match if token spans overlap with the word position
-      // and the token text matches the word (ignoring punctuation)
-      const tokenText = token.text;
-      if (tokenText === word &&
-          tokenStart >= paraOffset &&
-          tokenStart < paraOffset + tokens[0].spans[0][0] + 1000) { // rough para end
-        return token;
-      }
-    }
-    // Fallback: find by position
-    return findTokenAtPosition(tokens, absStart);
-  }
-
-  // Render paragraph by splitting into words and whitespace, wrapping words with tokens
-  function renderParagraph(
-    para: string,
-    paraOffset: number,
-    tokens: FrToken[]
-  ): any {
-    // Split into words and whitespace (preserve whitespace)
-    const parts = para.split(/(\s+)/);
-    let posInPara = 0;
-
-    return parts.map((part, partIdx) => {
-      if (part.match(/^\s+$/)) {
-        // Whitespace - just return it and advance position
-        posInPara += part.length;
-        return part;
-      }
-
-      // Word - find token for it
-      const absPos = paraOffset + posInPara;
-      const token = findTokenAtPosition(tokens, absPos);
-
-      posInPara += part.length;
-
-      if (token && token.text === part) {
-        return (
-          <span
-            class={`fr-token${isActive(token.en_indices[0]) ? " active" : ""}`}
-            onClick={(e) => {
-              setActiveIndicesFrom(token.en_indices);
-              setTooltipContent(token.translation);
-              setTooltipPos({ x: e.clientX, y: e.clientY });
-            }}
-          >
-            {part}
-          </span>
-        );
-      }
-
-      // No token found - render plain text
-      return part;
-    });
+  function toggle(idx: number) {
+    setActiveIdx((prev) => (prev === idx ? null : idx));
   }
 
   return (
@@ -312,8 +278,11 @@ export default function ArticleOfTheDay() {
         {(data) => {
           const hasTokens = () => !!data().tokenized?.fr_tokens?.length;
           const tokens = () => data().tokenized?.fr_tokens ?? [];
-          const enTokens = () => data().tokenized?.en_tokens ?? [];
           const paras = () => data().paragraphs;
+          // Token indices grouped per paragraph. Both language columns render
+          // from this same grouping so French words and their English
+          // translations stay aligned 1:1.
+          const groups = createMemo(() => groupTokensByParagraph(tokens(), paras()));
 
           return (
             <>
@@ -358,10 +327,29 @@ export default function ArticleOfTheDay() {
                     <h2>Français</h2>
                     <For each={paras()}>
                       {(para, i) => {
-                        const paraOffset = () => getParaOffset(paras(), i());
+                        const parts = () =>
+                          buildFrParts(para, paraStart(paras(), i()), groups()[i()] ?? [], tokens());
                         return (
                           <p class="article-paragraphs">
-                            {renderParagraph(para, paraOffset(), tokens())}
+                            <For each={parts()}>
+                              {(part) =>
+                                part.gi !== undefined ? (
+                                  <span
+                                    class={`fr-token${activeIdx() === part.gi ? " active" : ""}`}
+                                    data-trans={tokens()[part.gi].translation}
+                                    onClick={(e) => {
+                                      toggle(part.gi!);
+                                      setTooltipContent(tokens()[part.gi!].translation);
+                                      setTooltipPos({ x: e.clientX, y: e.clientY });
+                                    }}
+                                  >
+                                    {part.text}
+                                  </span>
+                                ) : (
+                                  <>{part.text}</>
+                                )
+                              }
+                            </For>
                           </p>
                         );
                       }}
@@ -371,27 +359,26 @@ export default function ArticleOfTheDay() {
                   <div class="language-col en-col">
                     <h2>English</h2>
                     <For each={paras()}>
-                      {(_, i) => {
-                        const enIndices = () => getParaEnIndices(tokens(), paras(), i());
-                        return (
-                          <p class="article-paragraphs">
-                            <For each={enIndices()}>
-                              {(idx) => {
-                                const enTok = enTokens().find(e => e.index === idx);
-                                return enTok ? (
+                      {(_, i) => (
+                        <p class="article-paragraphs">
+                          <For each={groups()[i()] ?? []}>
+                            {(gi) => {
+                              const tok = tokens()[gi];
+                              return (
+                                <>
                                   <span
-                                    class={`en-token${isActive(idx) ? " active" : ""}`}
-                                    onClick={() => setActiveIndicesFrom([idx])}
-                                    title={enTok.text}
+                                    class={`en-token${activeIdx() === gi ? " active" : ""}`}
+                                    onClick={() => toggle(gi)}
+                                    title={tok.text}
                                   >
-                                    {enTok.text}{" "}
-                                  </span>
-                                ) : null;
-                              }}
-                            </For>
-                          </p>
-                        );
-                      }}
+                                    {tok.translation}
+                                  </span>{" "}
+                                </>
+                              );
+                            }}
+                          </For>
+                        </p>
+                      )}
                     </For>
                   </div>
                 </div>

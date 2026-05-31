@@ -260,13 +260,33 @@ pub async fn compute_article_of_the_day(state: &Arc<AppState>) {
             let paragraphs_raw = crate::gutenberg::split_paragraphs(&story_text);
             let paragraphs = crate::gutenberg::extract_excerpt(&paragraphs_raw, 120);
 
-            // Safety: truncate combined text to avoid exceeding token limits
-            let combined_text = paragraphs.join("\n\n");
-            let combined_text = if combined_text.len() > 1200 {
-                combined_text[..1200].to_string()
-            } else {
-                combined_text
+            // Keep only as many *whole* paragraphs as fit within the character
+            // budget. This avoids exceeding token limits while ensuring the
+            // paragraphs we return to the client stay perfectly aligned with the
+            // text we tokenize (token char-spans must index into this same text).
+            // Note: slicing `combined_text[..1200]` directly would panic if the
+            // 1200th byte fell inside a multi-byte UTF-8 character.
+            const MAX_CHARS: usize = 1200;
+            let paragraphs: Vec<String> = {
+                let mut kept: Vec<String> = Vec::new();
+                let mut used = 0usize;
+                for p in paragraphs {
+                    let sep = if kept.is_empty() { 0 } else { 2 }; // "\n\n"
+                    let plen = p.chars().count();
+                    if !kept.is_empty() && used + sep + plen > MAX_CHARS {
+                        break;
+                    }
+                    used += sep + plen;
+                    kept.push(p);
+                }
+                kept
             };
+            // Guard: nothing usable to show.
+            if paragraphs.is_empty() {
+                tracing::error!("No paragraphs extracted for book {}", book.gutenberg_id);
+                return;
+            }
+            let combined_text = paragraphs.join("\n\n");
 
             let (tokenized, tokenization_error) = match state.get_tokenized(book.gutenberg_id, &combined_text).await {
                 Ok(t) => {

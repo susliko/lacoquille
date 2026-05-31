@@ -9,29 +9,37 @@ impl PartialEq for Span {
 }
 
 impl<'de> Deserialize<'de> for Span {
+    // Lenient on purpose: LLMs frequently emit malformed spans (wrong length,
+    // floats, negative numbers, strings). We never trust these values anyway —
+    // `repair_spans` recomputes every span from the source text — so rather than
+    // failing the whole response over one bad span, we coerce to a best-effort
+    // value and let the repair step fix it.
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where D: serde::Deserializer<'de> {
-        let arr: Vec<serde_json::Value> = Deserialize::deserialize(deserializer)?;
-        if arr.len() != 2 {
-            return Err(serde::de::Error::custom("span must have exactly 2 elements"));
+        fn coerce(v: Option<&serde_json::Value>) -> usize {
+            match v {
+                Some(serde_json::Value::Number(n)) => {
+                    n.as_u64().unwrap_or_else(|| n.as_f64().unwrap_or(0.0).max(0.0) as u64) as usize
+                }
+                Some(serde_json::Value::String(s)) => s.trim().parse::<u64>().unwrap_or(0) as usize,
+                _ => 0,
+            }
         }
-        let a = match &arr[0] {
-            serde_json::Value::Number(n) => n.as_u64()
-                .ok_or_else(|| serde::de::Error::custom("span start must be non-negative integer"))?
-                as usize,
-            serde_json::Value::String(s) => s.parse::<u64>().map_err(serde::de::Error::custom)?
-                as usize,
-            _ => return Err(serde::de::Error::custom("span value must be number or numeric string")),
-        };
-        let b = match &arr[1] {
-            serde_json::Value::Number(n) => n.as_u64()
-                .ok_or_else(|| serde::de::Error::custom("span end must be non-negative integer"))?
-                as usize,
-            serde_json::Value::String(s) => s.parse::<u64>().map_err(serde::de::Error::custom)?
-                as usize,
-            _ => return Err(serde::de::Error::custom("span value must be number or numeric string")),
-        };
-        Ok(Span([a, b]))
+
+        let value = serde_json::Value::deserialize(deserializer)?;
+        match value {
+            serde_json::Value::Array(arr) => {
+                let a = coerce(arr.get(0));
+                // If the end is missing/garbage, fall back to the start; repair fixes it.
+                let b = arr.get(1).map(|x| coerce(Some(x))).unwrap_or(a);
+                Ok(Span([a, b]))
+            }
+            // A bare number is treated as a start with no usable end.
+            other => {
+                let a = coerce(Some(&other));
+                Ok(Span([a, a]))
+            }
+        }
     }
 }
 
@@ -209,7 +217,7 @@ fn build_prompt(french_text: &str) -> String {
     format!(
         r#"Tokenize FR→EN for bilingual reading. Translate naturally, including multi-word phrases.
 
-Output format:
+Respond with a single JSON object only (no prose, no markdown). JSON format:
 {{"frTokens":[{{"text":"phrase","trailingPunct":".","leadingPunct":"","translation":"phrase.","spans":[[0,6]],"enIndices":[0]}}],"enTokens":[{{"text":"phrase.","index":0}}]}}
 
 IMPORTANT RULES:
@@ -325,7 +333,7 @@ pub async fn tokenize_openrouter(
     let body = serde_json::json!({
         "model": model,
         "messages": [{ "role": "user", "content": prompt }],
-        "max_tokens": 8192,
+        "max_tokens": 4096,
         "temperature": 0.2
     });
 
@@ -408,7 +416,7 @@ async fn tokenize_groq(
         "model": model,
         "messages": [{ "role": "user", "content": prompt }],
         "response_format": { "type": "json_object" },
-        "max_tokens": 8192,
+        "max_tokens": 4096,
         "temperature": 0.2
     });
 
@@ -496,7 +504,7 @@ async fn tokenize_gemini(
         "generationConfig": {
             "responseMimeType": "application/json",
             "temperature": 0.2,
-            "maxOutputTokens": 8192,
+            "maxOutputTokens": 4096,
         }
     });
 
@@ -609,17 +617,23 @@ mod tests {
         let spans: Vec<Span> = serde_json::from_str(s).unwrap();
         assert_eq!(spans, vec![Span([0, 10]), Span([20, 35])]);
 
-        let s = r#"[[-1, 30]]"#;
-        assert!(serde_json::from_str::<Vec<Span>>(s).is_err());
+        // Malformed spans are coerced rather than rejected — repair_spans fixes
+        // the actual positions, so the parser must never hard-fail here.
+        // Negative start coerces to 0.
+        let spans: Vec<Span> = serde_json::from_str(r#"[[-1, 30]]"#).unwrap();
+        assert_eq!(spans, vec![Span([0, 30])]);
 
-        let s = r#"[[1.5, 30]]"#;
-        assert!(serde_json::from_str::<Vec<Span>>(s).is_err());
+        // Float start coerces via truncation.
+        let spans: Vec<Span> = serde_json::from_str(r#"[[1.5, 30]]"#).unwrap();
+        assert_eq!(spans, vec![Span([1, 30])]);
 
-        let s = r#"[[30]]"#;
-        assert!(serde_json::from_str::<Vec<Span>>(s).is_err());
+        // Single-element span: end falls back to start.
+        let spans: Vec<Span> = serde_json::from_str(r#"[[30]]"#).unwrap();
+        assert_eq!(spans, vec![Span([30, 30])]);
 
-        let s = r#"[["hello", "30"]]"#;
-        assert!(serde_json::from_str::<Vec<Span>>(s).is_err());
+        // Non-numeric string coerces to 0.
+        let spans: Vec<Span> = serde_json::from_str(r#"[["hello", "30"]]"#).unwrap();
+        assert_eq!(spans, vec![Span([0, 30])]);
     }
 
     // Punctuation splitting tests
