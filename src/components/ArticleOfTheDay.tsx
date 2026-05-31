@@ -114,8 +114,6 @@ export default function ArticleOfTheDay() {
   const [article] = createResource(fetchArticle);
   // The single currently-highlighted token (index into fr_tokens), or null.
   const [activeIdx, setActiveIdx] = createSignal<number | null>(null);
-  const [tooltipContent, setTooltipContent] = createSignal<string | null>(null);
-  const [tooltipPos, setTooltipPos] = createSignal<{ x: number; y: number } | null>(null);
 
   function toggle(idx: number) {
     setActiveIdx((prev) => (prev === idx ? null : idx));
@@ -236,30 +234,6 @@ export default function ArticleOfTheDay() {
         .error-state {
           color: var(--error);
         }
-        .tooltip {
-          position: fixed;
-          background: var(--accent, #3b82f6);
-          color: white;
-          padding: 6px 10px;
-          border-radius: 6px;
-          font-size: 0.9rem;
-          z-index: 1000;
-          pointer-events: none;
-          max-width: 250px;
-          white-space: normal;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-          transform: translate(-50%, -100%);
-          margin-top: -8px;
-        }
-        .tooltip::after {
-          content: '';
-          position: absolute;
-          top: 100%;
-          left: 50%;
-          transform: translateX(-50%);
-          border: 6px solid transparent;
-          border-top-color: var(--accent, #3b82f6);
-        }
       `}</style>
 
       <Show when={article.loading}>
@@ -337,11 +311,7 @@ export default function ArticleOfTheDay() {
                                   <span
                                     class={`fr-token${activeIdx() === part.gi ? " active" : ""}`}
                                     data-trans={tokens()[part.gi].translation}
-                                    onClick={(e) => {
-                                      toggle(part.gi!);
-                                      setTooltipContent(tokens()[part.gi!].translation);
-                                      setTooltipPos({ x: e.clientX, y: e.clientY });
-                                    }}
+                                    onClick={() => toggle(part.gi!)}
                                   >
                                     {part.text}
                                   </span>
@@ -381,18 +351,6 @@ export default function ArticleOfTheDay() {
                       )}
                     </For>
                   </div>
-                </div>
-              </Show>
-
-              <Show when={tooltipContent()}>
-                <div
-                  class="tooltip"
-                  style={{
-                    left: `${tooltipPos()?.x ?? 0}px`,
-                    top: `${tooltipPos()?.y ?? 0}px`
-                  }}
-                >
-                  {tooltipContent()}
                 </div>
               </Show>
             </>
