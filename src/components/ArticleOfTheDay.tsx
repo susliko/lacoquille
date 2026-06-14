@@ -1,5 +1,26 @@
 import { createMemo, createResource, createSignal, For, Show } from "solid-js";
 
+// All curated books are Maupassant works. Hardcoded until the API exposes author.
+const AUTHOR = "Guy de Maupassant";
+
+// Translate French genre labels to English for clarity.
+const SOURCE_LABELS: Record<string, string> = {
+  "Roman": "Novel",
+  "Nouvelles": "Short Stories",
+  "Contes du jour et de la nuit": "Short Stories",
+  "Les Rougon-Macquart": "Novel Cycle",
+};
+
+// Build a Gutenberg search URL from the article title.
+function getGutenbergSearchUrl(title: string): string {
+  return `https://www.gutenberg.org/ebooks/search/?query=maupassant+${encodeURIComponent(title)}`;
+}
+
+// Build a Wikisource URL from the article title (best-effort guess).
+function getWikisourceUrl(title: string): string {
+  return `https://en.wikisource.org/wiki/${encodeURIComponent(title)}`;
+}
+
 interface FrToken {
   text: string;
   trailingPunct?: string | null;
@@ -307,7 +328,7 @@ export default function ArticleOfTheDay() {
               <header class="article-header">
                 <h1>{data().title}</h1>
                 <p class="article-meta">
-                  {data().source} ({data().published_year})
+                  {AUTHOR} · <a href={getGutenbergSearchUrl(data().title)} target="_blank" rel="noopener">Read on Gutenberg</a> · <a href={getWikisourceUrl(data().title)} target="_blank" rel="noopener">Wikisource</a> ({data().published_year})
                 </p>
               </header>
 
