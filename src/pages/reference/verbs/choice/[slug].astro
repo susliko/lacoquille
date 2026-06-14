@@ -26,8 +26,11 @@ const guideMap = Object.fromEntries(allChoices.map(e => [e.id, e.data.title]));
   ]}
 >
   <article>
-    <div class="hgroup">
-      <h1>{title}</h1>
+    <div style="margin-bottom: 1.5rem;">
+      <a href="/reference/verbs"><p class="home-eyebrow">Grammaire</p></a>
+      <div class="hgroup">
+        <h1>{title}</h1>
+      </div>
     </div>
 
     <Content />

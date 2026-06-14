@@ -25,9 +25,10 @@ const PATHS: Record<string, string> = {
 
 /* ── Practice tiles ───────────────────────────────────────────── */
 const PRACTICE = [
-  { id: "typing",    name: "Typing Race",   sub: "speed conjugate drills", color: "#ff6b35", path: "/practice/typing" },
-  { id: "shadowing", name: "Shadowing",     sub: "listen & repeat",       color: "#ff9f43", path: "/practice/shadowing" },
-  { id: "article",   name: "Article of Day", sub: "daily Maupassant story", color: "#ff4757", path: "/stories/article-of-the-day" },
+  { id: "article",   name: "Article of Day",   sub: "daily Maupassant story", color: "#ff4757", path: "/stories/article-of-the-day" },
+  { id: "typing",    name: "Typing Race",       sub: "speed conjugate drills", color: "#ff6b35", path: "/practice/typing" },
+  { id: "shadowing", name: "Shadowing",         sub: "listen & repeat",        color: "#ff9f43", path: "/practice/shadowing" },
+  { id: "vocabulary", name: "Vocabulary Mining", sub: "mine texts for words",  color: "#f7b731", path: "/practice/vocabulary" },
 ];
 
 /* ── Component ────────────────────────────────────────────────── */
@@ -97,6 +98,11 @@ export default function HomepageTabs() {
             )}
           </For>
         </div>
+        <p style="margin-top: 1rem; text-align: center;">
+          <a href="/reference/grammar" style="font-size: 0.875rem; color: var(--text-muted);">
+            See all grammar →
+          </a>
+        </p>
       </div>
 
       {/* Practice tab */}
