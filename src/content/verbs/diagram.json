@@ -204,7 +204,7 @@
       "type": "mood-swap",
       "from": "present-indicatif",
       "to": "subjonctif-present",
-      "label": "same time, different mood"
+      "label": "durée"
     },
     {
       "type": "anteriority",
