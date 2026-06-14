@@ -360,6 +360,19 @@ export default function VerbDiagram({ data, tenseTitles }: Props) {
           ))}
         </div>
       </div>
+      <div class="legend-section">
+        <p class="legend-section-title">Labels</p>
+        <div class="legend-grid">
+          <div class="legend-item">
+            <svg width="32" height="10" aria-hidden="true">
+              <line x1="0" y1="5" x2="32" y2="5"
+                stroke={EDGE_COLOR["mood-swap"]} stroke-width="2.5"
+                stroke-dasharray={EDGE_DASH["mood-swap"]} stroke-linecap="round" />
+            </svg>
+            <span><em>durée</em> — ongoing action; same form across moods</span>
+          </div>
+        </div>
+      </div>
     </details>
   );
 
@@ -373,13 +386,15 @@ export default function VerbDiagram({ data, tenseTitles }: Props) {
             class="verb-dropdown-trigger"
             type="button"
             aria-expanded={verbDropdownOpen()}
+            aria-haspopup="listbox"
+            aria-controls="verb-dropdown-menu"
             onClick={() => setVerbDropdownOpen(o => !o)}
           >
             {VERB_OPTIONS.find(o => o.value === selectedVerb())?.label ?? selectedVerb()}
             <span class="verb-dropdown-arrow" aria-hidden="true">▾</span>
           </button>
           <Show when={verbDropdownOpen()}>
-            <div class="verb-dropdown-menu" role="listbox">
+            <div id="verb-dropdown-menu" class="verb-dropdown-menu" role="listbox">
               {VERB_OPTIONS.map(opt => (
                 <button
                   class={`verb-dropdown-item${selectedVerb() === opt.value ? " active" : ""}`}
@@ -503,6 +518,19 @@ export default function VerbDiagram({ data, tenseTitles }: Props) {
                       }
                     />
                     <path d={d} fill="none" stroke="transparent" stroke-width="12" />
+                    {/* Edge label */}
+                    <text
+                      x={(from.cx + to.cx) / 2}
+                      y={(from.cy + to.cy) / 2 - 5}
+                      text-anchor="middle"
+                      font-size="9"
+                      font-style="italic"
+                      fill={edgeColor}
+                      opacity={isActive() ? 1 : 0.85}
+                      style={{ "pointer-events": "none" }}
+                    >
+                      {edge.label}
+                    </text>
                   </g>
                 );
               }}
@@ -606,6 +634,19 @@ export default function VerbDiagram({ data, tenseTitles }: Props) {
                       }
                     />
                     <path d={d} fill="none" stroke="transparent" stroke-width="16" />
+                    {/* Edge label */}
+                    <text
+                      x={(from.cx + to.cx) / 2}
+                      y={(from.cy + to.cy) / 2 - 6}
+                      text-anchor="middle"
+                      font-size="11"
+                      font-style="italic"
+                      fill={edgeColor}
+                      opacity={isActive() ? 1 : 0.85}
+                      style={{ "pointer-events": "none" }}
+                    >
+                      {edge.label}
+                    </text>
                   </g>
                 );
               }}
