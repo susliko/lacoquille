@@ -327,7 +327,7 @@ export default function ArticleOfTheDay() {
               <header class="article-header">
                 <h1>{data().title}</h1>
                 <p class="article-meta">
-                  {AUTHOR} · <a href={getGutenbergSearchUrl(data().title)} target="_blank" rel="noopener">Read on Gutenberg</a> · <a href={getWikisourceUrl(data().title)} target="_blank" rel="noopener">Wikisource</a> ({data().published_year})
+                  {AUTHOR} · {SOURCE_LABELS[data().source] ?? data().source} · <a href={getGutenbergSearchUrl(data().title)} target="_blank" rel="noopener">Read on Gutenberg</a> · <a href={getWikisourceUrl(data().title)} target="_blank" rel="noopener">Wikisource</a> ({data().published_year})
                 </p>
               </header>
 
