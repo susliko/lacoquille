@@ -17,6 +17,9 @@ pnpm-debug.log*
 .env
 .env.production
 
+# dogfood output (audit + fixes evidence)
+dogfood-output/
+
 # macOS-specific files
 .DS_Store
 
