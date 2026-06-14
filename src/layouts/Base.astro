@@ -7,6 +7,7 @@ interface Props {
 }
 
 const { title, description = "An interactive French grammar reference." } = Astro.props;
+const cleanTitle = title.replace(/ — La Coquille$/, "").replace(/ · La Coquille$/, "");
 ---
 
 <!doctype html>
@@ -15,11 +16,12 @@ const { title, description = "An interactive French grammar reference." } = Astr
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
-    <title>{title} · La Coquille</title>
+    <title>{cleanTitle} · La Coquille</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
   <body>
-    <main>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <main id="main-content">
       <slot />
     </main>
   </body>

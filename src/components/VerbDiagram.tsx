@@ -373,13 +373,15 @@ export default function VerbDiagram({ data, tenseTitles }: Props) {
             class="verb-dropdown-trigger"
             type="button"
             aria-expanded={verbDropdownOpen()}
+            aria-haspopup="listbox"
+            aria-controls="verb-dropdown-menu"
             onClick={() => setVerbDropdownOpen(o => !o)}
           >
             {VERB_OPTIONS.find(o => o.value === selectedVerb())?.label ?? selectedVerb()}
             <span class="verb-dropdown-arrow" aria-hidden="true">▾</span>
           </button>
           <Show when={verbDropdownOpen()}>
-            <div class="verb-dropdown-menu" role="listbox">
+            <div id="verb-dropdown-menu" class="verb-dropdown-menu" role="listbox">
               {VERB_OPTIONS.map(opt => (
                 <button
                   class={`verb-dropdown-item${selectedVerb() === opt.value ? " active" : ""}`}
