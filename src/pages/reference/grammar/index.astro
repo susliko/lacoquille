@@ -1,3 +1,86 @@
 ---
-return Astro.redirect("/");
+import Base from "../../../layouts/Base.astro";
+
+const title = "Grammar";
+const description = "All French grammar topics: from articles and pronouns to negation, syntax, and asking questions.";
+
+const topics = [
+  { title: "Articles",          slug: "articles"        },
+  { title: "Adjectives",       slug: "adjectifs"       },
+  { title: "Adverbs",          slug: "adverbs"         },
+  { title: "Prepositions",     slug: "prepositions"    },
+  { title: "French Pronouns",  slug: "pronouns"        },
+  { title: "Negation",         slug: "negation"        },
+  { title: "Interrogation",    slug: "interrogation"   },
+  { title: "Reflexive Verbs",  slug: "reflexive-verbs" },
+  { title: "Syntax & Word Order", slug: "syntax"       },
+];
 ---
+
+<Base title={title} description={description}>
+  <div style="margin-bottom: 1.5rem;">
+    <p class="home-eyebrow">Grammaire</p>
+    <h1>Grammar</h1>
+    <p style="color: var(--text-2); margin-top: 0.4rem;">
+      {description}
+    </p>
+  </div>
+
+  <div class="grammar-index-grid">
+    {topics.map(topic => (
+      <a href={`/reference/grammar/${topic.slug}/`} class="grammar-index-card">
+        <span class="grammar-index-card-title">{topic.title}</span>
+        <span class="grammar-index-card-arrow">→</span>
+      </a>
+    ))}
+  </div>
+</Base>
+
+<style>
+  .grammar-index-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+
+  .grammar-index-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    text-decoration: none;
+    color: var(--text);
+    background: var(--bg-surface);
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .grammar-index-card:hover {
+    border-color: var(--accent);
+    background: var(--bg-elevated);
+  }
+
+  .grammar-index-card-title {
+    font-weight: 500;
+    font-size: 0.9375rem;
+  }
+
+  .grammar-index-card-arrow {
+    font-size: 1rem;
+    color: var(--text-muted);
+    transition: color 0.2s, transform 0.2s;
+  }
+
+  .grammar-index-card:hover .grammar-index-card-arrow {
+    color: var(--accent);
+    transform: translateX(3px);
+  }
+
+  @media (max-width: 480px) {
+    .grammar-index-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+</style>

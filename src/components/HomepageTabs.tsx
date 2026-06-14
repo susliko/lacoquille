@@ -98,6 +98,11 @@ export default function HomepageTabs() {
             )}
           </For>
         </div>
+        <p style="margin-top: 1rem; text-align: center;">
+          <a href="/reference/grammar" style="font-size: 0.875rem; color: var(--text-muted);">
+            See all grammar →
+          </a>
+        </p>
       </div>
 
       {/* Practice tab */}
