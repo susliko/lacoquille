@@ -20,7 +20,7 @@ export default function TypingRace() {
   const [finished, setFinished] = createSignal(false);
   const [elapsedSecs, setElapsedSecs] = createSignal(0);
 
-  const text = createMemo(() => (article()?.paragraphs?.[0] ?? "").split(""));
+  const text = createMemo(() => (article()?.paragraphs?.join("\n\n") ?? "").split(""));
 
   // Tick elapsed time every 500ms once race starts
   createEffect(() => {
@@ -105,8 +105,10 @@ export default function TypingRace() {
   let containerRef: HTMLDivElement | undefined;
 
   createEffect(() => {
-    if (article() && containerRef) {
+    if (article() && containerRef && text().length > 0) {
       containerRef.focus();
+      // Fallback: if browser blocked the focus, try again after a tick
+      setTimeout(() => containerRef?.focus(), 100);
     }
   });
 
@@ -196,6 +198,10 @@ export default function TypingRace() {
           border-radius: var(--radius);
           position: relative;
           user-select: none;
+        }
+        .tr-text-area:focus-visible {
+          outline: 2px solid var(--coral, #ff4757);
+          outline-offset: 2px;
         }
         .tr-cursor {
           display: inline-block;
@@ -367,7 +373,7 @@ export default function TypingRace() {
               </div>
             </div>
 
-            <p class="tr-tap-hint">click the text · start typing</p>
+            <p class="tr-tap-hint">start typing</p>
 
             <Show when={finished()}>
               <div class="tr-overlay">
