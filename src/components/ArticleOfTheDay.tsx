@@ -178,8 +178,8 @@ export default function ArticleOfTheDay() {
           border-radius: 2px;
         }
         .token.active {
-          background-color: rgba(59, 130, 246, 0.2);
-          outline: 2px solid var(--accent, #3b82f6);
+          background-color: rgba(59, 130, 246, 0.4);
+          outline: 3px solid var(--accent, #3b82f6);
           outline-offset: 1px;
         }
         .en-token {
@@ -187,7 +187,7 @@ export default function ArticleOfTheDay() {
           padding: 0 1px;
         }
         .en-token.active {
-          background-color: rgba(59, 130, 246, 0.2);
+          background-color: rgba(59, 130, 246, 0.4);
         }
         .fr-token {
           cursor: pointer;
@@ -195,7 +195,7 @@ export default function ArticleOfTheDay() {
           position: relative;
         }
         .fr-token.active {
-          background-color: rgba(59, 130, 246, 0.2);
+          background-color: rgba(59, 130, 246, 0.4);
         }
         @media (max-width: 768px) {
           .article-body {
@@ -209,9 +209,10 @@ export default function ArticleOfTheDay() {
             content: attr(data-trans);
             display: block;
             position: absolute;
-            bottom: calc(100% + 4px);
+            top: 100%;
             left: 50%;
             transform: translateX(-50%);
+            margin-top: 4px;
             background: var(--accent, #3b82f6);
             color: white;
             padding: 4px 8px;
