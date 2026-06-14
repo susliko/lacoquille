@@ -250,13 +250,56 @@ export default function ArticleOfTheDay() {
 
       <Show when={article()}>
         {(data) => {
-          const hasTokens = () => !!data().tokenized?.fr_tokens?.length;
           const tokens = () => data().tokenized?.fr_tokens ?? [];
           const paras = () => data().paragraphs;
           // Token indices grouped per paragraph. Both language columns render
           // from this same grouping so French words and their English
           // translations stay aligned 1:1.
           const groups = createMemo(() => groupTokensByParagraph(tokens(), paras()));
+
+          const isTokenizationGood = createMemo(() => {
+            const t = data().tokenized;
+            if (!t?.fr_tokens?.length || !t?.en_tokens?.length) return false;
+            const totalChars = paras().join("").length;
+            const frTokens = t.fr_tokens;
+            const enTokens = t.en_tokens;
+            const groups = groupTokensByParagraph(frTokens, paras());
+
+            // C1: token count vs text length
+            if (frTokens.length < totalChars / 8) return false;
+
+            // C3: English coverage (en/fr ratio)
+            if (enTokens.length < frTokens.length * 0.3) return false;
+
+            // C2: mis-grouped tokens — count tokens whose span start is NOT in the
+            // paragraph they were grouped into
+            let misplaced = 0;
+            for (let pIdx = 0; pIdx < groups.length; pIdx++) {
+              const paraStartOffset = paras().slice(0, pIdx).reduce((acc, p) => acc + p.length + 2, 0);
+              const paraEndOffset = paraStartOffset + paras()[pIdx].length;
+              for (const gi of groups[pIdx]) {
+                const span = frTokens[gi]?.spans?.[0];
+                if (!span) continue;
+                if (span[0] < paraStartOffset || span[0] >= paraEndOffset) misplaced++;
+              }
+            }
+            if (misplaced / frTokens.length > 0.3) return false;
+
+            // C4: span/text mismatch — check that the actual text at the given span
+            // equals token.text (with whitespace/punctuation normalization)
+            const combined = paras().join("\n\n");
+            let mismatched = 0;
+            for (const tok of frTokens) {
+              const span = tok.spans?.[0];
+              if (!span) continue;
+              const actual = combined.slice(span[0], span[1]);
+              const norm = (s: string) => s.replace(/\s+/g, " ").trim();
+              if (norm(actual) !== norm(tok.text)) mismatched++;
+            }
+            if (mismatched / frTokens.length > 0.25) return false;
+
+            return true;
+          });
 
           return (
             <>
@@ -274,26 +317,31 @@ export default function ArticleOfTheDay() {
               </Show>
 
               <Show
-                when={hasTokens()}
+                when={isTokenizationGood()}
                 fallback={
-                  <div class="article-body">
-                    <div class="language-col">
-                      <h2>Français</h2>
-                      <div class="article-paragraphs">
-                        <For each={paras()}>
-                          {(para) => <p>{para}</p>}
-                        </For>
+                  <>
+                    <div class="tokenization-error">
+                      The interactive translation for today's story is unavailable. Showing French only.
+                    </div>
+                    <div class="article-body">
+                      <div class="language-col">
+                        <h2>Français</h2>
+                        <div class="article-paragraphs">
+                          <For each={paras()}>
+                            {(para) => <p>{para}</p>}
+                          </For>
+                        </div>
+                      </div>
+                      <div class="language-col">
+                        <h2>English</h2>
+                        <div class="article-paragraphs">
+                          <For each={paras()}>
+                            {() => <p>[No translations available]</p>}
+                          </For>
+                        </div>
                       </div>
                     </div>
-                    <div class="language-col">
-                      <h2>English</h2>
-                      <div class="article-paragraphs">
-                        <For each={paras()}>
-                          {() => <p>[No translations available]</p>}
-                        </For>
-                      </div>
-                    </div>
-                  </div>
+                  </>
                 }
               >
                 <div class="article-body">
