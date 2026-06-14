@@ -258,15 +258,15 @@ pub async fn compute_article_of_the_day(state: &Arc<AppState>) {
         Ok(text) => {
             let story_text = crate::gutenberg::first_story_content(&text);
             let paragraphs_raw = crate::gutenberg::split_paragraphs(&story_text);
-            let paragraphs = crate::gutenberg::extract_excerpt(&paragraphs_raw, 120);
+            let paragraphs = crate::gutenberg::extract_excerpt(&paragraphs_raw, 250);
 
             // Keep only as many *whole* paragraphs as fit within the character
             // budget. This avoids exceeding token limits while ensuring the
             // paragraphs we return to the client stay perfectly aligned with the
             // text we tokenize (token char-spans must index into this same text).
-            // Note: slicing `combined_text[..1200]` directly would panic if the
-            // 1200th byte fell inside a multi-byte UTF-8 character.
-            const MAX_CHARS: usize = 1200;
+            // Note: slicing `combined_text[..MAX_CHARS]` directly would panic if
+            // the MAX_CHARSth byte fell inside a multi-byte UTF-8 character.
+            const MAX_CHARS: usize = 2500;
             let paragraphs: Vec<String> = {
                 let mut kept: Vec<String> = Vec::new();
                 let mut used = 0usize;

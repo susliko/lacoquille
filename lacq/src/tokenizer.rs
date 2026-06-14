@@ -215,17 +215,24 @@ fn is_closing_punct(c: char) -> bool {
 
 fn build_prompt(french_text: &str) -> String {
     format!(
-        r#"Tokenize FR→EN for bilingual reading. Translate naturally, including multi-word phrases.
+        r#"You are translating a French literary excerpt into NATURAL English for a language learner who is reading the French and tapping words to see translations.
+
+CRITICAL: The English MUST be a natural, idiomatic English sentence — NOT a word-for-word gloss. If a literal translation would be ungrammatical, restructure the sentence to be natural English. The learner's goal is comprehension, not matching word order.
+
+IMPORTANT: Every French sentence in the input MUST be translated. Do not skip any sentences. Do not collapse multiple sentences into one.
 
 Respond with a single JSON object only (no prose, no markdown). JSON format:
 {{"frTokens":[{{"text":"phrase","trailingPunct":".","leadingPunct":"","translation":"phrase.","spans":[[0,6]],"enIndices":[0]}}],"enTokens":[{{"text":"phrase.","index":0}}]}}
 
-IMPORTANT RULES:
-1. Natural phrase boundaries: translate multi-word units together when natural ("Le petit" → "The little")
-2. Contractions stay together: "d'une", "au", "du", "l'homme"
-3. Spans are CHARACTER offsets in the original French text
-4. Translation MUST include trailing punctuation: "Le chat," → "The cat," (keep comma!)
-5. Translation should read naturally in English
+RULES:
+1. Natural English first: if a word-for-word mapping produces ungrammatical English, use a natural English structure. Example: "Il le ramassait de ses deux mains" → "He was picking it up with both his hands" (NOT "He it was picking up of his two hands").
+2. Reflexive verbs: keep the pronoun as part of the verb. Example: "se lève" → "stands up" (one token, with the se included in the translation). "il s'est assis" → "sat down" (NOT "he himself is seated").
+3. Articles: French drops articles that English requires. Always add "the" / "a" / "an" where natural English needs them.
+4. Natural phrase boundaries: translate multi-word units together when natural ("Le petit" → "The little", "ne voyait que lui" → "could only see him").
+5. Contractions stay together: "d'une", "au", "du", "l'homme" — do not split.
+6. Spans are CHARACTER offsets in the original French text. They must point to the actual text — do not invent positions.
+7. Translation MUST include trailing punctuation: "Le chat," → "The cat," (keep the comma!).
+8. Every French word, including articles, prepositions, and pronouns, MUST have a token. Do not skip anything.
 
 EXAMPLES:
 Input: "La fortune."
