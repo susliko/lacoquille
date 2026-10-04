@@ -339,6 +339,9 @@ interface SummaryPanelProps {
   retryHref: string;
   nextHref?: string;
   nextLabel?: string;
+  /** Optional children rendered below the action buttons row
+   *  (e.g. a "keep going" button after an explicit end-session). */
+  children?: JSX.Element;
 }
 
 export function SummaryPanel(props: SummaryPanelProps) {
@@ -371,6 +374,7 @@ export function SummaryPanel(props: SummaryPanelProps) {
           </a>
         </Show>
       </div>
+      <Show when={props.children}>{props.children}</Show>
     </div>
   );
 }

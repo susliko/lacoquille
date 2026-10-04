@@ -428,6 +428,29 @@ mark.drill-cue {
   transform: none;
 }
 
+/* ── End session button (used by ConjugationsDrill) ──────────── */
+
+.drill-end-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  background: transparent;
+  color: var(--text-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.drill-end-btn:hover {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border-bright);
+}
+.drill-end-btn:active { transform: scale(0.97); }
+
 /* ── Tense drill (2-card choice) ──────────────────────────────── */
 
 .drill-gloss {
@@ -698,11 +721,58 @@ mark.drill-cue {
 /* ── Mobile ───────────────────────────────────────────────────── */
 
 @media (max-width: 600px) {
-  .drill-stage { padding: 1.5rem 1.25rem; align-items: flex-start; }
-  .drill-sentence { font-size: 1.3rem; min-height: 4rem; }
-  .drill-input-row { flex-direction: column; align-items: stretch; }
+  .drill-stage { padding: 1rem 1rem; align-items: flex-start; }
+  .drill-card { max-width: 100%; }
+
+  /* Sentence scales down further on narrow screens. */
+  .drill-sentence { font-size: 1.15rem; min-height: 4rem; line-height: 1.45; }
+
+  /* Chips & chain steps shrink so they wrap rather than overflow. */
+  .drill-chip { font-size: 0.7rem; padding: 0.25rem 0.55rem; }
+  .drill-chip-v { font-size: 0.95rem; }
+  .drill-chips { gap: 0.3rem; }
+  .drill-chips-center { margin-bottom: 1.5rem; }
+  .drill-chain { gap: 0.3rem; padding: 0.65rem 0.75rem; }
+  .drill-chain-step { font-size: 0.7rem; padding: 0.25rem 0.55rem; }
+  .drill-chain-arrow { font-size: 0.7rem; }
+
+  /* Input + submit stack vertically with full-width submit. */
+  .drill-input-row { flex-direction: column; align-items: stretch; gap: 0.5rem; }
   .drill-submit { width: 100%; }
-  .drill-choice-grid { grid-template-columns: 1fr; }
-  .drill-step-card { padding: 1.25rem; }
-  .drill-summary-stats { gap: 1rem; padding: 0.75rem 1rem; }
+  .drill-input-big { font-size: 1.6rem; padding: 1rem 0.75rem; }
+
+  /* Accent buttons are slightly larger for touch targets. */
+  .drill-accent { width: 2.4rem; height: 2.4rem; font-size: 1.05rem; }
+
+  /* Choices stack vertically, more touch-friendly. */
+  .drill-choice-grid { grid-template-columns: 1fr; gap: 0.6rem; }
+  .drill-choice { padding: 1.1rem 0.85rem; }
+  .drill-choice-form { font-size: 1.2rem; }
+
+  /* Step card padding tighter. */
+  .drill-step-card { padding: 1.25rem 1rem; }
+  .drill-step-prompt { font-size: 1.2rem; }
+  .drill-step-instr { font-size: 0.7rem; padding: 0.25rem 0.6rem; }
+  .drill-step-prev-form { font-size: 0.85rem; }
+
+  /* Feedback wraps better. */
+  .drill-feedback { padding: 0.85rem 1rem; }
+  .drill-feedback-verdict { font-size: 0.8rem; }
+
+  /* Summary tighter. */
+  .drill-summary-stats { gap: 0.75rem; padding: 0.75rem 0.75rem; flex-wrap: wrap; }
+  .drill-summary-stat { min-width: 4rem; }
+  .drill-summary-title { font-size: 1.4rem; }
+  .drill-summary-note { font-size: 0.85rem; }
+}
+
+/* Very narrow phones: accent buttons wrap to 2 rows. */
+@media (max-width: 380px) {
+  .drill-accents { gap: 0.25rem; }
+  .drill-accent { width: 2.2rem; height: 2.2rem; }
+}
+
+/* On narrow screens, the SessionStrip button needs less padding. */
+@media (max-width: 600px) {
+  .drill-end-btn { padding: 0.35rem 0.65rem; font-size: 0.72rem; white-space: nowrap; }
 }

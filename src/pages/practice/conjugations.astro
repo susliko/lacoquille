@@ -1,0 +1,12 @@
+---
+import Base from "../../layouts/Base.astro";
+import ConjugationsDrill from "../../components/drills/ConjugationsDrill";
+---
+
+<Base title="Conjugations — La Coquille" section="practice">
+  <ConjugationsDrill client:only="solid-js" />
+</Base>
+
+<style is:global>
+  @import "../../styles/drills.css";
+</style>
