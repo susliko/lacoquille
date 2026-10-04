@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conjugation Drill Prototypes — lacoquille</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #ffffff; --surface: #f7f5f2; --surface-2: #f0ece6;
+  --border: #ddd8d0; --border-subtle: #ece8e2; --border-bright: #b8b0a5;
+  --text: #1a1814; --text-2: #6b6560; --text-muted: #a09890;
+  --coral: #ff4757; --indigo: #3d5af1; --emerald: #00c48c; --amber: #ffb703; --violet: #8b5cf6;
+  --coral-soft: rgba(255, 71, 87, 0.10);
+  --indigo-soft: rgba(61, 90, 241, 0.10);
+  --emerald-soft: rgba(0, 196, 140, 0.10);
+  --amber-soft: rgba(255, 183, 3, 0.14);
+  --violet-soft: rgba(139, 92, 246, 0.10);
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); line-height: 1.65; min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; }
+
+header { padding: 4rem 1.5rem 2.5rem; max-width: 1200px; margin: 0 auto; }
+.eyebrow { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: var(--coral); margin-bottom: 0.75rem; }
+h1 { font-family: var(--font-display); font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 500; line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 1rem; max-width: 32ch; }
+h1 em { font-family: 'DM Serif Display', serif; font-style: italic; font-weight: 400; color: var(--coral); }
+.lead { font-size: 1.1rem; color: var(--text-2); max-width: 60ch; font-weight: 300; line-height: 1.55; }
+.lead b { color: var(--text); font-weight: 500; }
+
+main { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+section.principles { margin: 2.5rem 0 3rem; padding: 1.5rem 1.75rem; background: var(--surface); border-radius: 12px; border: 1px solid var(--border-subtle); }
+section.principles h2 { font-family: var(--font-display); font-size: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-2); margin-bottom: 0.75rem; }
+section.principles ul { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: 0.4rem 2rem; font-size: 0.92rem; color: var(--text-2); }
+section.principles li::before { content: '→ '; color: var(--coral); font-weight: 500; }
+
+h2.group { font-family: var(--font-display); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-2); margin: 2.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 0.6rem; }
+h2.group .count { font-family: var(--font-mono); color: var(--text-muted); font-size: 0.7rem; }
+
+.proto-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr)); gap: 1rem; }
+
+.proto-card { position: relative; display: block; padding: 1.5rem 1.5rem 1.75rem; background: var(--bg); border: 1px solid var(--border-subtle); border-radius: 12px; transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease; cursor: pointer; }
+.proto-card:hover { border-color: var(--border-bright); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(26, 24, 20, 0.06); }
+.proto-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent, var(--coral)); border-radius: 12px 12px 0 0; }
+.proto-card .num { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+.proto-card .name { font-family: var(--font-display); font-size: 1.3rem; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 0.4rem; }
+.proto-card .tag { display: inline-block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; color: var(--accent, var(--coral)); margin-bottom: 0.75rem; }
+.proto-card .desc { font-size: 0.92rem; color: var(--text-2); line-height: 1.55; margin-bottom: 0.75rem; }
+.proto-card .open { font-size: 0.85rem; color: var(--accent, var(--coral)); font-weight: 500; margin-top: 0.5rem; }
+.proto-card .laws { font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); margin-top: 0.4rem; }
+
+footer { text-align: center; padding: 2rem 1.5rem 3rem; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--border-subtle); margin-top: 3rem; }
+footer b { color: var(--text-2); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">prototypes — 12 sketches, all clickable</div>
+  <h1>Conjugation drills, <em>compared</em></h1>
+  <p class="lead">Each prototype is a working interactive sketch. Built with the project's design tokens, real conjugation data, and keyboard-first interactions. <b>Try them in order</b> — the first three are the same exercise (cloze) with three different feedback philosophies, so you can compare them directly.</p>
+</header>
+
+<main>
+
+  <section class="principles">
+    <h2>Designed around these principles</h2>
+    <ul>
+      <li>Retrieval beats re-reading — make them produce, not pick</li>
+      <li>Interleaving transfers better than blocking (feels harder)</li>
+      <li>~80% success is the sweet spot for learning</li>
+      <li>Forms learned in sentences transfer to real use</li>
+      <li>Three-state feedback: correct / almost (typo, missing accent) / wrong</li>
+      <li>Failed items come back soon, then at longer intervals</li>
+      <li>Show progress per verb &amp; tense, not just a streak</li>
+      <li>Keyboard first — Enter submits, typing is the point</li>
+      <li>Laws of UX applied: Hick, Fitts, Doherty, Von Restorff, Aesthetic-Usability, Peak-End, Jakob's, Law of Proximity</li>
+    </ul>
+  </section>
+
+  <h2 class="group">Cloze — three feedback philosophies <span class="count">3 prototypes</span></h2>
+  <div class="proto-grid">
+    <a class="proto-card" href="1-cloze-inline-reveal.html" style="--accent: #3d5af1">
+      <div class="num">01</div>
+      <div class="tag">Cloze · A</div>
+      <div class="name">Inline reveal</div>
+      <p class="desc">Single screen, minimal. Submit → answer appears inline in the sentence with stem &amp; ending color-coded. Fastest, most minimal.</p>
+      <div class="open">open prototype →</div>
+      <div class="laws">Hick · Fitts · Doherty · Aesthetic-Usability</div>
+    </a>
+    <a class="proto-card" href="2-cloze-three-state.html" style="--accent: #ffb703">
+      <div class="num">02</div>
+      <div class="tag">Cloze · B</div>
+      <div class="name">Three-state + retyping</div>
+      <p class="desc">Correct → continue. Almost (typo or missing accent) → show diff. Wrong → show correct form, force a retyping before continuing. Retyping is a second retrieval.</p>
+      <div class="open">open prototype →</div>
+      <div class="laws">Postel · Doherty · Von Restorff · Peak-End</div>
+    </a>
+    <a class="proto-card" href="3-cloze-reflective-card.html" style="--accent: #8b5cf6">
+      <div class="num">03</div>
+      <div class="tag">Cloze · C</div>
+      <div class="name">Reflective card</div>
+      <p class="desc">Two-step card. Answer the cloze, then a review card reveals your answer vs correct, the rule, and the full 6-person paradigm. Patterns stick when you see the rule.</p>
+      <div class="open">open prototype →</div>
+      <div class="laws">Law of Similarity · Zeigarnik · Miller · Serial Position</div>
+    </a>
+  </div>
+
+  <h2 class="group">Other exercise types <span class="count">9 prototypes</span></h2>
+  <div class="proto-grid">
+    <a class="proto-card" href="4-cue-to-form.html" style="--accent: #ff4757">
+      <div class="num">04</div>
+      <div class="tag">Flashcard</div>
+      <div class="name">Cue-to-form</div>
+      <p class="desc">Three chips: verb · person · tense. Single input. Pure retrieval at speed. The SRS backbone.</p>
+      <div class="open">open prototype →</div>
+      <div class="laws">Hick · Fitts · Doherty · Von Restorff (streak)</div>
+    </a>
+    <a class="proto-card" href="5-spot-the-tense.html" style="--accent: #00c48c">
+      <div class="num">05</div>
+      <div class="tag">Discrimination</div>
+      <div class="name">Spot the tense</div>
+      <p class="desc">A story context with a gap and two tappable candidate forms. Practices the choice, not just the form. Where the real difficulty lives.</p>
+      <div class="open">open prototype →</div>
+      <div class="laws">Hick (2) · Peak-End (explanation) · Von Restorff (cue word)</div>
+    </a>
+    <a class="proto-card" href="6-transformation-chain.html" style="--accent: #8b5cf6">
+      <div class="num">06</div>
+      <div class="tag">Transformation</div>
+      <div class="name">Sentence transformation chain</div>
+      <p class="desc">A chain of 3–4 cards. Each new form is built from the last: switch person, switch tense, add negation. Real errors live in person/tense switching.</p>
+      <div class="open">open prototype →</div>
+      <div class="laws">Zeigarnik · Law of Proximity · Serial Position</div>
+    </a>
+    <a class="proto-card" href="7-rapid-fire.html" style="--accent: #ff6b35">
+      <div class="num">07</div>
+      <div class="tag">Fluency</div>
+      <div class="name">Rapid-fire</div>
+      <p class="desc">60 seconds, streak counter, mixed cue-to-form. Builds fluency. Unlock only once accuracy is high (lock condition is shown).</p>
+      <div class="open">open prototype →</div>
+      <div class="laws">Doherty · Parkinson mitigation · Peak-End</div>
+    </a>
+    <a class="proto-card" href="8-pattern-discovery.html" style="--accent: #00c48c">
+      <div class="num">08</div>
+      <div class="tag">Discovery</div>
+      <div class="name">Pattern discovery</div>
+      <p class="desc">6 verbs in a tense, endings highlighted. Pick the rule. Then conjugate a new verb. Noticing a pattern teaches more than memorizing a list.</p>
+      <div class="open">open prototype →</div>
+      <div class="laws">Similarity · Common Region · Zeigarnik · Miller</div>
+    </a>
+    <a class="proto-card" href="9-error-spotting.html" style="--accent: #3d5af1">
+      <div class="num">09</div>
+      <div class="tag">Spotting</div>
+      <div class="name">Error spotting</div>
+      <p class="desc">Tap a word you think is wrong. Fix it from a list of options. Trains self-monitoring — the metacognitive skill behind B2 → C1.</p>
+      <div class="open">open prototype →</div>
+      <div class="laws">Fitts (each word) · Paradox · Law of Proximity</div>
+    </a>
+    <a class="proto-card" href="10-audio-dictation.html" style="--accent: #8b5cf6">
+      <div class="num">10</div>
+      <div class="tag">Audio</div>
+      <div class="name">Audio dictation</div>
+      <p class="desc">Hear a sentence (Web Speech API), type the verb. 3 plays max. In French, parle/parles/parlent sound identical — the spelling carries the grammar.</p>
+      <div class="open">open prototype →</div>
+      <div class="laws">Fitts (play btn) · Postel · Doherty</div>
+    </a>
+    <a class="proto-card" href="11-pretest.html" style="--accent: #ffb703">
+      <div class="num">11</div>
+      <div class="tag">Pretest</div>
+      <div class="name">Pretest (errorful learning)</div>
+      <p class="desc">Before teaching a new tense, guess 3 questions. Your wrong guesses create prediction errors that the upcoming rule will resolve. Distinct framing.</p>
+      <div class="open">open prototype →</div>
+      <div class="laws">Von Restorff (warm amber) · Paradox · Peak-End (bridge to lesson)</div>
+    </a>
+    <a class="proto-card" href="12-mixed-review.html" style="--accent: #1a1814">
+      <div class="num">12</div>
+      <div class="tag">Daily</div>
+      <div class="name">Cumulative mixed review</div>
+      <p class="desc">One session. Many types. Interleaved. This is the daily practice shape — 8 items, ~10 minutes, end with an arc visualization of how the session went.</p>
+      <div class="open">open prototype →</div>
+      <div class="laws">Miller (7±2) · Interleaving · Zeigarnik · Peak-End (arc)</div>
+    </a>
+  </div>
+
+</main>
+
+<footer>
+  Plain HTML — no build step, no server. <b>12 prototypes</b> · built in one sitting · all clickable
+</footer>
+
+</body>
+</html>

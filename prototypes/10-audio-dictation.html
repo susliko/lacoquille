@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>10 — Audio dictation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/*
+  LAWS OF UX APPLIED
+  ─────────────────
+  Fitts's Law: the play button is the largest tappable element. Replay counter
+    visible nearby.
+  Aesthetic-Usability Effect: clean audio player aesthetic.
+  Postel's Law: accept liberal input — missing accents are "almost", not wrong.
+  Jakob's Law: familiar audio player pattern.
+  Doherty Threshold: feedback within 50ms. Audio plays on click.
+  Hick's Law: one decision: type what you heard.
+  Von Restorff Effect: replay count is distinct (limited plays).
+  Peak-End Rule: end with the most challenging items.
+*/
+:root {
+  color-scheme: light;
+  --bg: #ffffff; --surface: #f7f5f2; --surface-2: #f0ece6;
+  --border: #ddd8d0; --border-subtle: #ece8e2; --border-bright: #b8b0a5;
+  --text: #1a1814; --text-2: #6b6560; --text-muted: #a09890;
+  --coral: #ff4757; --indigo: #3d5af1; --emerald: #00c48c; --amber: #ffb703;
+  --coral-soft: rgba(255, 71, 87, 0.10);
+  --indigo-soft: rgba(61, 90, 241, 0.10);
+  --emerald-soft: rgba(0, 196, 140, 0.10);
+  --amber-soft: rgba(255, 183, 3, 0.14);
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --accent: #8b5cf6;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); line-height: 1.65; display: flex; flex-direction: column; min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; }
+
+.bar { position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-subtle); padding: 0.7rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; }
+.bar .back { color: var(--text-2); padding: 0.25rem 0.5rem; border-radius: 6px; }
+.bar .back:hover { background: var(--surface); color: var(--text); }
+.bar .badge { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); padding: 0.2rem 0.5rem; border: 1px solid var(--border-subtle); border-radius: 999px; }
+.bar .label { color: var(--text-2); }
+.bar .spacer { flex: 1; }
+.bar .counter { color: var(--text-2); font-variant-numeric: tabular-nums; }
+.bar .counter b { color: var(--text); font-weight: 500; }
+
+.progress { height: 3px; background: var(--surface-2); position: relative; overflow: hidden; }
+.progress::after { content: ''; position: absolute; top: 0; left: 0; height: 100%; width: var(--pct, 0%); background: var(--accent); transition: width 0.4s cubic-bezier(0.2, 0.7, 0.2, 1); }
+
+.stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem 1.5rem; }
+.card { width: 100%; max-width: 36rem; text-align: center; }
+
+.eyebrow { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--accent); margin-bottom: 0.5rem; font-weight: 500; }
+
+/* Player (Fitts: large play button) */
+.player {
+  margin: 1.5rem 0;
+  display: flex; flex-direction: column; align-items: center; gap: 0.85rem;
+}
+.play-btn {
+  width: 5.5rem; height: 5.5rem;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.25);
+  transition: transform 0.1s, box-shadow 0.2s;
+  font-size: 0;  /* hide text */
+}
+.play-btn:hover { transform: scale(1.05); box-shadow: 0 6px 24px rgba(139, 92, 246, 0.35); }
+.play-btn:active { transform: scale(0.98); }
+.play-btn:disabled { background: var(--text-muted); cursor: not-allowed; box-shadow: none; transform: none; }
+.play-btn.playing {
+  background: var(--coral);
+  box-shadow: 0 4px 20px rgba(255, 71, 87, 0.25);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse { 50% { box-shadow: 0 4px 28px rgba(255, 71, 87, 0.4); } }
+
+.play-btn svg { width: 1.8rem; height: 1.8rem; }
+
+.replay-info {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-2);
+}
+.replay-info .count { color: var(--text); font-weight: 500; font-variant-numeric: tabular-nums; }
+.replay-info .max { color: var(--text-muted); }
+
+/* Sentence context (with the verb hidden) */
+.sentence {
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 3.4vw, 1.85rem);
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  color: var(--text-2);  /* slightly muted — they haven't confirmed yet */
+  margin: 1.5rem 0 1rem;
+}
+.sentence .gap {
+  display: inline-block;
+  min-width: 7ch;
+  border-bottom: 2px dashed var(--text-muted);
+  margin: 0 0.15em;
+  text-align: center;
+  color: transparent;
+  background: var(--surface);
+  border-radius: 4px;
+  padding: 0 0.3em;
+}
+.sentence .gap.revealed-correct { color: var(--emerald); background: var(--emerald-soft); border-bottom-color: var(--emerald); border-radius: 4px; }
+.sentence .gap.revealed-wrong   { color: var(--coral); background: var(--coral-soft); border-bottom-color: var(--coral); border-radius: 4px; text-decoration: line-through; }
+
+.hint { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+.hint b { color: var(--text-2); font-weight: 500; }
+
+.input-row { display: flex; align-items: center; gap: 0.6rem; margin: 1rem 0 0.5rem; }
+.input { flex: 1; font-family: var(--font-mono); font-size: 1.15rem; padding: 0.85rem 1rem; background: var(--surface); border: 1.5px solid var(--border-subtle); border-radius: 10px; color: var(--text); outline: none; transition: border-color 0.15s; }
+.input:focus { border-color: var(--accent); background: var(--bg); }
+.input::placeholder { color: var(--text-muted); }
+.input.correct { border-color: var(--emerald); background: var(--emerald-soft); color: var(--emerald); }
+.input.almost  { border-color: var(--amber); background: var(--amber-soft); color: #b07500; }
+.input.wrong   { border-color: var(--coral); background: var(--coral-soft); color: var(--coral); }
+
+.submit { display: inline-flex; align-items: center; padding: 0.85rem 1.25rem; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-weight: 500; font-size: 0.95rem; cursor: pointer; min-width: 5rem; }
+.submit .kbd { margin-left: 0.5rem; font-family: var(--font-mono); font-size: 0.7rem; padding: 0.1rem 0.4rem; background: rgba(255,255,255,0.18); border-radius: 4px; }
+.submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.accents { display: flex; gap: 0.35rem; justify-content: center; margin-top: 0.5rem; }
+.accent { width: 2.2rem; height: 2.2rem; display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 1.05rem; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-2); cursor: pointer; }
+.accent:hover { background: var(--surface-2); color: var(--text); }
+
+.feedback {
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+  font-size: 0.95rem;
+  text-align: left;
+  display: none;
+  animation: slideIn 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.feedback.shown { display: block; }
+@keyframes slideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.feedback .verdict { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.3rem; }
+.feedback .verdict.correct { color: var(--emerald); }
+.feedback .verdict.almost  { color: #b07500; }
+.feedback .verdict.wrong   { color: var(--coral); }
+.feedback .correction { font-family: var(--font-mono); color: var(--emerald); font-weight: 600; }
+.feedback .diff-yours { font-family: var(--font-mono); color: var(--coral); text-decoration: line-through; margin-right: 0.4rem; }
+.feedback .arrow { color: var(--text-muted); margin: 0 0.4rem; }
+.feedback .note { font-size: 0.88rem; color: var(--text-2); margin-top: 0.5rem; line-height: 1.5; }
+
+.continue-row { display: flex; justify-content: flex-end; margin-top: 1.25rem; min-height: 3rem; }
+.continue { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.85rem 1.4rem; background: var(--text); color: var(--bg); border: none; border-radius: 10px; font-weight: 500; font-size: 0.95rem; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; text-decoration: none; }
+.continue.shown { opacity: 1; pointer-events: auto; }
+.continue .kbd { font-family: var(--font-mono); font-size: 0.7rem; padding: 0.1rem 0.4rem; background: rgba(255,255,255,0.18); border-radius: 4px; }
+
+.summary { text-align: center; padding: 1.5rem 0; max-width: 32rem; margin: 0 auto; }
+.summary h2 { font-family: var(--font-display); font-size: 1.8rem; font-weight: 600; margin-bottom: 0.5rem; }
+.summary p { color: var(--text-2); margin-bottom: 1.5rem; }
+.summary .stats { display: inline-flex; gap: 1.5rem; margin-bottom: 1.5rem; }
+.summary .stat .n { font-family: var(--font-display); font-size: 2rem; font-weight: 600; display: block; }
+.summary .stat .l { font-size: 0.8rem; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.08em; }
+.summary .note { font-size: 0.9rem; color: var(--text-2); max-width: 30rem; margin: 0 auto 1.5rem; line-height: 1.6; }
+.summary .row { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+.continue.green { background: var(--accent); }
+.continue.ghost { background: var(--surface); color: var(--text); }
+
+.foot { text-align: center; font-size: 0.8rem; color: var(--text-muted); padding: 1.5rem; border-top: 1px solid var(--border-subtle); }
+
+@media (max-width: 600px) {
+  .stage { padding: 1.5rem 1.25rem; }
+  .sentence { font-size: 1.2rem; }
+  .play-btn { width: 4.5rem; height: 4.5rem; }
+  .input-row { flex-direction: column; align-items: stretch; }
+  .submit { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <a class="back" href="index.html">← prototypes</a>
+  <span class="badge">10 · Audio</span>
+  <span class="label">Audio dictation</span>
+  <span class="spacer"></span>
+  <span class="counter"><b id="counter">1</b> / <span id="total">5</span></span>
+</div>
+<div class="progress" id="progress"></div>
+
+<main class="stage">
+  <div class="card" id="card"></div>
+</main>
+
+<div class="foot">Listen, then type the verb you heard. <b>3 plays max.</b> Many verb endings sound identical in French — the spelling carries the grammar.</div>
+
+<script>
+// Each item: a French sentence (with the verb as a gap placeholder for the learner),
+// the missing verb, and a "speak" version (the full sentence for TTS).
+const ITEMS = [
+  {
+    display: ["Hier, je ", "___", " au marché avec ma sœur."],
+    speak: "Hier, je suis allé au marché avec ma sœur.",
+    answer: "suis allé",
+    audioNote: "aller uses être in the passé composé",
+  },
+  {
+    display: ["Tu ", "___", " toujours tes devoirs avant de jouer."],
+    speak: "Tu finis toujours tes devoirs avant de jouer.",
+    answer: "finis",
+  },
+  {
+    display: ["Il ", "___", " à l'école à pied tous les matins."],
+    speak: "Il allait à l'école à pied tous les matins.",
+    answer: "allait",
+  },
+  {
+    display: ["Nous ", "___", " beaucoup de chocolat à Noël."],
+    speak: "Nous avons mangé beaucoup de chocolat à Noël.",
+    answer: "avons mangé",
+  },
+  {
+    display: ["Elles ", "___", " chez leurs grands-parents chaque été."],
+    speak: "Elles venaient chez leurs grands-parents chaque été.",
+    answer: "venaient",
+  },
+];
+
+let idx = 0, phase = "answer";
+let stats = { correct: 0, almost: 0, wrong: 0 };
+let playsLeft = 3;
+let isPlaying = false;
+
+const card = document.getElementById("card");
+const counter = document.getElementById("counter");
+const total = document.getElementById("total");
+const progress = document.getElementById("progress");
+total.textContent = ITEMS.length;
+
+function norm(s) { return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/['']/g, "'").trim(); }
+function isAlmost(a, b) {
+  a = norm(a); b = norm(b);
+  if (a === b) return true;
+  if (Math.abs(a.length - b.length) > 1) return false;
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]);
+  for (let j = 1; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+  return dp[m][n] <= 1;
+}
+
+function speak(text) {
+  if (!('speechSynthesis' in window)) {
+    alert("Sorry — your browser doesn't support the Web Speech API. Try Chrome or Edge.");
+    return Promise.resolve();
+  }
+  window.speechSynthesis.cancel();
+  return new Promise((resolve) => {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "fr-FR";
+    u.rate = 0.85;
+    u.pitch = 1.0;
+    u.onend = () => resolve();
+    u.onerror = () => resolve();
+    window.speechSynthesis.speak(u);
+  });
+}
+
+async function playAudio() {
+  if (isPlaying || playsLeft <= 0) return;
+  playsLeft--;
+  isPlaying = true;
+  const btn = document.getElementById("play-btn");
+  btn.classList.add("playing");
+  const item = ITEMS[idx];
+  await speak(item.speak);
+  isPlaying = false;
+  btn.classList.remove("playing");
+  // update replay count
+  const info = document.getElementById("replay-info");
+  if (info) info.innerHTML = `<span class="count">${playsLeft}</span> / <span class="max">3</span> plays left`;
+  if (playsLeft <= 0 && btn) btn.disabled = true;
+}
+
+function render() {
+  if (idx >= ITEMS.length) return renderSummary();
+  const item = ITEMS[idx];
+  counter.textContent = idx + 1;
+  progress.style.setProperty("--pct", `${(idx / ITEMS.length) * 100}%`);
+
+  if (phase === "answer") {
+    card.innerHTML = `
+      <div class="eyebrow">▸ listen & type</div>
+      <div class="player">
+        <button class="play-btn" id="play-btn" aria-label="Play audio">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <div class="replay-info" id="replay-info">
+          <span class="count">${playsLeft}</span> / <span class="max">3</span> plays left
+        </div>
+      </div>
+      <div class="sentence" id="sentence">
+        <span>${item.display[0]}</span><span class="gap">?</span><span>${item.display[2]}</span>
+      </div>
+      <div class="hint">Type the verb you heard, then <b>Enter</b></div>
+      <div class="input-row">
+        <input class="input" id="answer" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="?" autofocus />
+        <button class="submit" id="submit">check <span class="kbd">↵</span></button>
+      </div>
+      <div class="accents">
+        <button class="accent" data-c="é">é</button>
+        <button class="accent" data-c="è">è</button>
+        <button class="accent" data-c="ê">ê</button>
+        <button class="accent" data-c="à">à</button>
+        <button class="accent" data-c="ù">ù</button>
+        <button class="accent" data-c="ç">ç</button>
+        <button class="accent" data-c="ô">ô</button>
+        <button class="accent" data-c="î">î</button>
+        <button class="accent" data-c="ë">ë</button>
+      </div>
+    `;
+    document.getElementById("play-btn").addEventListener("click", playAudio);
+    const input = document.getElementById("answer");
+    const submit = document.getElementById("submit");
+    input.focus();
+    const handle = () => {
+      const v = input.value.trim();
+      if (!v) return;
+      const exact = v.toLowerCase() === item.answer;
+      const almost = !exact && isAlmost(v, item.answer);
+      if (exact) { stats.correct++; }
+      else if (almost) { stats.almost++; }
+      else { stats.wrong++; }
+      phase = "feedback";
+      render();
+    };
+    submit.addEventListener("click", handle);
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); handle(); } });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === " " && e.target === document.body) { e.preventDefault(); playAudio(); }
+    });
+    document.querySelectorAll(".accent").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const c = btn.dataset.c;
+        const s = input.selectionStart ?? input.value.length;
+        const e = input.selectionEnd ?? input.value.length;
+        input.value = input.value.slice(0, s) + c + input.value.slice(e);
+        input.focus();
+        input.setSelectionRange(s + 1, s + 1);
+      });
+    });
+    // auto-play on first show (Doherty: don't make them hunt for the button)
+    setTimeout(playAudio, 350);
+  } else if (phase === "feedback") {
+    const input = document.getElementById("answer");
+    const v = input.value.trim();
+    const exact = v.toLowerCase() === item.answer;
+    const almost = !exact && isAlmost(v, item.answer);
+    const verdict = exact ? "correct" : almost ? "almost" : "wrong";
+    const inputCls = verdict;
+    const gapCls = exact ? "revealed-correct" : "revealed-wrong";
+
+    let fbHTML = "";
+    if (verdict === "correct") {
+      fbHTML = `
+        <div class="feedback shown">
+          <div class="verdict correct">✓ you heard it right</div>
+          <div class="note">${item.audioNote || "Spelling carries the grammar — <code>parle / parles / parlent</code> all sound similar at the end of an utterance."}</div>
+        </div>
+      `;
+    } else if (verdict === "almost") {
+      fbHTML = `
+        <div class="feedback shown">
+          <div class="verdict almost">almost</div>
+          <div><span class="diff-yours">${v}</span><span class="arrow">→</span><span class="correction">${item.answer}</span></div>
+          <div class="note">Watch the accent — in connected speech, the difference between <em>parlé</em> and <em>parler</em> is the final /e/ sound.</div>
+        </div>
+      `;
+    } else {
+      fbHTML = `
+        <div class="feedback shown">
+          <div class="verdict wrong">not quite</div>
+          <div><span class="diff-yours">${v}</span><span class="arrow">→</span><span class="correction">${item.answer}</span></div>
+          <div class="note">${item.audioNote || "Listen for the ending — that's where the grammar lives."}</div>
+        </div>
+      `;
+    }
+
+    card.innerHTML = `
+      <div class="eyebrow">▸ listen & type</div>
+      <div class="player">
+        <button class="play-btn" id="play-btn" aria-label="Replay" ${playsLeft <= 0 ? 'disabled' : ''}>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <div class="replay-info" id="replay-info">
+          <span class="count">${playsLeft}</span> / <span class="max">3</span> plays left
+        </div>
+      </div>
+      <div class="sentence">
+        <span>${item.display[0]}</span><span class="gap ${gapCls}">${item.answer}</span><span>${item.display[2]}</span>
+      </div>
+      <input class="input ${inputCls}" value="${v}" disabled />
+      ${fbHTML}
+      <div class="continue-row">
+        <button class="continue shown" id="continue">continue <span class="kbd">↵</span></button>
+      </div>
+    `;
+    document.getElementById("play-btn").addEventListener("click", playAudio);
+    const cont = document.getElementById("continue");
+    cont.focus();
+    cont.addEventListener("click", next);
+  }
+}
+
+function next() {
+  idx++;
+  phase = "answer";
+  playsLeft = 3;
+  render();
+}
+
+function renderSummary() {
+  progress.style.setProperty("--pct", "100%");
+  card.innerHTML = `
+    <div class="summary">
+      <h2>You trained your ear.</h2>
+      <p>In French, <em>je parle</em>, <em>tu parles</em>, and <em>ils parlent</em> all end in the same sound. The spelling is the only thing carrying the grammar.</p>
+      <div class="stats">
+        <div class="stat"><span class="n" style="color:var(--emerald)">${stats.correct}</span><span class="l">heard right</span></div>
+        <div class="stat"><span class="n" style="color:#b07500">${stats.almost}</span><span class="l">almost</span></div>
+        <div class="stat"><span class="n" style="color:var(--coral)">${stats.wrong}</span><span class="l">missed</span></div>
+      </div>
+      <p class="note">Audio dictation is a complement to reading, not a replacement. Use it once a week to keep the spoken/spelled link fresh. <b>3 plays max</b> is intentional — it pushes you to listen actively the first time, not just replay until the answer surfaces.</p>
+      <div class="row">
+        <a class="continue green" href="10-audio-dictation.html">try again</a>
+        <a class="continue ghost" href="11-pretest.html">next: pretest →</a>
+      </div>
+    </div>
+  `;
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && phase === "feedback") { e.preventDefault(); next(); }
+  if (e.key === " " && phase === "answer" && document.activeElement?.id !== "answer") { e.preventDefault(); playAudio(); }
+});
+
+render();
+</script>
+</body>
+</html>

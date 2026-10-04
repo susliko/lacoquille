@@ -1,0 +1,12 @@
+---
+import Base from "../../layouts/Base.astro";
+import CueDrill from "../../components/drills/CueDrill";
+---
+
+<Base title="Cue-to-form — La Coquille" section="practice">
+  <CueDrill client:only="solid-js" />
+</Base>
+
+<style is:global>
+  @import "../../styles/drills.css";
+</style>

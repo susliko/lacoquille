@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 — Cloze · Inline reveal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #ffffff; --surface: #f7f5f2; --surface-2: #f0ece6;
+  --border: #ddd8d0; --border-subtle: #ece8e2; --border-bright: #b8b0a5;
+  --text: #1a1814; --text-2: #6b6560; --text-muted: #a09890;
+  --coral: #ff4757; --indigo: #3d5af1; --emerald: #00c48c; --amber: #ffb703;
+  --coral-soft: rgba(255, 71, 87, 0.10);
+  --indigo-soft: rgba(61, 90, 241, 0.10);
+  --emerald-soft: rgba(0, 196, 140, 0.10);
+  --amber-soft: rgba(255, 183, 3, 0.14);
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --accent: #3d5af1;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  line-height: 1.65;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; }
+
+/* ── Top bar ─────────────────────────────────────────────────── */
+.bar {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0.7rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+}
+.bar .back {
+  color: var(--text-2);
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  font-size: 0.85rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+.bar .back:hover { background: var(--surface); color: var(--text); }
+.bar .badge {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+}
+.bar .label { color: var(--text-2); }
+.bar .spacer { flex: 1; }
+.bar .counter { color: var(--text-2); font-variant-numeric: tabular-nums; }
+.bar .counter b { color: var(--text); font-weight: 500; }
+
+/* ── Progress strip ──────────────────────────────────────────── */
+.progress {
+  height: 3px;
+  background: var(--surface-2);
+  position: relative;
+  overflow: hidden;
+}
+.progress::after {
+  content: '';
+  position: absolute; top: 0; left: 0; height: 100%;
+  width: var(--pct, 0%);
+  background: var(--accent);
+  transition: width 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* ── Stage ───────────────────────────────────────────────────── */
+.stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem 1.5rem;
+}
+.card {
+  width: 100%;
+  max-width: 36rem;
+}
+
+/* ── Hint chip (verb + tense + person) ───────────────────────── */
+.hints {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 1.75rem;
+  font-size: 0.85rem;
+  color: var(--text-2);
+  flex-wrap: wrap;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 0.3rem 0.65rem;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  color: var(--text-2);
+  letter-spacing: 0.01em;
+}
+.chip .k { color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; margin-right: 0.35rem; }
+.chip strong { color: var(--text); font-weight: 500; }
+.arrow { color: var(--text-muted); font-size: 0.8rem; }
+
+/* ── Sentence ────────────────────────────────────────────────── */
+.sentence {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin-bottom: 1.5rem;
+  min-height: 6rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.05em;
+}
+.sentence .blank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 7.5ch;
+  padding: 0.1em 0.5em;
+  border-bottom: 2px solid var(--accent);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  letter-spacing: 0.05em;
+  user-select: none;
+  border-radius: 2px;
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
+}
+.sentence .blank.correct {
+  color: var(--emerald);
+  background: var(--emerald-soft);
+  border-color: var(--emerald);
+  font-family: var(--font-display);
+  font-size: 1em;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.sentence .blank.almost {
+  color: var(--amber);
+  background: var(--amber-soft);
+  border-color: var(--amber);
+  font-family: var(--font-display);
+  font-size: 1em;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.sentence .blank.wrong {
+  color: var(--coral);
+  background: var(--coral-soft);
+  border-color: var(--coral);
+  font-family: var(--font-display);
+  font-size: 1em;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+}
+.sentence .blank.revealed::after {
+  content: ' → ';
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-weight: 400;
+  margin: 0 0.4em;
+  font-size: 0.9em;
+}
+.sentence .blank.revealed .answer {
+  color: var(--emerald);
+  font-weight: 600;
+  text-decoration: none;
+}
+.sentence .blank.revealed .answer .stem { color: var(--indigo); font-weight: 500; }
+.sentence .blank.revealed .answer .ending { color: var(--coral); font-weight: 600; }
+.sentence .blank.revealed .answer .almost-note { color: #b07500; font-size: 0.75em; font-weight: 400; font-style: italic; margin-left: 0.4rem; }
+
+/* ── Input row ───────────────────────────────────────────────── */
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+.input {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 10px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+  letter-spacing: 0.01em;
+}
+.input:focus {
+  border-color: var(--accent);
+  background: var(--bg);
+}
+.input::placeholder { color: var(--text-muted); }
+.input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem 1.25rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.05s;
+  min-width: 5rem;
+}
+.submit:hover { opacity: 0.92; }
+.submit:active { transform: translateY(1px); }
+.submit:disabled { opacity: 0.4; cursor: not-allowed; }
+.submit .kbd {
+  display: inline-block;
+  margin-left: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 0.1rem 0.4rem;
+  background: rgba(255,255,255,0.18);
+  border-radius: 4px;
+  font-weight: 400;
+}
+
+/* ── Accent row ──────────────────────────────────────────────── */
+.accents {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 1.5rem;
+}
+.accent {
+  width: 2.2rem; height: 2.2rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.accent:hover { background: var(--surface-2); color: var(--text); border-color: var(--border-bright); }
+.accent:active { transform: scale(0.95); }
+
+/* ── State message under input ───────────────────────────────── */
+.message {
+  font-size: 0.92rem;
+  color: var(--text-2);
+  min-height: 1.4em;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.message .verdict {
+  font-weight: 500;
+  font-size: 0.85rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+}
+.verdict.correct { color: var(--emerald); background: var(--emerald-soft); }
+.verdict.almost  { color: #b07500; background: var(--amber-soft); }
+.verdict.wrong   { color: var(--coral); background: var(--coral-soft); }
+
+/* ── Stem/ending reveal (inline, color-coded parts of answer) ── */
+.decomposition {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 500;
+  margin-left: 0.4rem;
+}
+.decomposition .stem { color: var(--indigo); }
+.decomposition .ending { color: var(--coral); }
+
+/* ── Continue / footer ───────────────────────────────────────── */
+.continue-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+  min-height: 3rem;
+}
+.continue {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.4rem;
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.continue.shown { opacity: 1; pointer-events: auto; transform: none; }
+.continue .kbd {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 0.1rem 0.4rem;
+  background: rgba(255,255,255,0.18);
+  border-radius: 4px;
+  font-weight: 400;
+}
+
+.summary {
+  text-align: center;
+  padding: 2rem 0;
+}
+.summary h2 {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.summary p { color: var(--text-2); margin-bottom: 1.5rem; }
+.summary .stats { display: inline-flex; gap: 1.5rem; margin-bottom: 1.5rem; }
+.summary .stat .n { font-family: var(--font-display); font-size: 2rem; font-weight: 600; color: var(--text); display: block; }
+.summary .stat .l { font-size: 0.8rem; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.08em; }
+
+.foot {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding: 1.5rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+@media (max-width: 600px) {
+  .stage { padding: 1.5rem 1.25rem; }
+  .sentence { font-size: 1.4rem; min-height: 5rem; }
+  .input-row { flex-direction: column; align-items: stretch; }
+  .submit { width: 100%; }
+  .summary .stats { gap: 1rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <a class="back" href="index.html">← prototypes</a>
+  <span class="badge">01 · Cloze A</span>
+  <span class="label">Inline reveal</span>
+  <span class="spacer"></span>
+  <span class="counter"><b id="counter">1</b> / <span id="total">8</span></span>
+</div>
+<div class="progress" id="progress"></div>
+
+<main class="stage">
+  <div class="card" id="card"><!-- injected --></div>
+</main>
+
+<div class="foot">Enter to submit · Enter again to continue · missing accents are accepted (gently)</div>
+
+<script>
+// ── Data ────────────────────────────────────────────────────────
+const ITEMS = [
+  { hint: { verb: "parler", person: "je",   tense: "imparfait" },
+    sentence: ["Quand j'étais petit, ", "_", " beaucoup avec mes amis."],
+    answer: "parlais", stem: "parl", ending: "ais" },
+  { hint: { verb: "aller",  person: "il",   tense: "imparfait" },
+    sentence: ["Chaque matin, il ", "_", " à l'école à pied."],
+    answer: "allait", stem: "all", ending: "ait" },
+  { hint: { verb: "finir",  person: "tu",   tense: "présent" },
+    sentence: ["Tu ", "_", " toujours tes devoirs avant de jouer."],
+    answer: "finis", stem: "fin", ending: "is" },
+  { hint: { verb: "manger", person: "nous", tense: "passé composé" },
+    sentence: ["Hier soir, nous ", "_", " au restaurant italien."],
+    answer: "avons mangé", stem: "avons mang", ending: "é" },
+  { hint: { verb: "être",   person: "elle", tense: "imparfait" },
+    sentence: ["Elle ", "_", " très timide quand elle était enfant."],
+    answer: "était", stem: "ét", ending: "ait" },
+  { hint: { verb: "avoir",  person: "je",   tense: "présent" },
+    sentence: ["J'", "_", " faim, on mange quelque chose ?"],
+    answer: "ai", stem: "ai", ending: "" },
+  { hint: { verb: "faire",  person: "vous", tense: "passé composé" },
+    sentence: ["Qu'est-ce que vous ", "_", " ce week-end ?"],
+    answer: "avez fait", stem: "avez f", ending: "ait" },
+  { hint: { verb: "venir",  person: "ils",  tense: "imparfait" },
+    sentence: ["Les étés, ils ", "_", " souvent chez leurs grands-parents."],
+    answer: "venaient", stem: "ven", ending: "aient" },
+];
+
+// ── State ───────────────────────────────────────────────────────
+let idx = 0;
+let phase = "answer";   // "answer" | "feedback"
+let verdict = null;     // "correct" | "almost" | "wrong"
+let correct = 0, almost = 0, wrong = 0;
+let history = [];
+
+// ── Render ──────────────────────────────────────────────────────
+const card = document.getElementById("card");
+const counter = document.getElementById("counter");
+const total = document.getElementById("total");
+const progress = document.getElementById("progress");
+total.textContent = ITEMS.length;
+
+function norm(s) {
+  return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+}
+
+function isAlmost(input, answer) {
+  // Only accept "almost" if it's a 1-2 char typo (not a near-miss like wrong ending)
+  const a = norm(input), b = norm(answer);
+  if (a === b) return true;        // missing accents
+  if (Math.abs(a.length - b.length) > 1) return false;
+  // Levenshtein <= 1
+  const m = a.length, n = b.length;
+  if (Math.abs(m - n) > 1) return false;
+  const dp = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]);
+  for (let j = 1; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i-1] === b[j-1]
+        ? dp[i-1][j-1]
+        : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+  return dp[m][n] <= 1;
+}
+
+function render() {
+  if (idx >= ITEMS.length) return renderSummary();
+  const item = ITEMS[idx];
+  counter.textContent = idx + 1;
+  progress.style.setProperty("--pct", `${(idx / ITEMS.length) * 100}%`);
+
+  const h = item.hint;
+  const stemHTML = item.ending
+    ? `<span class="answer"><span class="stem">${item.stem}</span><span class="ending">-${item.ending}</span></span>`
+    : `<span class="answer">${item.answer}</span>`;
+  const almostNote = verdict === "almost" ? '<span class="almost-note">— accent?</span>' : '';
+  const blankHTML = phase === "answer"
+    ? `<span class="blank" id="blank">____</span>`
+    : verdict === "correct"
+      ? `<span class="blank correct revealed">${stemHTML}</span>`
+      : verdict === "almost"
+        ? `<span class="blank almost revealed">${stemHTML}${almostNote}</span>`
+        : `<span class="blank wrong revealed">${stemHTML}</span>`;
+
+  let messageHTML = "";
+  let contClass = "";
+  if (phase === "feedback") {
+    const decomp = item.ending
+      ? `<span class="decomposition"><span class="stem">${item.stem}</span> + <span class="ending">-${item.ending}</span></span>`
+      : "";
+    if (verdict === "correct") {
+      messageHTML = `<span class="verdict correct">correct</span> nice. <span class="decomposition"><span class="stem">${item.stem}</span>${item.ending ? ` + <span class="ending">-${item.ending}</span>` : ""}</span>`;
+    } else if (verdict === "almost") {
+      messageHTML = `<span class="verdict almost">almost</span> ${verdict === "almost" && !norm(history[idx]).match(norm(item.answer)) ? "watch the accent" : "one letter off"} · ${item.answer} ${decomp}`;
+    } else {
+      messageHTML = `<span class="verdict wrong">not quite</span> the form is <b>${item.answer}</b> ${decomp}`;
+    }
+    contClass = "shown";
+  }
+
+  card.innerHTML = `
+    <div class="hints">
+      <span class="chip"><span class="k">verb</span><strong>${h.verb}</strong></span>
+      <span class="arrow">·</span>
+      <span class="chip"><span class="k">person</span><strong>${h.person}</strong></span>
+      <span class="arrow">·</span>
+      <span class="chip"><span class="k">tense</span><strong>${h.tense}</strong></span>
+    </div>
+    <div class="sentence">
+      <span>${item.sentence[0]}</span>${blankHTML}<span>${item.sentence[2]}</span>
+    </div>
+    ${phase === "answer" ? `
+      <div class="input-row">
+        <input class="input" id="answer" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="type the conjugated form" autofocus />
+        <button class="submit" id="submit">check <span class="kbd">↵</span></button>
+      </div>
+      <div class="accents" id="accents">
+        <button class="accent" data-c="é">é</button>
+        <button class="accent" data-c="è">è</button>
+        <button class="accent" data-c="ê">ê</button>
+        <button class="accent" data-c="à">à</button>
+        <button class="accent" data-c="ù">ù</button>
+        <button class="accent" data-c="ç">ç</button>
+        <button class="accent" data-c="ô">ô</button>
+        <button class="accent" data-c="î">î</button>
+        <button class="accent" data-c="ë">ë</button>
+      </div>
+      <div class="message"></div>
+    ` : `
+      <div class="message">${messageHTML}</div>
+      <div class="continue-row">
+        <button class="continue ${contClass}" id="continue">continue <span class="kbd">↵</span></button>
+      </div>
+    `}
+  `;
+
+  if (phase === "answer") {
+    const input = document.getElementById("answer");
+    const submit = document.getElementById("submit");
+    input.focus();
+    const handleSubmit = () => {
+      if (!input.value.trim()) return;
+      submitForm(input.value.trim());
+    };
+    submit.addEventListener("click", handleSubmit);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); handleSubmit(); }
+    });
+    // Accent buttons insert at cursor
+    document.querySelectorAll(".accent").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const c = btn.dataset.c;
+        const s = input.selectionStart || input.value.length;
+        const e = input.selectionEnd || input.value.length;
+        input.value = input.value.slice(0, s) + c + input.value.slice(e);
+        input.focus();
+        input.setSelectionRange(s + 1, s + 1);
+      });
+    });
+  } else {
+    const cont = document.getElementById("continue");
+    cont.focus();
+    cont.addEventListener("click", next);
+  }
+}
+
+function submitForm(value) {
+  history[idx] = value;
+  const item = ITEMS[idx];
+  const exact = value.toLowerCase().trim() === item.answer;
+  const almost = !exact && isAlmost(value, item.answer);
+  if (exact) { verdict = "correct"; correct++; }
+  else if (almost) { verdict = "almost"; this.almost++; }
+  else { verdict = "wrong"; wrong++; }
+  phase = "feedback";
+  render();
+}
+
+function next() {
+  idx++;
+  phase = "answer";
+  verdict = null;
+  render();
+}
+
+function renderSummary() {
+  progress.style.setProperty("--pct", "100%");
+  card.innerHTML = `
+    <div class="summary">
+      <h2>Nice work.</h2>
+      <p>${ITEMS.length} items · inline reveal, the most minimal of the three cloze variants.</p>
+      <div class="stats">
+        <div class="stat"><span class="n" style="color:var(--emerald)">${correct}</span><span class="l">correct</span></div>
+        <div class="stat"><span class="n" style="color:#b07500">${almost}</span><span class="l">almost</span></div>
+        <div class="stat"><span class="n" style="color:var(--coral)">${wrong}</span><span class="l">wrong</span></div>
+      </div>
+      <div style="display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap;">
+        <a class="continue shown" href="1-cloze-inline-reveal.html">try again</a>
+        <a class="continue shown" style="background:var(--surface); color:var(--text)" href="2-cloze-three-state.html">next: three-state →</a>
+      </div>
+    </div>
+  `;
+}
+
+// global key handler for "continue" phase
+document.addEventListener("keydown", (e) => {
+  if (phase === "feedback" && e.key === "Enter") {
+    e.preventDefault();
+    next();
+  }
+});
+
+render();
+</script>
+</body>
+</html>

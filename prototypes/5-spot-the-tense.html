@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>05 — Spot the tense</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/*
+  LAWS OF UX APPLIED
+  ─────────────────
+  Hick's Law: only 2 choices — décision time ~230ms.
+  Fitts's Law: both cards large and equidistant; clearly tappable.
+  Jakob's Law: card-flip pattern, like Quizlet.
+  Law of Similarity: both forms styled identically so only content differs.
+  Peak-End Rule: the explanation reveal IS the experience. End of each item is the "aha".
+  Aesthetic-Usability Effect: emphasis on the cue words (highlighted) to teach the heuristic.
+  Serial Position Effect: varied order — don't always put imparfait first.
+  Von Restorff Effect: the cue word is highlighted in the sentence.
+*/
+:root {
+  color-scheme: light;
+  --bg: #ffffff; --surface: #f7f5f2; --surface-2: #f0ece6;
+  --border: #ddd8d0; --border-subtle: #ece8e2; --border-bright: #b8b0a5;
+  --text: #1a1814; --text-2: #6b6560; --text-muted: #a09890;
+  --coral: #ff4757; --indigo: #3d5af1; --emerald: #00c48c; --amber: #ffb703;
+  --coral-soft: rgba(255, 71, 87, 0.10);
+  --indigo-soft: rgba(61, 90, 241, 0.10);
+  --emerald-soft: rgba(0, 196, 140, 0.10);
+  --amber-soft: rgba(255, 183, 3, 0.14);
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --accent: #00c48c;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); line-height: 1.65; display: flex; flex-direction: column; min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; }
+
+.bar { position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-subtle); padding: 0.7rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; }
+.bar .back { color: var(--text-2); padding: 0.25rem 0.5rem; border-radius: 6px; }
+.bar .back:hover { background: var(--surface); color: var(--text); }
+.bar .badge { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); padding: 0.2rem 0.5rem; border: 1px solid var(--border-subtle); border-radius: 999px; }
+.bar .label { color: var(--text-2); }
+.bar .spacer { flex: 1; }
+.bar .counter { color: var(--text-2); font-variant-numeric: tabular-nums; }
+.bar .counter b { color: var(--text); font-weight: 500; }
+
+.progress { height: 3px; background: var(--surface-2); position: relative; overflow: hidden; }
+.progress::after { content: ''; position: absolute; top: 0; left: 0; height: 100%; width: var(--pct, 0%); background: var(--accent); transition: width 0.4s cubic-bezier(0.2, 0.7, 0.2, 1); }
+
+.stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem 1.5rem; }
+.card { width: 100%; max-width: 38rem; }
+
+.eyebrow {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--accent);
+  font-weight: 500;
+  margin-bottom: 0.6rem;
+  font-family: var(--font-mono);
+}
+.eyebrow .icon { margin-right: 0.4rem; }
+
+.sentence {
+  font-family: var(--font-display);
+  font-size: clamp(1.45rem, 3.6vw, 1.9rem);
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin-bottom: 0.6rem;
+}
+.sentence .cue {
+  background: var(--amber-soft);
+  padding: 0.05em 0.3em;
+  border-radius: 4px;
+  color: #b07500;
+  font-weight: 600;
+}
+.sentence .blank {
+  display: inline-block;
+  min-width: 6ch;
+  border-bottom: 2px dashed var(--text-muted);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  text-align: center;
+  margin: 0 0.15em;
+  user-select: none;
+}
+.sentence .blank.correct { color: var(--emerald); background: var(--emerald-soft); border-bottom-color: var(--emerald); border-radius: 4px; font-family: var(--font-display); font-size: 1em; font-weight: 600; }
+.sentence .blank.wrong   { color: var(--coral); background: var(--coral-soft); border-bottom-color: var(--coral); border-radius: 4px; font-family: var(--font-display); font-size: 1em; font-weight: 600; }
+
+.gloss { font-size: 0.92rem; color: var(--text-2); margin-bottom: 1.75rem; }
+.gloss em { color: var(--text); font-style: normal; font-weight: 500; }
+
+.prompt {
+  font-size: 0.92rem;
+  color: var(--text-2);
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+.prompt b { color: var(--text); font-weight: 500; }
+
+/* The two cards */
+.choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.choice {
+  position: relative;
+  padding: 1.5rem 1rem;
+  background: var(--bg);
+  border: 2px solid var(--border-subtle);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  font-family: var(--font-display);
+}
+.choice:hover { border-color: var(--border-bright); transform: translateY(-2px); }
+.choice:active { transform: translateY(0); }
+.choice .tense {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.6rem;
+}
+.choice .form {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin-bottom: 0.4rem;
+}
+.choice .gloss-en {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: var(--text-2);
+  font-style: italic;
+}
+.choice.picked-right { border-color: var(--emerald); background: var(--emerald-soft); }
+.choice.picked-wrong { border-color: var(--coral); background: var(--coral-soft); }
+.choice.show-right { border-color: var(--emerald); }
+.choice.dimmed { opacity: 0.45; }
+
+/* Explanation (Peak-End: this is the "aha") */
+.explain {
+  margin-top: 1.5rem;
+  padding: 1.25rem 1.4rem;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.explain.shown { opacity: 1; transform: none; pointer-events: auto; }
+.explain .verdict { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem; }
+.explain .verdict.right { color: var(--emerald); }
+.explain .verdict.wrong { color: var(--coral); }
+.explain .cue-line { font-size: 0.95rem; color: var(--text); margin-bottom: 0.4rem; }
+.explain .cue-line .cue { background: var(--amber-soft); padding: 0.05em 0.3em; border-radius: 4px; color: #b07500; font-weight: 600; }
+.explain .rule { font-size: 0.9rem; color: var(--text-2); line-height: 1.6; }
+.explain .rule b { color: var(--text); font-weight: 500; }
+.explain code { font-family: var(--font-mono); background: rgba(61, 90, 241, 0.08); color: var(--indigo); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.85em; }
+
+.continue-row { display: flex; justify-content: flex-end; margin-top: 1.25rem; min-height: 3rem; }
+.continue { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.85rem 1.4rem; background: var(--text); color: var(--bg); border: none; border-radius: 10px; font-weight: 500; font-size: 0.95rem; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; text-decoration: none; }
+.continue.shown { opacity: 1; pointer-events: auto; }
+.continue .kbd { font-family: var(--font-mono); font-size: 0.7rem; padding: 0.1rem 0.4rem; background: rgba(255,255,255,0.18); border-radius: 4px; }
+
+.summary { text-align: center; padding: 2rem 0; max-width: 32rem; margin: 0 auto; }
+.summary h2 { font-family: var(--font-display); font-size: 1.8rem; font-weight: 600; margin-bottom: 0.5rem; }
+.summary p { color: var(--text-2); margin-bottom: 1.5rem; }
+.summary .stats { display: inline-flex; gap: 1.5rem; margin-bottom: 1.5rem; }
+.summary .stat .n { font-family: var(--font-display); font-size: 2rem; font-weight: 600; display: block; }
+.summary .stat .l { font-size: 0.8rem; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.08em; }
+.summary .note { font-size: 0.9rem; color: var(--text-2); max-width: 30rem; margin: 0 auto 1.5rem; line-height: 1.6; }
+.summary .row { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+.continue.green { background: var(--accent); }
+.continue.ghost { background: var(--surface); color: var(--text); }
+
+.foot { text-align: center; font-size: 0.8rem; color: var(--text-muted); padding: 1.5rem; border-top: 1px solid var(--border-subtle); }
+
+@media (max-width: 600px) {
+  .stage { padding: 1.5rem 1.25rem; }
+  .sentence { font-size: 1.25rem; }
+  .choices { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <a class="back" href="index.html">← prototypes</a>
+  <span class="badge">05 · Discrimination</span>
+  <span class="label">Spot the tense</span>
+  <span class="spacer"></span>
+  <span class="counter"><b id="counter">1</b> / <span id="total">6</span></span>
+</div>
+<div class="progress" id="progress"></div>
+
+<main class="stage">
+  <div class="card" id="card"></div>
+</main>
+
+<div class="foot">Tap a form, or use ← → keys. Tap or Enter to continue.</div>
+
+<script>
+// Items: imparfait vs passé composé (the most-discriminated pair)
+// Each item: the gap, the two candidate forms, the cue word, the explanation
+const ITEMS = [
+  {
+    sentence: "Hier matin, je <blank> au marché quand j'ai vu Marie.",
+    gloss: "Yesterday morning, I ___ to the market when I saw Marie.",
+    options: [
+      { form: "j'allais",    tense: "imparfait",     gloss: "I was going (habit / background)" },
+      { form: "je suis allé", tense: "passé composé", gloss: "I went (specific event)" },
+    ],
+    correct: 0,
+    cue: "quand j'ai vu",
+    rule: "The passé composé is for the <b>foreground event</b> (<code>j'ai vu</code>); the imparfait is for the <b>background state</b> that was ongoing when it happened.",
+  },
+  {
+    sentence: "Quand j'étais petit, je <blank> au parc tous les jours.",
+    gloss: "When I was a child, I ___ to the park every day.",
+    options: [
+      { form: "j'allais",    tense: "imparfait",     gloss: "I used to go (habit)" },
+      { form: "je suis allé", tense: "passé composé", gloss: "I went (single event)" },
+    ],
+    correct: 0,
+    cue: "tous les jours",
+    rule: "<b>Habitual past</b> in French is imparfait — <code>tous les jours, d'habitude, souvent, chaque été</code>.",
+  },
+  {
+    sentence: "Pendant que je <blank>, le téléphone a sonné.",
+    gloss: "While I ___ , the phone rang.",
+    options: [
+      { form: "dormais",     tense: "imparfait",     gloss: "was sleeping (ongoing)" },
+      { form: "ai dormi",    tense: "passé composé", gloss: "slept (completed)" },
+    ],
+    correct: 0,
+    cue: "pendant que",
+    rule: "<code>pendant que / quand / tandis que</code> + imparfait sets up a <b>background</b> against which a <b>foreground event</b> (<code>a sonné</code>) happens.",
+  },
+  {
+    sentence: "Soudain, il <blank> dans la rue.",
+    gloss: "Suddenly, he ___ in the street.",
+    options: [
+      { form: "est tombé",   tense: "passé composé", gloss: "fell (specific, bounded event)" },
+      { form: "tombait",     tense: "imparfait",     gloss: "was falling (ongoing, no start/end)" },
+    ],
+    correct: 0,
+    cue: "soudain",
+    rule: "<code>soudain, tout à coup, un jour</code> mark a <b>punctual, bounded event</b> — passé composé.",
+  },
+  {
+    sentence: "Il pleuvait fort quand je <blank> de la maison.",
+    gloss: "It was raining hard when I ___ the house.",
+    options: [
+      { form: "suis sorti",  tense: "passé composé", gloss: "left (the foreground event)" },
+      { form: "sortais",     tense: "imparfait",     gloss: "was leaving (ongoing)" },
+    ],
+    correct: 0,
+    cue: "il pleuvait",
+    rule: "<code>il pleuvait</code> is imparfait (description, no start/end). The <b>event that interrupts</b> it is passé composé.",
+  },
+  {
+    sentence: "À cette époque-là, nous <blank> dans un petit appartement.",
+    gloss: "At that time, we ___ in a small apartment.",
+    options: [
+      { form: "habitions",   tense: "imparfait",     gloss: "were living (state, no end)" },
+      { form: "avons habité", tense: "passé composé", gloss: "lived (bounded)" },
+    ],
+    correct: 0,
+    cue: "à cette époque-là",
+    rule: "<b>States and descriptions</b> in the past (where someone lived, how they felt) are imparfait. <code>à cette époque-là, à ce moment-là</code> are strong cues.",
+  },
+];
+
+let idx = 0;
+let phase = "answer";
+let picked = null;
+let stats = { right: 0, wrong: 0 };
+let history = [];
+
+const card = document.getElementById("card");
+const counter = document.getElementById("counter");
+const total = document.getElementById("total");
+const progress = document.getElementById("progress");
+total.textContent = ITEMS.length;
+
+function render() {
+  if (idx >= ITEMS.length) return renderSummary();
+  const item = ITEMS[idx];
+  counter.textContent = idx + 1;
+  progress.style.setProperty("--pct", `${(idx / ITEMS.length) * 100}%`);
+
+  // Render sentence with blank and cue highlighted
+  let sHTML = item.sentence.replace("<blank>", '<span class="blank">?</span>');
+  // Highlight the cue word if present
+  if (item.cue) {
+    sHTML = sHTML.replace(new RegExp(`(${item.cue})`, "g"), '<span class="cue">$1</span>');
+  }
+
+  if (phase === "answer") {
+    card.innerHTML = `
+      <div class="eyebrow"><span class="icon">▸</span> pick the form that fits</div>
+      <div class="sentence">${sHTML}</div>
+      <div class="gloss">${item.gloss}</div>
+      <div class="prompt">which tense does the context call for?</div>
+      <div class="choices" id="choices">
+        ${item.options.map((o, i) => `
+          <button class="choice" data-i="${i}">
+            <div class="tense">${o.tense}</div>
+            <div class="form">${o.form}</div>
+            <div class="gloss-en">${o.gloss}</div>
+          </button>
+        `).join("")}
+      </div>
+    `;
+    document.querySelectorAll(".choice").forEach(btn => {
+      btn.addEventListener("click", () => {
+        picked = parseInt(btn.dataset.i, 10);
+        history[idx] = picked;
+        if (picked === item.correct) stats.right++; else stats.wrong++;
+        phase = "feedback";
+        render();
+      });
+    });
+  } else {
+    // After pick
+    const correctForm = item.options[item.correct].form;
+    const isRight = picked === item.correct;
+    const blankHTML = `<span class="blank ${isRight ? 'correct' : 'wrong'}">${correctForm}</span>`;
+    let sHTML2 = item.sentence.replace("<blank>", blankHTML);
+    if (item.cue) sHTML2 = sHTML2.replace(new RegExp(`(${item.cue})`, "g"), '<span class="cue">$1</span>');
+
+    card.innerHTML = `
+      <div class="eyebrow"><span class="icon">▸</span> ${isRight ? "good call" : "good to know"}</div>
+      <div class="sentence">${sHTML2}</div>
+      <div class="gloss">${item.gloss}</div>
+      <div class="choices" id="choices">
+        ${item.options.map((o, i) => `
+          <div class="choice ${i === item.correct ? 'show-right' : ''} ${i === picked && i !== item.correct ? 'picked-wrong' : ''} ${i !== item.correct && i !== picked ? 'dimmed' : ''}">
+            <div class="tense">${o.tense}</div>
+            <div class="form">${o.form}</div>
+            <div class="gloss-en">${o.gloss}</div>
+          </div>
+        `).join("")}
+      </div>
+      <div class="explain shown">
+        <div class="verdict ${isRight ? 'right' : 'wrong'}">${isRight ? "✓ correct" : "✗ actually"}</div>
+        <div class="cue-line">the cue is <span class="cue">${item.cue}</span></div>
+        <div class="rule">${item.rule}</div>
+      </div>
+      <div class="continue-row">
+        <button class="continue shown" id="continue">continue <span class="kbd">↵</span></button>
+      </div>
+    `;
+    const cont = document.getElementById("continue");
+    cont.focus();
+    cont.addEventListener("click", next);
+  }
+}
+
+function next() { idx++; phase = "answer"; picked = null; render(); }
+
+function renderSummary() {
+  progress.style.setProperty("--pct", "100%");
+  const total = stats.right + stats.wrong;
+  const pct = Math.round((stats.right / total) * 100);
+  card.innerHTML = `
+    <div class="summary">
+      <h2>The cue makes the call.</h2>
+      <p>${stats.right} of ${total} right · ${pct}% accuracy</p>
+      <div class="stats">
+        <div class="stat"><span class="n" style="color:var(--emerald)">${stats.right}</span><span class="l">right</span></div>
+        <div class="stat"><span class="n" style="color:var(--coral)">${stats.wrong}</span><span class="l">to revisit</span></div>
+      </div>
+      <p class="note">The two forms are not just different spellings — they encode <b>how the speaker sees the event</b>. imparfait is the <b>camera's wide shot</b>; passé composé is the <b>cut</b> to a specific action. The cue words (quand, pendant que, soudain, tous les jours) tell you which lens to use.</p>
+      <div class="row">
+        <a class="continue green" href="5-spot-the-tense.html">try again</a>
+        <a class="continue ghost" href="6-transformation-chain.html">next: transformation →</a>
+      </div>
+    </div>
+  `;
+}
+
+document.addEventListener("keydown", (e) => {
+  if (phase === "answer") {
+    if (e.key === "ArrowLeft") { document.querySelector('.choice[data-i="0"]')?.click(); }
+    if (e.key === "ArrowRight") { document.querySelector('.choice[data-i="1"]')?.click(); }
+  } else if (phase === "feedback" && e.key === "Enter") {
+    e.preventDefault();
+    next();
+  }
+});
+
+render();
+</script>
+</body>
+</html>

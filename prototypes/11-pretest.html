@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>11 — Pretest (errorful learning)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/*
+  LAWS OF UX APPLIED
+  ─────────────────
+  Von Restorff Effect: visually distinct (warm amber, italic display) from
+    regular exercises. This is a "test" but framed as "exploration".
+  Paradox of the Active User: clear that guessing is encouraged. No score.
+  Peak-End Rule: end with a smooth transition into the learning phase, not a
+    pass/fail verdict. The "now let's learn it" frame is the reward.
+  Aesthetic-Usability Effect: warm, inviting, not test-y.
+  Jakob's Law: familiar "try first, then we explain" pattern.
+  Postel's Law: any attempt is accepted. Empty guess is also fine.
+  Hick's Law: one input, one decision per question.
+*/
+:root {
+  color-scheme: light;
+  --bg: #ffffff; --surface: #f7f5f2; --surface-2: #f0ece6;
+  --border: #ddd8d0; --border-subtle: #ece8e2; --border-bright: #b8b0a5;
+  --text: #1a1814; --text-2: #6b6560; --text-muted: #a09890;
+  --coral: #ff4757; --indigo: #3d5af1; --emerald: #00c48c; --amber: #ffb703; --violet: #8b5cf6;
+  --coral-soft: rgba(255, 71, 87, 0.10);
+  --indigo-soft: rgba(61, 90, 241, 0.10);
+  --emerald-soft: rgba(0, 196, 140, 0.10);
+  --amber-soft: rgba(255, 183, 3, 0.16);
+  --violet-soft: rgba(139, 92, 246, 0.10);
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --accent: #ffb703;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); line-height: 1.65; display: flex; flex-direction: column; min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; }
+
+.bar { position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-subtle); padding: 0.7rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; }
+.bar .back { color: var(--text-2); padding: 0.25rem 0.5rem; border-radius: 6px; }
+.bar .back:hover { background: var(--surface); color: var(--text); }
+.bar .badge { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); padding: 0.2rem 0.5rem; border: 1px solid var(--accent); border-radius: 999px; background: var(--amber-soft); }
+.bar .label { color: var(--text-2); }
+.bar .spacer { flex: 1; }
+.bar .counter { color: var(--text-2); font-variant-numeric: tabular-nums; }
+.bar .counter b { color: var(--text); font-weight: 500; }
+
+.progress { height: 3px; background: var(--surface-2); position: relative; overflow: hidden; }
+.progress::after { content: ''; position: absolute; top: 0; left: 0; height: 100%; width: var(--pct, 0%); background: var(--accent); transition: width 0.4s cubic-bezier(0.2, 0.7, 0.2, 1); }
+
+.stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem 1.5rem; }
+.card { width: 100%; max-width: 36rem; }
+
+/* Intro card (warm, italic display) */
+.intro-card {
+  text-align: center;
+  padding: 2rem 1.5rem;
+  background: linear-gradient(180deg, var(--amber-soft) 0%, var(--bg) 100%);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  margin-bottom: 0;
+}
+.intro-card .eyebrow { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--accent); margin-bottom: 0.5rem; font-weight: 500; }
+.intro-card h1 { font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 2.4rem); font-weight: 500; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 0.75rem; }
+.intro-card h1 em { font-family: 'DM Serif Display', serif; font-style: italic; font-weight: 400; color: var(--accent); }
+.intro-card p { color: var(--text-2); font-size: 1rem; max-width: 32rem; margin: 0 auto 1.5rem; line-height: 1.6; }
+.intro-card .start-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.9rem 1.6rem; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-weight: 500; font-size: 1rem; cursor: pointer; font-family: var(--font-display); }
+.intro-card .start-btn .kbd { font-family: var(--font-mono); font-size: 0.75rem; padding: 0.15rem 0.5rem; background: rgba(255,255,255,0.2); border-radius: 4px; }
+.intro-card .why { font-size: 0.85rem; color: var(--text-2); margin-top: 1.25rem; line-height: 1.6; max-width: 30rem; margin-left: auto; margin-right: auto; }
+.intro-card .why code { font-family: var(--font-mono); background: rgba(255,183,3,0.15); color: #b07500; padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.85em; }
+
+/* Pretest question card */
+.q-card {
+  padding: 2rem 1.75rem;
+  background: var(--bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+}
+.q-card .top { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
+.q-card .top .q-num { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); background: var(--amber-soft); padding: 0.3rem 0.7rem; border-radius: 999px; font-weight: 500; }
+.q-card .top .q-tense { font-size: 0.85rem; color: var(--text-2); }
+
+.context {
+  font-family: var(--font-display);
+  font-size: clamp(1.3rem, 3.4vw, 1.7rem);
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+.context .blank {
+  display: inline-block;
+  min-width: 7ch;
+  border-bottom: 2px dashed var(--text-muted);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  text-align: center;
+  margin: 0 0.15em;
+}
+.context .blank.correct { color: var(--emerald); background: var(--emerald-soft); border-bottom-color: var(--emerald); border-radius: 4px; font-family: var(--font-display); font-size: 1em; font-weight: 600; }
+.context .blank.wrong   { color: var(--coral); background: var(--coral-soft); border-bottom-color: var(--coral); border-radius: 4px; font-family: var(--font-display); font-size: 1em; font-weight: 600; }
+.context .blank.attempt { color: var(--indigo); background: var(--indigo-soft); border-bottom-color: var(--indigo); border-radius: 4px; font-family: var(--font-display); font-size: 1em; font-weight: 600; }
+
+.gloss { font-size: 0.92rem; color: var(--text-2); margin-bottom: 1.5rem; font-style: italic; }
+.gloss code { font-family: var(--font-mono); background: rgba(61, 90, 241, 0.08); color: var(--indigo); padding: 0.1rem 0.4rem; border-radius: 4px; font-style: normal; font-size: 0.85em; }
+
+.guess-prompt { font-size: 0.9rem; color: var(--text-2); margin-bottom: 0.5rem; }
+.guess-prompt b { color: var(--text); font-weight: 500; }
+
+.input-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; }
+.input { flex: 1; font-family: var(--font-mono); font-size: 1.1rem; padding: 0.85rem 1rem; background: var(--surface); border: 1.5px solid var(--border-subtle); border-radius: 10px; color: var(--text); outline: none; transition: border-color 0.15s; }
+.input:focus { border-color: var(--accent); background: var(--bg); }
+.input::placeholder { color: var(--text-muted); }
+
+.submit { display: inline-flex; align-items: center; padding: 0.85rem 1.25rem; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-weight: 500; font-size: 0.95rem; cursor: pointer; min-width: 5rem; }
+.submit .kbd { margin-left: 0.5rem; font-family: var(--font-mono); font-size: 0.7rem; padding: 0.1rem 0.4rem; background: rgba(255,255,255,0.2); border-radius: 4px; }
+
+.accents { display: flex; gap: 0.35rem; margin-top: 0.5rem; }
+.accent { width: 2.2rem; height: 2.2rem; display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 1.05rem; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-2); cursor: pointer; }
+.accent:hover { background: var(--surface-2); }
+
+/* Reveal panel (post-attempt) */
+.reveal {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  display: none;
+  animation: slideIn 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.reveal.shown { display: block; }
+@keyframes slideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.reveal .verdict { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.4rem; }
+.reveal .verdict.got-it { color: var(--emerald); }
+.reveal .verdict.missed { color: var(--coral); }
+.reveal .compare { font-family: var(--font-mono); font-size: 1rem; margin-bottom: 0.5rem; }
+.reveal .compare .yours { color: var(--indigo); background: var(--indigo-soft); padding: 0.1rem 0.4rem; border-radius: 4px; }
+.reveal .compare .arrow { color: var(--text-muted); margin: 0 0.4rem; }
+.reveal .compare .theirs { color: var(--emerald); font-weight: 600; }
+.reveal .why { font-size: 0.9rem; color: var(--text-2); line-height: 1.55; }
+.reveal .why b { color: var(--text); font-weight: 500; }
+.reveal .why code { font-family: var(--font-mono); background: rgba(61, 90, 241, 0.08); color: var(--indigo); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.85em; }
+
+.continue-row { display: flex; justify-content: flex-end; margin-top: 1.25rem; min-height: 3rem; }
+.continue { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.85rem 1.4rem; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-weight: 500; font-size: 0.95rem; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; text-decoration: none; }
+.continue.shown { opacity: 1; pointer-events: auto; }
+.continue .kbd { font-family: var(--font-mono); font-size: 0.7rem; padding: 0.1rem 0.4rem; background: rgba(255,255,255,0.18); border-radius: 4px; font-weight: 400; }
+
+/* Bridge to lesson (Peak-End) */
+.bridge {
+  text-align: center;
+  padding: 2rem 1.5rem;
+  background: linear-gradient(180deg, var(--bg) 0%, var(--amber-soft) 100%);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+}
+.bridge h2 { font-family: var(--font-display); font-size: 1.6rem; font-weight: 600; margin-bottom: 0.5rem; }
+.bridge h2 em { font-family: 'DM Serif Display', serif; font-style: italic; font-weight: 400; color: var(--accent); }
+.bridge p { color: var(--text-2); font-size: 0.95rem; max-width: 30rem; margin: 0 auto 1.25rem; }
+.bridge .lesson-list { text-align: left; max-width: 30rem; margin: 0 auto 1.5rem; }
+.bridge .lesson-list .item { padding: 0.6rem 0; border-bottom: 1px solid var(--border-subtle); font-size: 0.92rem; color: var(--text-2); display: flex; align-items: center; gap: 0.6rem; }
+.bridge .lesson-list .item:last-child { border-bottom: none; }
+.bridge .lesson-list .item code { font-family: var(--font-mono); color: var(--accent); font-weight: 600; }
+
+.summary { text-align: center; padding: 1.5rem 0; max-width: 32rem; margin: 0 auto; }
+.summary h2 { font-family: var(--font-display); font-size: 1.8rem; font-weight: 600; margin-bottom: 0.5rem; }
+.summary p { color: var(--text-2); margin-bottom: 1.5rem; }
+.summary .row { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+.continue.green { background: var(--emerald); }
+.continue.ghost { background: var(--surface); color: var(--text); }
+
+.foot { text-align: center; font-size: 0.8rem; color: var(--text-muted); padding: 1.5rem; border-top: 1px solid var(--border-subtle); }
+
+@media (max-width: 600px) {
+  .stage { padding: 1.5rem 1.25rem; }
+  .context { font-size: 1.15rem; }
+  .q-card { padding: 1.5rem 1.25rem; }
+  .input-row { flex-direction: column; align-items: stretch; }
+  .submit { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <a class="back" href="index.html">← prototypes</a>
+  <span class="badge">11 · Pretest</span>
+  <span class="label">Test first, learn second</span>
+  <span class="spacer"></span>
+  <span class="counter"><b id="counter">—</b> / <span id="total">3</span></span>
+</div>
+<div class="progress" id="progress"></div>
+
+<main class="stage">
+  <div class="card" id="card"></div>
+</main>
+
+<div class="foot">Pretest = errorful learning. The act of <em>trying</em> (and being wrong) prepares your brain to notice the rule when it arrives.</div>
+
+<script>
+// Pretest on the subjonctif présent — a tense most learners haven't seen yet.
+const TENSE = "subjonctif présent";
+const TENSE_INTRO = "the subjonctif présent (used after <em>il faut que, je veux que, bien que…</em>)";
+const ITEMS = [
+  {
+    display: ["Il faut que je ", "___", " à l'heure."],
+    gloss: "I have to finish on time.",
+    answer: "finisse",
+    rule: "For <b>-ir</b> verbs, the subjonctif stem is the <b>ils</b> present form minus <code>-ent</code>: <code>finissent → finiss-</code>. Then add <code>-e, -es, -e, -ions, -iez, -ent</code>.",
+  },
+  {
+    display: ["Je veux que tu ", "___", " là demain."],
+    gloss: "I want you to be there tomorrow.",
+    answer: "sois",
+    rule: "<b>être</b> in the subjonctif is fully irregular: <code>je sois, tu sois, il soit, nous soyons, vous soyez, ils soient</code>. There is no detectable pattern — memorize it as a set.",
+  },
+  {
+    display: ["Bien qu'il ", "___", ", on sort."],
+    gloss: "Even though it's raining, we're going out.",
+    answer: "pleuve",
+    rule: "<b>pleuvoir</b> in the subjonctif: <code>qu'il pleuve</code>. Most impersonal verbs (pleuvoir, falloir) only have a 3rd-person singular subjonctif form, and they're often irregular.",
+  },
+];
+
+let phase = "intro";
+let idx = 0;
+let guesses = ["", "", ""];
+
+const card = document.getElementById("card");
+const counter = document.getElementById("counter");
+const total = document.getElementById("total");
+const progress = document.getElementById("progress");
+total.textContent = ITEMS.length;
+
+function render() {
+  if (phase === "done") return renderBridge();
+  if (phase === "intro") return renderIntro();
+
+  counter.textContent = idx + 1;
+  progress.style.setProperty("--pct", `${((idx + (phase === "feedback" ? 0.5 : 0)) / ITEMS.length) * 100}%`);
+
+  const item = ITEMS[idx];
+
+  if (phase === "answer") {
+    card.innerHTML = `
+      <div class="q-card">
+        <div class="top">
+          <span class="q-num">question ${idx + 1} of ${ITEMS.length}</span>
+          <span class="q-tense">${TENSE} · just guess</span>
+        </div>
+        <div class="context">${item.display[0]}<span class="blank">?</span>${item.display[2]}</div>
+        <div class="gloss">${item.gloss}</div>
+        <div class="guess-prompt">If you had to fill in the blank, what would you type? <b>There are no wrong answers</b> — we're testing what you already know, not what you should know.</div>
+        <div class="input-row">
+          <input class="input" id="answer" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="best guess, or leave blank" autofocus />
+          <button class="submit" id="submit">reveal <span class="kbd">↵</span></button>
+        </div>
+        <div class="accents">
+          <button class="accent" data-c="é">é</button>
+          <button class="accent" data-c="è">è</button>
+          <button class="accent" data-c="ê">ê</button>
+          <button class="accent" data-c="à">à</button>
+          <button class="accent" data-c="ù">ù</button>
+          <button class="accent" data-c="ç">ç</button>
+        </div>
+      </div>
+    `;
+    const input = document.getElementById("answer");
+    const submit = document.getElementById("submit");
+    input.focus();
+    const handle = () => {
+      guesses[idx] = input.value.trim();
+      phase = "feedback";
+      render();
+    };
+    submit.addEventListener("click", handle);
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); handle(); } });
+    document.querySelectorAll(".accent").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const c = btn.dataset.c;
+        const s = input.selectionStart ?? input.value.length;
+        const e = input.selectionEnd ?? input.value.length;
+        input.value = input.value.slice(0, s) + c + input.value.slice(e);
+        input.focus();
+        input.setSelectionRange(s + 1, s + 1);
+      });
+    });
+  } else if (phase === "feedback") {
+    const guess = guesses[idx] || "(skipped)";
+    const got = guess.toLowerCase() === item.answer;
+    const skip = !guesses[idx];
+    const blankCls = skip ? "correct" : (got ? "correct" : "wrong");
+    const blankContent = skip ? item.answer : (got ? item.answer : item.answer);
+
+    card.innerHTML = `
+      <div class="q-card">
+        <div class="top">
+          <span class="q-num">reveal · ${TENSE}</span>
+        </div>
+        <div class="context">${item.display[0]}<span class="blank ${blankCls}">${blankContent}</span>${item.display[2]}</div>
+        <div class="gloss">${item.gloss}</div>
+        <div class="reveal shown">
+          <div class="verdict ${skip ? 'missed' : (got ? 'got-it' : 'missed')}">${skip ? "the form is" : (got ? "✓ you got it" : "the form is")}</div>
+          ${!skip ? `<div class="compare"><span class="yours">${guess || "(blank)"}</span><span class="arrow">→</span><span class="theirs">${item.answer}</span></div>` : ""}
+          <div class="why">${item.rule}</div>
+        </div>
+        <div class="continue-row">
+          <button class="continue shown" id="continue">${idx + 1 < ITEMS.length ? 'next question' : 'see lesson path'} <span class="kbd">↵</span></button>
+        </div>
+      </div>
+    `;
+    const cont = document.getElementById("continue");
+    cont.focus();
+    cont.addEventListener("click", () => {
+      idx++;
+      if (idx >= ITEMS.length) { phase = "done"; }
+      else { phase = "answer"; }
+      render();
+    });
+  }
+}
+
+function renderIntro() {
+  progress.style.setProperty("--pct", "0%");
+  counter.textContent = "—";
+  card.innerHTML = `
+    <div class="intro-card">
+      <div class="eyebrow">▸ about to learn: ${TENSE}</div>
+      <h1>Test <em>first</em>,<br>learn <em>second</em></h1>
+      <p>You're about to encounter ${TENSE_INTRO}. Before we teach you anything, you'll see 3 questions on it. <b>Try them — even a wild guess is more useful than skipping.</b></p>
+      <p>Why? Research on <b>errorful learning</b> shows that attempting an answer (and seeing the correct one) prepares your brain to <em>notice the rule</em> when it's taught. The wrong guess creates a prediction error that the rule then resolves.</p>
+      <button class="start-btn" id="start-btn">begin pretest <span class="kbd">↵</span></button>
+      <p class="why">If you don't know — type something. Anything. Even a <code>???</code> is a valid guess.</p>
+    </div>
+  `;
+  document.getElementById("start-btn").addEventListener("click", () => { phase = "answer"; render(); });
+}
+
+function renderBridge() {
+  progress.style.setProperty("--pct", "100%");
+  const correct = guesses.filter((g, i) => g.toLowerCase() === ITEMS[i].answer).length;
+  const skipped = guesses.filter(g => !g).length;
+  card.innerHTML = `
+    <div class="bridge">
+      <h2>Now let's <em>learn</em> it.</h2>
+      <p>You just attempted ${ITEMS.length} questions. ${correct} correct, ${skipped} skipped. The errors you made — or the blanks you left — are exactly the things the next exercises will target.</p>
+      <div class="lesson-list">
+        <div class="item"><code>1.</code> pattern discovery: see the subjonctif endings across regular verbs</div>
+        <div class="item"><code>2.</code> cue-to-form drill: practice the irregular stems (être, avoir, faire, pouvoir, savoir…)</div>
+        <div class="item"><code>3.</code> cloze: ${TENSE} in real sentences</div>
+        <div class="item"><code>4.</code> spot the tense: when to use subjonctif vs indicatif</div>
+        <div class="item"><code>5.</code> tomorrow's review: the items you got wrong come back first</div>
+      </div>
+      <a class="continue green shown" href="pattern-discovery.html">start the pattern discovery →</a>
+    </div>
+  `;
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && phase === "intro") { e.preventDefault(); phase = "answer"; render(); }
+});
+
+render();
+</script>
+</body>
+</html>

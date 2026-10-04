@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>08 — Pattern discovery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/*
+  LAWS OF UX APPLIED
+  ─────────────────
+  Law of Similarity: identical endings get the same color treatment.
+  Law of Common Region: the pattern table is one unit; the rule card is another.
+  Zeigarnik Effect: incomplete cells in the "your turn" row pull the eye.
+  Miller's Law: 6 verbs × 6 persons = within working memory. Stop at 6.
+  Serial Position Effect: first verb (anchor) and last verb (recency) are most
+    sticky. Highlight the LAST verb's blank as the "your turn" item.
+  Aesthetic-Usability Effect: clean table, generous spacing.
+  Hick's Law: 3-4 multiple-choice options for the rule — manageable.
+  Doherty Threshold: feedback in <50ms.
+  Jakob's Law: table → choice → apply. Familiar induction pattern.
+*/
+:root {
+  color-scheme: light;
+  --bg: #ffffff; --surface: #f7f5f2; --surface-2: #f0ece6;
+  --border: #ddd8d0; --border-subtle: #ece8e2; --border-bright: #b8b0a5;
+  --text: #1a1814; --text-2: #6b6560; --text-muted: #a09890;
+  --coral: #ff4757; --indigo: #3d5af1; --emerald: #00c48c; --amber: #ffb703; --violet: #8b5cf6;
+  --coral-soft: rgba(255, 71, 87, 0.10);
+  --indigo-soft: rgba(61, 90, 241, 0.10);
+  --emerald-soft: rgba(0, 196, 140, 0.10);
+  --amber-soft: rgba(255, 183, 3, 0.14);
+  --violet-soft: rgba(139, 92, 246, 0.10);
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --accent: #00c48c;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); line-height: 1.65; display: flex; flex-direction: column; min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; }
+
+.bar { position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-subtle); padding: 0.7rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; }
+.bar .back { color: var(--text-2); padding: 0.25rem 0.5rem; border-radius: 6px; }
+.bar .back:hover { background: var(--surface); color: var(--text); }
+.bar .badge { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); padding: 0.2rem 0.5rem; border: 1px solid var(--border-subtle); border-radius: 999px; }
+.bar .label { color: var(--text-2); }
+.bar .spacer { flex: 1; }
+.bar .counter { color: var(--text-2); font-variant-numeric: tabular-nums; }
+.bar .counter b { color: var(--text); font-weight: 500; }
+
+.progress { height: 3px; background: var(--surface-2); position: relative; overflow: hidden; }
+.progress::after { content: ''; position: absolute; top: 0; left: 0; height: 100%; width: var(--pct, 0%); background: var(--accent); transition: width 0.4s cubic-bezier(0.2, 0.7, 0.2, 1); }
+
+.stage { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding: 2rem 1.5rem 1.5rem; }
+.card { width: 100%; max-width: 40rem; }
+
+.intro { margin-bottom: 1.5rem; }
+.intro .eyebrow { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--accent); margin-bottom: 0.5rem; font-weight: 500; }
+.intro h2 { font-family: var(--font-display); font-size: clamp(1.5rem, 3.5vw, 1.9rem); font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 0.4rem; }
+.intro h2 em { font-family: 'DM Serif Display', serif; font-style: italic; font-weight: 400; color: var(--accent); }
+.intro p { color: var(--text-2); font-size: 0.95rem; }
+
+/* The pattern table (Law of Similarity: endings same color) */
+.paradigm {
+  margin: 1.5rem 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.paradigm .row-h {
+  display: grid;
+  grid-template-columns: 8rem repeat(6, 1fr);
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.paradigm .row-h > div { padding: 0.6rem 0.5rem; }
+.paradigm .row-h .verb-col { color: var(--text-2); }
+.paradigm .row {
+  display: grid;
+  grid-template-columns: 8rem repeat(6, 1fr);
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 500;
+  align-items: center;
+}
+.paradigm .row:last-child { border-bottom: none; }
+.paradigm .row .verb-col { padding: 0.65rem 0.5rem; color: var(--text-2); font-size: 0.9rem; font-family: var(--font-mono); }
+.paradigm .row .form { padding: 0.65rem 0.5rem; color: var(--text); }
+.paradigm .row .form .ending { color: var(--coral); font-weight: 600; }
+.paradigm .row .form .stem { color: var(--indigo); }
+
+.paradigm .row.target {
+  background: var(--accent-soft, var(--emerald-soft));
+  border-top: 2px solid var(--accent);
+}
+.paradigm .row.target .form { color: var(--text-muted); font-style: italic; }
+.paradigm .row.target .form.revealed { color: var(--emerald); font-style: normal; font-weight: 600; }
+.paradigm .row.target .form.revealed .ending { color: var(--coral); }
+
+/* Rule choice */
+.ask { margin-top: 1.5rem; }
+.ask .label { font-size: 0.85rem; color: var(--text-2); margin-bottom: 0.5rem; }
+.choices { display: grid; gap: 0.5rem; }
+.choice {
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--text);
+  transition: all 0.12s;
+}
+.choice:hover { background: var(--surface-2); border-color: var(--border-bright); }
+.choice .tag { display: block; font-family: var(--font-body); font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.2rem; }
+.choice.right { background: var(--emerald-soft); border-color: var(--emerald); }
+.choice.wrong { background: var(--coral-soft); border-color: var(--coral); }
+.choice .ok, .choice .no { display: none; font-size: 0.75rem; margin-left: 0.5rem; }
+.choice.right .ok { display: inline; color: var(--emerald); }
+.choice.wrong .no { display: inline; color: var(--coral); }
+
+.feedback {
+  margin-top: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+  font-size: 0.92rem;
+  color: var(--text-2);
+  display: none;
+  animation: slideIn 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.feedback.shown { display: block; }
+.feedback.correct { background: var(--emerald-soft); border-color: rgba(0,196,140,0.4); color: var(--text); }
+.feedback.wrong   { background: var(--coral-soft); border-color: rgba(255,71,87,0.4); color: var(--text); }
+@keyframes slideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.continue-row { display: flex; justify-content: flex-end; margin-top: 1.25rem; min-height: 3rem; }
+.continue { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.85rem 1.4rem; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-weight: 500; font-size: 0.95rem; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; text-decoration: none; }
+.continue.shown { opacity: 1; pointer-events: auto; }
+.continue .kbd { font-family: var(--font-mono); font-size: 0.7rem; padding: 0.1rem 0.4rem; background: rgba(255,255,255,0.18); border-radius: 4px; font-weight: 400; }
+
+/* Your turn (apply the pattern) */
+.apply-card {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: linear-gradient(180deg, var(--emerald-soft) 0%, var(--bg) 100%);
+  border: 1px solid rgba(0,196,140,0.3);
+  border-radius: 12px;
+}
+.apply-card .ribbon { display: inline-flex; align-items: center; gap: 0.4rem; font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--emerald); background: rgba(0,196,140,0.12); padding: 0.25rem 0.6rem; border-radius: 999px; margin-bottom: 0.85rem; font-weight: 500; }
+.apply-card .prompt { font-family: var(--font-display); font-size: 1.4rem; font-weight: 500; letter-spacing: -0.01em; margin-bottom: 1rem; }
+.apply-card .prompt code { font-family: var(--font-mono); background: var(--indigo-soft); color: var(--indigo); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.9em; }
+.input-row { display: flex; align-items: center; gap: 0.6rem; }
+.input { flex: 1; font-family: var(--font-mono); font-size: 1.1rem; padding: 0.85rem 1rem; background: var(--bg); border: 1.5px solid var(--border-subtle); border-radius: 10px; color: var(--text); outline: none; transition: border-color 0.15s; }
+.input:focus { border-color: var(--accent); }
+.submit { display: inline-flex; align-items: center; padding: 0.85rem 1.25rem; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-weight: 500; font-size: 0.95rem; cursor: pointer; min-width: 5rem; }
+.submit .kbd { margin-left: 0.5rem; font-family: var(--font-mono); font-size: 0.7rem; padding: 0.1rem 0.4rem; background: rgba(255,255,255,0.18); border-radius: 4px; }
+
+.accents { display: flex; gap: 0.35rem; margin-top: 0.5rem; }
+.accent { width: 2.2rem; height: 2.2rem; display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 1.05rem; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-2); cursor: pointer; }
+.accent:hover { background: var(--surface-2); }
+
+.summary { text-align: center; padding: 1.5rem 0; max-width: 30rem; margin: 0 auto; }
+.summary h2 { font-family: var(--font-display); font-size: 1.8rem; font-weight: 600; margin-bottom: 0.5rem; }
+.summary p { color: var(--text-2); margin-bottom: 1.5rem; }
+.summary .row { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+.continue.green { background: var(--accent); }
+.continue.ghost { background: var(--surface); color: var(--text); }
+
+.foot { text-align: center; font-size: 0.8rem; color: var(--text-muted); padding: 1.5rem; border-top: 1px solid var(--border-subtle); }
+
+@media (max-width: 700px) {
+  .stage { padding: 1.5rem 1rem; }
+  .paradigm { font-size: 0.85rem; }
+  .paradigm .row-h, .paradigm .row { grid-template-columns: 5rem repeat(6, 1fr); }
+  .paradigm .row { font-size: 0.85rem; }
+  .paradigm .row .form { padding: 0.5rem 0.3rem; }
+  .input-row { flex-direction: column; align-items: stretch; }
+  .submit { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <a class="back" href="index.html">← prototypes</a>
+  <span class="badge">08 · Discovery</span>
+  <span class="label">Pattern discovery</span>
+  <span class="spacer"></span>
+  <span class="counter"><b id="counter">1</b> / <span id="total">3</span></span>
+</div>
+<div class="progress" id="progress"></div>
+
+<main class="stage">
+  <div class="card" id="card"></div>
+</main>
+
+<div class="foot">Noticing a pattern teaches more than memorizing a list. Endings stay with you; rules you discover stick.</div>
+
+<script>
+// Each pattern: 6 sample verbs in one tense, then a "your turn" verb to apply the pattern.
+const PATTERNS = [
+  {
+    title: "imparfait of <em>-er verbs</em>",
+    desc: "Look at the imparfait of six regular -er verbs. The endings are highlighted. What do you see?",
+    persons: ["je", "tu", "il", "nous", "vous", "ils"],
+    samples: [
+      { verb: "parler", forms: ["parlais", "parlais", "parlait", "parlions", "parliez", "parlaient"] },
+      { verb: "manger", forms: ["mangeais", "mangeais", "mangeait", "mangions", "mangiez", "mangeaient"] },
+      { verb: "aimer",  forms: ["aimais", "aimais", "aimait", "aimions", "aimiez", "aimaient"] },
+      { verb: "danser", forms: ["dansais", "dansais", "dansait", "dansions", "dansiez", "dansaient"] },
+      { verb: "jouer",  forms: ["jouais", "jouais", "jouait", "jouions", "jouiez", "jouaient"] },
+      { verb: "trouver",forms: ["trouvais","trouvais","trouvait","trouvions","trouviez","trouvaient"] },
+    ],
+    endings: ["ais", "ais", "ait", "ions", "iez", "aient"],
+    target: { verb: "rester", person: "je", answer: "restais" },
+    targetPrompt: "Now conjugate <code>rester</code> in the imparfait, <code>je</code>.",
+    options: [
+      { tag: "rule A", text: "stem + -e, -es, -e, -ons, -ez, -ent (like the présent)" },
+      { tag: "rule B", text: "stem + -ais, -ais, -ait, -ions, -iez, -aient" },
+      { tag: "rule C", text: "full infinitive + -s, -s, -t, -ons, -ez, -ent" },
+      { tag: "rule D", text: "stem + -ais, -ais, -ait, -ait, -ait, -ait" },
+    ],
+    correct: 1,
+    feedback: "The imparfait stem is the <b>present-tense nous form without -ons</b>. For <code>parler → parl-, manger → mang-</code>. Then add the imparfait endings: <code>-ais, -ais, -ait, -ions, -iez, -aient</code>.",
+  },
+  {
+    title: "<em>présent</em> of <em>-ir verbs</em> (finir group)",
+    desc: "Look at the présent of six -ir verbs like <em>finir</em>. Notice the pattern.",
+    persons: ["je", "tu", "il", "nous", "vous", "ils"],
+    samples: [
+      { verb: "finir",  forms: ["finis", "finis", "finit", "finissons", "finissez", "finissent"] },
+      { verb: "choisir",forms: ["choisis","choisis","choisit","choisissons","choisissez","choisissent"] },
+      { verb: "grandir",forms: ["grandis","grandis","grandit","grandissons","grandissez","grandissent"] },
+      { verb: "obéir",  forms: ["obéis", "obéis", "obéit", "obéissons", "obéissez", "obéissent"] },
+      { verb: "réfléchir",forms:["réfléchis","réfléchis","réfléchit","réfléchissons","réfléchissez","réfléchissent"] },
+      { verb: "rougir", forms: ["rougis", "rougis", "rougit", "rougissons", "rougissez", "rougissent"] },
+    ],
+    endings: ["is", "is", "it", "issons", "issez", "issent"],
+    target: { verb: "finir", person: "vous", answer: "finissez" },
+    targetPrompt: "Now conjugate <code>finir</code> in the présent, <code>vous</code>.",
+    options: [
+      { tag: "rule A", text: "stem + -e, -es, -e, -ons, -ez, -ent" },
+      { tag: "rule B", text: "stem + -is, -is, -it, -issons, -issez, -issent" },
+      { tag: "rule C", text: "stem + -i, -i, -i, -issons, -issez, -issent" },
+      { tag: "rule D", text: "stem + -s, -s, -t, -ons, -ez, -ent" },
+    ],
+    correct: 1,
+    feedback: "<code>-ir</code> verbs of the <code>finir</code> group are the easiest: <code>stem + -is, -is, -it, -issons, -issez, -issent</code>. Memorize this and you've covered <em>finir, choisir, grandir, obéir, réfléchir, rougir</em>, and dozens more.",
+  },
+  {
+    title: "<em>imparfait</em> of <em>être</em> — the irregular one",
+    desc: "Most verbs build the imparfait by adding endings to a stem. <em>être</em> is the exception worth memorizing.",
+    persons: ["j'", "tu", "il", "nous", "vous", "ils"],
+    samples: [
+      { verb: "être", forms: ["étais", "étais", "était", "étions", "étiez", "étaient"] },
+    ],
+    endings: ["ais", "ais", "ait", "ions", "iez", "aient"],
+    target: { verb: "être", person: "nous", answer: "étions" },
+    targetPrompt: "Now conjugate <code>être</code> in the imparfait, <code>nous</code>.",
+    options: [
+      { tag: "rule A", text: "stem <code>ét-</code> + standard imparfait endings (the only irregular one)" },
+      { tag: "rule B", text: "<code>être</code> is the same as the présent" },
+      { tag: "rule C", text: "Use <code>avoir</code> in the imparfait instead" },
+      { tag: "rule D", text: "<code>être</code> doesn't have an imparfait" },
+    ],
+    correct: 0,
+    feedback: "<b>être</b> is the only verb whose imparfait stem is <em>ét-</em> (with a circumflex). It's irregular, but once you learn it, the endings are the same as everywhere else.",
+  },
+];
+
+let idx = 0, phase = "discover";   // "discover" | "apply" | "apply-feedback" | "done"
+let stats = { right: 0, wrong: 0, applied: 0 };
+
+const card = document.getElementById("card");
+const counter = document.getElementById("counter");
+const total = document.getElementById("total");
+const progress = document.getElementById("progress");
+total.textContent = PATTERNS.length;
+
+function norm(s) { return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(); }
+
+function render() {
+  if (idx >= PATTERNS.length) return renderSummary();
+  const pat = PATTERNS[idx];
+  counter.textContent = idx + 1;
+  progress.style.setProperty("--pct", `${(idx / PATTERNS.length) * 100}%`);
+
+  if (phase === "done") {
+    idx++;
+    phase = "discover";
+    render();
+    return;
+  }
+
+  // Build paradigm table
+  let tableHTML = `<div class="paradigm">`;
+  tableHTML += `<div class="row-h"><div class="verb-col"></div>${pat.persons.map(p => `<div>${p}</div>`).join("")}</div>`;
+  pat.samples.forEach(s => {
+    tableHTML += `<div class="row">
+      <div class="verb-col">${s.verb}</div>
+      ${s.forms.map((f, i) => {
+        const ending = pat.endings[i];
+        const stem = ending ? f.slice(0, f.length - ending.length) : f;
+        return `<div class="form"><span class="stem">${stem}</span><span class="ending">${ending || ''}</span></div>`;
+      }).join("")}
+    </div>`;
+  });
+  // "Your turn" row (target verb in the target person)
+  const target = pat.target;
+  const targetIdx = pat.persons.indexOf(target.person);
+  const blankCells = pat.persons.map((p, i) => {
+    if (i === targetIdx) return `<div class="form">?</div>`;
+    return `<div class="form">—</div>`;
+  }).join("");
+  tableHTML += `<div class="row target">
+    <div class="verb-col">${target.verb}</div>
+    ${blankCells}
+  </div>`;
+  tableHTML += `</div>`;
+
+  let bodyHTML = "";
+  if (phase === "discover") {
+    bodyHTML = `
+      <div class="ask">
+        <div class="label">What's the rule?</div>
+        <div class="choices" id="choices">
+          ${pat.options.map((o, i) => `
+            <button class="choice" data-i="${i}">
+              <span class="tag">${o.tag}</span>
+              ${o.text}
+            </button>
+          `).join("")}
+        </div>
+      </div>
+      <div class="feedback" id="feedback"></div>
+      <div class="continue-row"><button class="continue" id="continue">your turn → <span class="kbd">↵</span></button></div>
+    `;
+  } else if (phase === "apply") {
+    bodyHTML = `
+      <div class="apply-card">
+        <div class="ribbon">↻ your turn</div>
+        <div class="prompt">${pat.targetPrompt}</div>
+        <div class="input-row">
+          <input class="input" id="answer" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="?" autofocus />
+          <button class="submit" id="submit">check <span class="kbd">↵</span></button>
+        </div>
+        <div class="accents">
+          <button class="accent" data-c="é">é</button>
+          <button class="accent" data-c="è">è</button>
+          <button class="accent" data-c="ê">ê</button>
+          <button class="accent" data-c="à">à</button>
+          <button class="accent" data-c="ù">ù</button>
+          <button class="accent" data-c="ç">ç</button>
+        </div>
+      </div>
+      <div class="feedback" id="feedback"></div>
+      <div class="continue-row"><button class="continue" id="continue">continue <span class="kbd">↵</span></button></div>
+    `;
+  } else if (phase === "apply-feedback") {
+    const t = pat.target;
+    const blankCell = pat.persons.map((p, i) => {
+      if (i === pat.persons.indexOf(t.person)) {
+        return `<div class="form revealed"><span class="stem">${t.answer.slice(0, t.answer.length - pat.endings[i].length)}</span><span class="ending">${pat.endings[i]}</span></div>`;
+      }
+      return `<div class="form">—</div>`;
+    }).join("");
+    bodyHTML = `
+      <div class="apply-card">
+        <div class="ribbon">↻ your turn</div>
+        <div class="prompt">${pat.targetPrompt}</div>
+        <div class="paradigm" style="margin:0">
+          <div class="row target">
+            <div class="verb-col">${t.verb}</div>
+            ${blankCell}
+          </div>
+        </div>
+        <div class="feedback shown correct" style="margin-top:1rem">${pat.feedback}</div>
+        <div class="continue-row" style="margin-top:0.5rem"><button class="continue shown" id="continue">${idx + 1 < PATTERNS.length ? 'next pattern' : 'finish'} <span class="kbd">↵</span></button></div>
+      </div>
+    `;
+  }
+
+  card.innerHTML = `
+    <div class="intro">
+      <div class="eyebrow">pattern ${idx + 1} of ${PATTERNS.length} · ${pat.samples.length} examples</div>
+      <h2>${pat.title}</h2>
+      <p>${pat.desc}</p>
+    </div>
+    ${tableHTML}
+    ${bodyHTML}
+  `;
+
+  if (phase === "discover") {
+    document.querySelectorAll(".choice").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const i = parseInt(btn.dataset.i, 10);
+        const isRight = i === pat.correct;
+        // disable all
+        document.querySelectorAll(".choice").forEach((b, j) => {
+          b.disabled = true;
+          b.style.cursor = "default";
+          if (j === pat.correct) b.classList.add("right");
+          else if (j === i && !isRight) b.classList.add("wrong");
+        });
+        const fb = document.getElementById("feedback");
+        if (isRight) { stats.right++; fb.className = "feedback shown correct"; fb.textContent = "Yes — " + pat.feedback; }
+        else { stats.wrong++; fb.className = "feedback shown wrong"; fb.textContent = "Not quite. " + pat.feedback; }
+        const cont = document.getElementById("continue");
+        cont.classList.add("shown");
+        cont.focus();
+        cont.addEventListener("click", () => { phase = "apply"; render(); });
+      });
+    });
+  } else if (phase === "apply") {
+    const input = document.getElementById("answer");
+    const submit = document.getElementById("submit");
+    input.focus();
+    const handle = () => {
+      const v = input.value.trim();
+      if (!v) return;
+      const ok = norm(v) === norm(pat.target.answer);
+      if (ok) stats.applied++;
+      const fb = document.getElementById("feedback");
+      if (ok) {
+        fb.className = "feedback shown correct";
+        fb.textContent = "✓ nice — " + pat.feedback;
+      } else {
+        fb.className = "feedback shown wrong";
+        fb.textContent = `The form is ${pat.target.answer}. ${pat.feedback}`;
+      }
+      input.disabled = true;
+      submit.disabled = true;
+      phase = "apply-feedback";
+      render();
+    };
+    submit.addEventListener("click", handle);
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); handle(); } });
+    document.querySelectorAll(".accent").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const c = btn.dataset.c;
+        const s = input.selectionStart ?? input.value.length;
+        const e = input.selectionEnd ?? input.value.length;
+        input.value = input.value.slice(0, s) + c + input.value.slice(e);
+        input.focus();
+        input.setSelectionRange(s + 1, s + 1);
+      });
+    });
+  } else if (phase === "apply-feedback") {
+    const cont = document.getElementById("continue");
+    cont.focus();
+    cont.addEventListener("click", () => { idx++; phase = "discover"; render(); });
+  }
+}
+
+function renderSummary() {
+  progress.style.setProperty("--pct", "100%");
+  card.innerHTML = `
+    <div class="summary">
+      <h2>3 patterns down.</h2>
+      <p>You saw the endings, picked the rule, then applied it to a new verb.</p>
+      <p style="font-size:0.9rem; color:var(--text-2); max-width: 30rem; margin: 0 auto 1.5rem;"><b>${stats.right}</b> of ${PATTERNS.length} rules spotted correctly · <b>${stats.applied}</b> applied correctly on the first try.</p>
+      <div class="row">
+        <a class="continue green" href="8-pattern-discovery.html">try again</a>
+        <a class="continue ghost" href="9-error-spotting.html">next: error spotting →</a>
+      </div>
+    </div>
+  `;
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    if (phase === "discover") {
+      // The continue button only appears after a choice is made; this Enter won't do anything until then
+    } else if (phase === "apply-feedback") {
+      e.preventDefault();
+      idx++;
+      phase = "discover";
+      render();
+    }
+  }
+});
+
+render();
+</script>
+</body>
+</html>

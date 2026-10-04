@@ -1,0 +1,12 @@
+---
+import Base from "../../layouts/Base.astro";
+import ChainDrill from "../../components/drills/ChainDrill";
+---
+
+<Base title="Transformation chain — La Coquille" section="practice">
+  <ChainDrill client:only="solid-js" />
+</Base>
+
+<style is:global>
+  @import "../../styles/drills.css";
+</style>

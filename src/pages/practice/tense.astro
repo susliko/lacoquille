@@ -1,0 +1,12 @@
+---
+import Base from "../../layouts/Base.astro";
+import TenseDrill from "../../components/drills/TenseDrill";
+---
+
+<Base title="Spot the tense — La Coquille" section="practice">
+  <TenseDrill client:only="solid-js" />
+</Base>
+
+<style is:global>
+  @import "../../styles/drills.css";
+</style>

@@ -4,6 +4,10 @@ import "../styles/global.css";
 interface Props {
   title: string;
   description?: string;
+  /** Section identifier (e.g. "practice", "reference/grammar"). Currently
+   *  informational — every page passes it but the layout doesn't render it. */
+  section?: string;
+  breadcrumb?: Array<{ label: string; href?: string }>;
 }
 
 const { title, description = "An interactive French grammar reference." } = Astro.props;

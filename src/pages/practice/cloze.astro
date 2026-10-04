@@ -1,0 +1,12 @@
+---
+import Base from "../../layouts/Base.astro";
+import ClozeDrill from "../../components/drills/ClozeDrill";
+---
+
+<Base title="Cloze — La Coquille" section="practice">
+  <ClozeDrill client:only="solid-js" />
+</Base>
+
+<style is:global>
+  @import "../../styles/drills.css";
+</style>

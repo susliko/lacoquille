@@ -1,0 +1,708 @@
+/* ───────────────────────────────────────────────────────────────
+   Drills · shared styles for the four conjugation drill types.
+   Each .drill-root sets `--accent` to its own colour. Children
+   reference `var(--accent)` everywhere it matters.
+   ─────────────────────────────────────────────────────────────── */
+
+/* ── Page chrome ─────────────────────────────────────────────── */
+
+.drill-root {
+  --accent: #ffb703;
+  --accent-soft: rgba(255, 183, 3, 0.14);
+
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+}
+
+.drill-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0.7rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+}
+.drill-back {
+  color: var(--text-2);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+.drill-back:hover { background: var(--surface); color: var(--text); }
+.drill-title {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+.drill-spacer { flex: 1; }
+.drill-eyebrow {
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+}
+.drill-eyebrow b { color: var(--text); font-weight: 500; }
+
+.drill-progress {
+  height: 3px;
+  background: var(--surface-2);
+  position: relative;
+  overflow: hidden;
+}
+.drill-progress-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--accent);
+  transition: width 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.drill-stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+}
+.drill-card {
+  width: 100%;
+  max-width: 38rem;
+}
+
+.drill-foot {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding: 1.5rem;
+  border-top: 1px solid var(--border-subtle);
+  line-height: 1.5;
+}
+
+/* ── Hint chips (verb · person · tense) ───────────────────────── */
+
+.drill-chips {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+.drill-chips-center {
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+.drill-chip-sep { color: var(--text-muted); font-size: 0.8rem; }
+
+.drill-chip {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 0.3rem 0.65rem;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  color: var(--text-2);
+}
+.drill-chip-k {
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-right: 0.35rem;
+}
+.drill-chip-v { color: var(--text); font-weight: 500; }
+
+/* ── Sentence + blank (three-state reveal) ────────────────────── */
+
+.drill-sentence {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3.8vw, 2rem);
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin: 0 0 1.25rem;
+  min-height: 5rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.05em;
+}
+
+.drill-blank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 7ch;
+  padding: 0.1em 0.4em;
+  border-bottom: 2px dashed var(--text-muted);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  letter-spacing: 0.05em;
+  user-select: none;
+  border-radius: 4px;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.drill-blank-correct {
+  color: var(--emerald);
+  background: var(--emerald-soft);
+  border-bottom-color: var(--emerald);
+  font-family: var(--font-display);
+  font-size: 1em;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.drill-blank-almost {
+  color: #b07500;
+  background: var(--amber-soft);
+  border-bottom-color: var(--amber);
+  font-family: var(--font-display);
+  font-size: 1em;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.drill-blank-wrong {
+  color: var(--coral);
+  background: var(--coral-soft);
+  border-bottom-color: var(--coral);
+  font-family: var(--font-display);
+  font-size: 1em;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+}
+
+.drill-blank-stem { color: var(--indigo); font-weight: 500; }
+.drill-blank-ending { color: var(--coral); font-weight: 600; }
+
+mark.drill-cue {
+  background: var(--amber-soft);
+  color: #b07500;
+  padding: 0.05em 0.3em;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* ── Input + accent buttons ───────────────────────────────────── */
+
+.drill-input-shell { margin-bottom: 0.5rem; }
+
+.drill-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+.drill-input {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 10px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.drill-input-big {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6vw, 2.8rem);
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: -0.01em;
+  padding: 1.25rem 1rem;
+}
+.drill-input:focus { border-color: var(--accent); background: var(--bg); }
+.drill-input::placeholder { color: var(--text-muted); }
+.drill-input:disabled { opacity: 0.5; cursor: not-allowed; }
+.drill-input-correct { border-color: var(--emerald); background: var(--emerald-soft); color: var(--emerald); }
+.drill-input-almost  { border-color: var(--amber);   background: var(--amber-soft);   color: #b07500; }
+.drill-input-wrong   {
+  border-color: var(--coral);
+  background: var(--coral-soft);
+  color: var(--coral);
+  animation: drill-shake 0.32s;
+}
+@keyframes drill-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.drill-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem 1.25rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  min-width: 5.5rem;
+  transition: opacity 0.15s, transform 0.05s;
+}
+.drill-submit:hover { opacity: 0.92; }
+.drill-submit:active { transform: translateY(1px); }
+.drill-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+.drill-kbd {
+  margin-left: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 0.1rem 0.4rem;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+  font-weight: 400;
+}
+
+.drill-accents {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.drill-accent {
+  width: 2.2rem;
+  height: 2.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.drill-accent:hover {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--border-bright);
+}
+.drill-accent:active { transform: scale(0.95); }
+
+/* ── Verdict chip ─────────────────────────────────────────────── */
+
+.drill-verdict {
+  display: inline-block;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  text-transform: lowercase;
+}
+.drill-verdict-correct { color: var(--emerald); background: var(--emerald-soft); }
+.drill-verdict-almost  { color: #b07500;     background: var(--amber-soft); }
+.drill-verdict-wrong   { color: var(--coral);  background: var(--coral-soft); }
+
+/* ── Feedback panel ───────────────────────────────────────────── */
+
+.drill-feedback {
+  margin-top: 1rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+  animation: drill-slide 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+@keyframes drill-slide {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+.drill-feedback-correct { background: var(--emerald-soft); border-color: rgba(0, 196, 140, 0.3); }
+.drill-feedback-almost  { background: var(--amber-soft);   border-color: rgba(255, 183, 3, 0.4); }
+.drill-feedback-wrong   { background: var(--coral-soft);   border-color: rgba(255, 71, 87, 0.3); }
+
+.drill-feedback-verdict {
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem;
+}
+.drill-feedback-correct .drill-feedback-verdict { color: var(--emerald); }
+.drill-feedback-almost  .drill-feedback-verdict { color: #b07500; }
+.drill-feedback-wrong   .drill-feedback-verdict { color: var(--coral); }
+
+.drill-feedback-diff {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  margin-bottom: 0.4rem;
+}
+.drill-feedback-yours {
+  color: var(--coral);
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  margin-right: 0.4rem;
+}
+.drill-feedback-arrow { color: var(--text-muted); margin-right: 0.4rem; }
+.drill-feedback-theirs { color: var(--emerald); font-weight: 600; }
+
+.drill-feedback-decomp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  margin: 0.3rem 0 0.6rem;
+}
+.drill-feedback-stem { color: var(--indigo); font-weight: 500; }
+.drill-feedback-plus { color: var(--text-muted); }
+.drill-feedback-ending { color: var(--coral); font-weight: 600; }
+
+.drill-feedback-rule {
+  font-size: 0.9rem;
+  color: var(--text-2);
+  line-height: 1.6;
+}
+.drill-feedback-rule code {
+  font-family: var(--font-mono);
+  background: rgba(61, 90, 241, 0.08);
+  color: var(--indigo);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+/* ── Retry row (inside cloze drill) ───────────────────────────── */
+
+.drill-retry {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-subtle);
+}
+.drill-retry-label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-2);
+  margin-bottom: 0.5rem;
+}
+.drill-retry-label b { color: var(--text); font-weight: 500; font-family: var(--font-mono); }
+
+/* ── Continue row ─────────────────────────────────────────────── */
+
+.drill-continue-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+  min-height: 3rem;
+}
+.drill-continue {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.4rem;
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 0.2s, transform 0.2s;
+  text-decoration: none;
+}
+.drill-continue.is-shown {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+/* ── Tense drill (2-card choice) ──────────────────────────────── */
+
+.drill-gloss {
+  font-size: 0.92rem;
+  color: var(--text-2);
+  margin-bottom: 1.5rem;
+  font-style: italic;
+}
+.drill-gloss code {
+  font-family: var(--font-mono);
+  background: rgba(61, 90, 241, 0.08);
+  color: var(--indigo);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-style: normal;
+  font-size: 0.85em;
+}
+
+.drill-choice-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+.drill-choice {
+  position: relative;
+  padding: 1.4rem 1rem;
+  background: var(--bg);
+  border: 2px solid var(--border-subtle);
+  border-radius: 14px;
+  cursor: pointer;
+  text-align: center;
+  font-family: var(--font-display);
+  transition: all 0.15s;
+}
+.drill-choice:hover {
+  border-color: var(--border-bright);
+  transform: translateY(-2px);
+}
+.drill-choice-tense {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+.drill-choice-form {
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin-bottom: 0.4rem;
+}
+.drill-choice-gloss {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  color: var(--text-2);
+  font-style: italic;
+}
+.drill-choice.is-right {
+  border-color: var(--emerald);
+  background: var(--emerald-soft);
+}
+.drill-choice.is-wrong {
+  border-color: var(--coral);
+  background: var(--coral-soft);
+}
+.drill-choice.is-dimmed { opacity: 0.45; }
+
+/* ── Chain drill ──────────────────────────────────────────────── */
+
+.drill-chain {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 1.5rem;
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+}
+.drill-chain-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.7rem;
+  background: var(--bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+.drill-chain-step-n {
+  color: var(--text-muted);
+  font-size: 0.65rem;
+}
+.drill-chain-step.is-done {
+  background: var(--emerald-soft);
+  border-color: rgba(0, 196, 140, 0.4);
+}
+.drill-chain-step.is-done .drill-chain-step-f { color: var(--emerald); }
+.drill-chain-step.is-current {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.drill-chain-step.is-current .drill-chain-step-f { color: var(--accent); font-weight: 600; }
+.drill-chain-arrow { color: var(--text-muted); font-size: 0.85rem; }
+
+.drill-step-card {
+  background: var(--bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+.drill-step-instr {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  margin-bottom: 0.85rem;
+  font-weight: 500;
+}
+.drill-step-prev {
+  font-size: 0.85rem;
+  color: var(--text-2);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.drill-step-prev-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+.drill-step-prev-form {
+  font-family: var(--font-mono);
+  color: var(--text);
+  font-weight: 500;
+  background: var(--surface);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+.drill-step-prompt {
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 3.4vw, 1.75rem);
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin-bottom: 1.25rem;
+}
+.drill-step-prompt b {
+  color: var(--indigo);
+  font-weight: 600;
+}
+.drill-step-prompt em {
+  color: var(--accent);
+  font-style: normal;
+  font-weight: 500;
+}
+
+/* ── Summary screen ───────────────────────────────────────────── */
+
+.drill-summary {
+  text-align: center;
+  padding: 2rem 1rem;
+  max-width: 32rem;
+  margin: 0 auto;
+}
+.drill-summary-title {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.01em;
+}
+.drill-summary-trail {
+  margin: 1.25rem 0;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  justify-content: center;
+  align-items: center;
+}
+.drill-summary-trail .drill-chain-step { background: var(--bg); }
+.drill-summary-trail .drill-chain-arrow { color: var(--text-muted); }
+
+.drill-summary-stats {
+  display: inline-flex;
+  gap: 1.5rem;
+  margin: 0.5rem 0 1.5rem;
+  padding: 1rem 1.5rem;
+  background: var(--surface);
+  border-radius: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.drill-summary-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+.drill-summary-n {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  line-height: 1;
+}
+.drill-summary-l {
+  font-size: 0.75rem;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.drill-summary-note {
+  font-size: 0.9rem;
+  color: var(--text-2);
+  max-width: 30rem;
+  margin: 0 auto 1.5rem;
+  line-height: 1.6;
+}
+
+.drill-summary-row {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.drill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.4rem;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.drill-btn:hover { opacity: 0.92; }
+.drill-btn-primary { background: var(--accent); color: #fff; }
+.drill-btn-ghost { background: var(--surface); color: var(--text); border: 1px solid var(--border-subtle); }
+
+/* ── Mobile ───────────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .drill-stage { padding: 1.5rem 1.25rem; align-items: flex-start; }
+  .drill-sentence { font-size: 1.3rem; min-height: 4rem; }
+  .drill-input-row { flex-direction: column; align-items: stretch; }
+  .drill-submit { width: 100%; }
+  .drill-choice-grid { grid-template-columns: 1fr; }
+  .drill-step-card { padding: 1.25rem; }
+  .drill-summary-stats { gap: 1rem; padding: 0.75rem 1rem; }
+}

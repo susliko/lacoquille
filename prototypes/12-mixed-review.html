@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>12 — Cumulative mixed review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/*
+  LAWS OF UX APPLIED
+  ─────────────────
+  Miller's Law: 7 ± 2 items per session. 8 items here.
+  Interleaving (research): deliberately mix exercise types — not block.
+  Serial Position Effect: end with a "win" — put an easier type last if possible.
+  Zeigarnik Effect: the visible progress bar drives completion.
+  Peak-End Rule: closing summary celebrates the whole arc, not just the last
+    item. Includes the peak (best moment) and the end (final stats).
+  Aesthetic-Usability Effect: distinct visual treatment for each exercise type
+    so the user knows what kind of work they're doing.
+  Postel's Law: handle every kind of input gracefully.
+  Hick's Law: still one decision per item.
+*/
+:root {
+  color-scheme: light;
+  --bg: #ffffff; --surface: #f7f5f2; --surface-2: #f0ece6;
+  --border: #ddd8d0; --border-subtle: #ece8e2; --border-bright: #b8b0a5;
+  --text: #1a1814; --text-2: #6b6560; --text-muted: #a09890;
+  --coral: #ff4757; --indigo: #3d5af1; --emerald: #00c48c; --amber: #ffb703; --violet: #8b5cf6;
+  --coral-soft: rgba(255, 71, 87, 0.10);
+  --indigo-soft: rgba(61, 90, 241, 0.10);
+  --emerald-soft: rgba(0, 196, 140, 0.10);
+  --amber-soft: rgba(255, 183, 3, 0.14);
+  --violet-soft: rgba(139, 92, 246, 0.10);
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --accent: #1a1814;  /* neutral — session-level */
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); line-height: 1.65; display: flex; flex-direction: column; min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; }
+
+.bar { position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-subtle); padding: 0.7rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; }
+.bar .back { color: var(--text-2); padding: 0.25rem 0.5rem; border-radius: 6px; }
+.bar .back:hover { background: var(--surface); color: var(--text); }
+.bar .badge { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); padding: 0.2rem 0.5rem; border: 1px solid var(--border-subtle); border-radius: 999px; }
+.bar .label { color: var(--text-2); }
+.bar .spacer { flex: 1; }
+
+/* Item-type dots in bar (Law of Similarity: each type has a color) */
+.type-dots { display: inline-flex; gap: 0.3rem; align-items: center; }
+.type-dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--text-muted); transition: background 0.2s; }
+.type-dot.done { background: var(--emerald); }
+.type-dot.current { background: var(--text); transform: scale(1.4); }
+.type-dot.cloze { background: var(--indigo); }
+.type-dot.cue { background: var(--coral); }
+.type-spot { background: var(--emerald); }
+
+.progress { height: 3px; background: var(--surface-2); position: relative; overflow: hidden; }
+.progress::after { content: ''; position: absolute; top: 0; left: 0; height: 100%; width: var(--pct, 0%); background: var(--text); transition: width 0.4s cubic-bezier(0.2, 0.7, 0.2, 1); }
+
+.stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
+.card { width: 100%; max-width: 38rem; }
+
+/* Type-specific accents */
+.type-cloze { --accent: #3d5af1; }
+.type-cue   { --accent: #ff4757; }
+.type-spot  { --accent: #00c48c; }
+.type-trans { --accent: #8b5cf6; }
+
+/* Type chip */
+.type-chip {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+.type-chip .dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--accent); }
+
+/* ── Start screen ────────────────────────────────────────────── */
+.start { text-align: center; max-width: 32rem; margin: 0 auto; }
+.start .eyebrow { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted); margin-bottom: 0.5rem; }
+.start h1 { font-family: var(--font-display); font-size: clamp(2rem, 4.5vw, 2.8rem); font-weight: 500; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 0.75rem; }
+.start h1 em { font-family: 'DM Serif Display', serif; font-style: italic; font-weight: 400; color: var(--coral); }
+.start p { color: var(--text-2); font-size: 1.05rem; max-width: 30rem; margin: 0 auto 1.5rem; line-height: 1.55; }
+.start .plan { background: var(--surface); border-radius: 12px; padding: 1.25rem 1.5rem; text-align: left; margin-bottom: 1.5rem; border: 1px solid var(--border-subtle); }
+.start .plan h3 { font-family: var(--font-display); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-2); margin-bottom: 0.5rem; }
+.start .plan .phases { display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.92rem; color: var(--text-2); }
+.start .plan .phases .phase { display: flex; align-items: center; gap: 0.5rem; }
+.start .plan .phases .phase b { color: var(--text); font-weight: 500; }
+.start .plan .phases .phase .num { font-family: var(--font-mono); color: var(--text-muted); font-size: 0.8rem; min-width: 1.5rem; }
+.start .plan .phases .phase .dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; }
+.start-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.9rem 1.6rem; background: var(--text); color: var(--bg); border: none; border-radius: 10px; font-weight: 500; font-size: 1rem; cursor: pointer; font-family: var(--font-display); }
+.start-btn .kbd { font-family: var(--font-mono); font-size: 0.75rem; padding: 0.15rem 0.5rem; background: rgba(255,255,255,0.2); border-radius: 4px; }
+
+/* ── Per-type card styles (inherits .type-X for color) ──────── */
+.qblock { background: var(--bg); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 1.5rem; }
+.qblock h2 { font-family: var(--font-display); font-size: 0.95rem; font-weight: 500; color: var(--text-2); margin-bottom: 0.75rem; }
+
+.chips { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; font-family: var(--font-mono); font-size: 0.8rem; padding: 0.3rem 0.65rem; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 999px; color: var(--text-2); }
+.chip .k { color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; margin-right: 0.35rem; }
+.chip strong { color: var(--text); font-weight: 500; }
+.arrow { color: var(--text-muted); font-size: 0.8rem; }
+
+.sentence { font-family: var(--font-display); font-size: clamp(1.4rem, 3.4vw, 1.8rem); font-weight: 500; line-height: 1.5; letter-spacing: -0.01em; color: var(--text); margin-bottom: 1rem; min-height: 4rem; }
+.sentence .blank { display: inline-block; min-width: 7ch; border-bottom: 2px dashed var(--text-muted); color: var(--text-muted); font-family: var(--font-mono); font-size: 0.85em; text-align: center; margin: 0 0.15em; }
+.sentence .blank.correct { color: var(--emerald); background: var(--emerald-soft); border-bottom-color: var(--emerald); border-radius: 4px; font-family: var(--font-display); font-size: 1em; font-weight: 600; }
+.sentence .blank.almost  { color: #b07500; background: var(--amber-soft); border-bottom-color: var(--amber); border-radius: 4px; font-family: var(--font-display); font-size: 1em; font-weight: 600; }
+.sentence .blank.wrong   { color: var(--coral); background: var(--coral-soft); border-bottom-color: var(--coral); border-radius: 4px; font-family: var(--font-display); font-size: 1em; font-weight: 600; }
+.sentence .blank.cue { background: var(--amber-soft); padding: 0.05em 0.3em; border-radius: 4px; color: #b07500; font-weight: 600; }
+
+.input-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; }
+.input { flex: 1; font-family: var(--font-mono); font-size: 1.1rem; padding: 0.85rem 1rem; background: var(--surface); border: 1.5px solid var(--border-subtle); border-radius: 10px; color: var(--text); outline: none; transition: border-color 0.15s; }
+.input:focus { border-color: var(--accent); background: var(--bg); }
+
+.submit { display: inline-flex; align-items: center; padding: 0.85rem 1.25rem; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-weight: 500; font-size: 0.95rem; cursor: pointer; min-width: 5rem; }
+.submit .kbd { margin-left: 0.5rem; font-family: var(--font-mono); font-size: 0.7rem; padding: 0.1rem 0.4rem; background: rgba(255,255,255,0.2); border-radius: 4px; }
+.submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.accents { display: flex; gap: 0.35rem; margin-top: 0.5rem; }
+.accent { width: 2.2rem; height: 2.2rem; display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 1.05rem; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-2); cursor: pointer; }
+.accent:hover { background: var(--surface-2); }
+
+.feedback { margin-top: 1rem; padding: 0.85rem 1rem; border-radius: 10px; font-size: 0.9rem; display: none; }
+.feedback.shown { display: block; }
+.feedback.correct { background: var(--emerald-soft); color: var(--emerald); }
+.feedback.wrong   { background: var(--coral-soft); color: var(--coral); }
+.feedback .correction { font-family: var(--font-mono); color: var(--emerald); font-weight: 600; }
+
+.choices-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.5rem; }
+.choice-mini { padding: 0.85rem; background: var(--surface); border: 1.5px solid var(--border-subtle); border-radius: 10px; cursor: pointer; text-align: center; font-family: var(--font-mono); font-size: 0.95rem; }
+.choice-mini:hover { background: var(--surface-2); }
+.choice-mini.right { background: var(--emerald-soft); border-color: var(--emerald); color: var(--emerald); }
+.choice-mini.wrong { background: var(--coral-soft); border-color: var(--coral); color: var(--coral); }
+.choice-mini.dimmed { opacity: 0.4; }
+.choice-mini .tense { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 0.3rem; }
+
+.continue-row { display: flex; justify-content: flex-end; margin-top: 1.25rem; min-height: 3rem; }
+.continue { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.85rem 1.4rem; background: var(--text); color: var(--bg); border: none; border-radius: 10px; font-weight: 500; font-size: 0.95rem; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; text-decoration: none; }
+.continue.shown { opacity: 1; pointer-events: auto; }
+.continue .kbd { font-family: var(--font-mono); font-size: 0.7rem; padding: 0.1rem 0.4rem; background: rgba(255,255,255,0.18); border-radius: 4px; font-weight: 400; }
+
+/* ── End screen (Peak-End) ──────────────────────────────────── */
+.summary { text-align: center; padding: 2rem 1rem; max-width: 32rem; margin: 0 auto; }
+.summary .eyebrow { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted); margin-bottom: 0.5rem; }
+.summary h2 { font-family: var(--font-display); font-size: 1.8rem; font-weight: 600; margin-bottom: 0.4rem; }
+.summary .sub { color: var(--text-2); font-size: 1rem; margin-bottom: 1.5rem; }
+.summary .arc { display: flex; align-items: center; justify-content: center; gap: 0.3rem; margin: 1rem 0 1.5rem; }
+.summary .arc .step { width: 2.5rem; height: 2.5rem; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; }
+.summary .arc .step.correct { background: var(--emerald); color: #fff; }
+.summary .arc .step.almost  { background: var(--amber); color: #fff; }
+.summary .arc .step.wrong   { background: var(--coral); color: #fff; }
+.summary .arc .step .k { font-family: var(--font-mono); font-size: 0.6rem; opacity: 0.7; display: block; }
+.summary .arc .step.correct::after { content: '✓'; }
+.summary .arc .step.almost::after  { content: '~'; }
+.summary .arc .step.wrong::after   { content: '✗'; }
+.summary .arc .step span.val { display: none; }
+
+.summary .stats { display: inline-flex; gap: 1.5rem; margin-bottom: 1.5rem; padding: 1rem 1.5rem; background: var(--surface); border-radius: 12px; }
+.summary .stat .n { font-family: var(--font-display); font-size: 1.6rem; font-weight: 600; display: block; font-variant-numeric: tabular-nums; }
+.summary .stat .l { font-size: 0.75rem; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.08em; }
+
+.summary .note { font-size: 0.9rem; color: var(--text-2); max-width: 30rem; margin: 0 auto 1.5rem; line-height: 1.6; }
+.summary .row { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+.continue.green { background: var(--emerald); }
+.continue.ghost { background: var(--surface); color: var(--text); }
+
+.foot { text-align: center; font-size: 0.8rem; color: var(--text-muted); padding: 1.5rem; border-top: 1px solid var(--border-subtle); }
+
+@media (max-width: 600px) {
+  .stage { padding: 1.5rem 1.25rem; }
+  .sentence { font-size: 1.2rem; }
+  .input-row { flex-direction: column; align-items: stretch; }
+  .submit { width: 100%; }
+  .choices-2 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <a class="back" href="index.html">← prototypes</a>
+  <span class="badge">12 · Daily</span>
+  <span class="label">Mixed review</span>
+  <span class="spacer"></span>
+  <span class="type-dots" id="type-dots"></span>
+  <span style="color:var(--text-muted); font-family:var(--font-mono); font-size:0.8rem; min-width:3rem; text-align:right;"><b id="counter">0</b>/<span id="total">8</span></span>
+</div>
+<div class="progress" id="progress"></div>
+
+<main class="stage">
+  <div class="card" id="card"></div>
+</main>
+
+<div class="foot">One session. Many types. <b>Interleaving</b> feels harder than blocking, but it transfers better.</div>
+
+<script>
+// ── Items, mixed deliberately (not blocked by type) ───────────
+// The order is intentionally interleaved: cloze, cue, spot, cloze, cue, spot, cloze, cue.
+const SESSION = [
+  { type: "cloze",  data: { hint: { verb: "parler", person: "je", tense: "imparfait" }, sentence: ["Quand j'étais petit, ", "_", " beaucoup avec mes amis."], answer: "parlais" } },
+  { type: "cue",    data: { verb: "aller",  person: "elle", tense: "imparfait", answer: "allait" } },
+  { type: "spot",   data: {
+      sentence: "Pendant que je <blank>, le téléphone a sonné.",
+      gloss: "While I ___ , the phone rang.",
+      options: [
+        { form: "dormais",     tense: "imparfait",     gloss: "was sleeping (ongoing)" },
+        { form: "ai dormi",    tense: "passé composé", gloss: "slept (completed)" },
+      ],
+      correct: 0,
+      cue: "pendant que",
+      rule: "<code>pendant que</code> + imparfait sets up the <b>background</b> against which a foreground event (<code>a sonné</code>) happens.",
+    }
+  },
+  { type: "cloze",  data: { hint: { verb: "finir", person: "tu", tense: "présent" }, sentence: ["Tu ", "_", " toujours tes devoirs avant de jouer."], answer: "finis" } },
+  { type: "cue",    data: { verb: "avoir",  person: "je",   tense: "présent",   answer: "ai" } },
+  { type: "spot",   data: {
+      sentence: "Soudain, il <blank> dans la rue.",
+      gloss: "Suddenly, he ___ in the street.",
+      options: [
+        { form: "est tombé",   tense: "passé composé", gloss: "fell (specific event)" },
+        { form: "tombait",     tense: "imparfait",     gloss: "was falling" },
+      ],
+      correct: 0,
+      cue: "soudain",
+      rule: "<code>soudain</code> marks a <b>punctual, bounded event</b> — passé composé.",
+    }
+  },
+  { type: "cloze",  data: { hint: { verb: "faire", person: "vous", tense: "passé composé" }, sentence: ["Qu'est-ce que vous ", "_", " ce week-end ?"], answer: "avez fait" } },
+  { type: "cue",    data: { verb: "venir",  person: "ils",  tense: "imparfait", answer: "venaient" } },
+];
+
+let idx = 0;
+let phase = "start";
+let results = [];   // "correct" | "almost" | "wrong"
+const card = document.getElementById("card");
+const counter = document.getElementById("counter");
+const total = document.getElementById("total");
+const progress = document.getElementById("progress");
+const typeDots = document.getElementById("type-dots");
+total.textContent = SESSION.length;
+
+function norm(s) { return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/['']/g, "'").trim(); }
+function isAlmost(a, b) {
+  a = norm(a); b = norm(b);
+  if (a === b) return true;
+  if (Math.abs(a.length - b.length) > 1) return false;
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]);
+  for (let j = 1; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+  return dp[m][n] <= 1;
+}
+
+function renderTypeDots() {
+  typeDots.innerHTML = SESSION.map((s, i) => {
+    let cls = `type-dot ${s.type}`;
+    if (results[i] === "correct" || results[i] === "almost" || results[i] === "wrong") cls += " done";
+    else if (i === idx && phase === "answer") cls += " current";
+    return `<span class="${cls}" title="${s.type}"></span>`;
+  }).join("");
+}
+
+function renderStart() {
+  card.innerHTML = `
+    <div class="start">
+      <div class="eyebrow">today's session · ~10 min</div>
+      <h1>Daily <em>review</em></h1>
+      <p>Mix of three types, interleaved. The shape matches the research — but the work still depends on you.</p>
+      <div class="plan">
+        <h3>Today's plan</h3>
+        <div class="phases">
+          <div class="phase"><span class="dot type-dot cloze"></span><span class="num">3</span><b>cloze</b> · 2 min</div>
+          <div class="phase"><span class="dot type-dot cue"></span><span class="num">3</span><b>cue-to-form</b> · 3 min</div>
+          <div class="phase"><span class="dot type-dot spot"></span><span class="num">2</span><b>spot the tense</b> · 3 min</div>
+          <div class="phase" style="margin-top:0.5rem; padding-top:0.5rem; border-top:1px solid var(--border-subtle);"><span class="dot type-dot" style="background:var(--text-muted)"></span><b>interleaved</b> · not blocked</div>
+        </div>
+      </div>
+      <button class="start-btn" id="start-btn">begin session <span class="kbd">↵</span></button>
+    </div>
+  `;
+  document.getElementById("start-btn").addEventListener("click", () => { phase = "answer"; render(); });
+}
+
+function render() {
+  renderTypeDots();
+  if (phase === "start") return renderStart();
+  if (idx >= SESSION.length) return renderSummary();
+  const item = SESSION[idx];
+  counter.textContent = idx + 1;
+  progress.style.setProperty("--pct", `${(idx / SESSION.length) * 100}%`);
+
+  if (item.type === "cloze") renderCloze(item);
+  else if (item.type === "cue") renderCue(item);
+  else if (item.type === "spot") renderSpot(item);
+}
+
+function renderCloze(item) {
+  const d = item.data;
+  card.className = "card type-cloze";
+  card.innerHTML = `
+    <div class="qblock">
+      <div class="type-chip"><span class="dot"></span>cloze · ${d.hint.tense}</div>
+      <div class="chips">
+        <span class="chip"><span class="k">verb</span><strong>${d.hint.verb}</strong></span>
+        <span class="arrow">·</span>
+        <span class="chip"><span class="k">person</span><strong>${d.hint.person}</strong></span>
+        <span class="arrow">·</span>
+        <span class="chip"><span class="k">tense</span><strong>${d.hint.tense}</strong></span>
+      </div>
+      <div class="sentence" id="sentence">${d.sentence[0]}<span class="blank">?</span>${d.sentence[2]}</div>
+      <div class="input-row">
+        <input class="input" id="answer" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="?" autofocus />
+        <button class="submit" id="submit">check <span class="kbd">↵</span></button>
+      </div>
+      <div class="accents">
+        <button class="accent" data-c="é">é</button>
+        <button class="accent" data-c="è">è</button>
+        <button class="accent" data-c="ê">ê</button>
+        <button class="accent" data-c="à">à</button>
+        <button class="accent" data-c="ù">ù</button>
+        <button class="accent" data-c="ç">ç</button>
+        <button class="accent" data-c="ô">ô</button>
+        <button class="accent" data-c="î">î</button>
+        <button class="accent" data-c="ë">ë</button>
+      </div>
+    </div>
+  `;
+  const input = document.getElementById("answer");
+  const submit = document.getElementById("submit");
+  input.focus();
+  const handle = () => {
+    const v = input.value.trim();
+    if (!v) return;
+    const exact = v.toLowerCase() === d.answer;
+    const almost = !exact && isAlmost(v, d.answer);
+    results[idx] = exact ? "correct" : almost ? "almost" : "wrong";
+    // show reveal
+    const sent = document.getElementById("sentence");
+    const blankCls = exact ? "correct" : almost ? "almost" : "wrong";
+    sent.innerHTML = `${d.sentence[0]}<span class="blank ${blankCls}">${d.answer}</span>${d.sentence[2]}`;
+    input.disabled = true;
+    submit.disabled = true;
+    if (!exact) {
+      const fb = document.createElement("div");
+      fb.className = `feedback shown ${exact ? 'correct' : 'wrong'}`;
+      fb.innerHTML = exact ? "✓ nice" : `the form is <span class="correction">${d.answer}</span>`;
+      document.querySelector(".qblock").appendChild(fb);
+    } else {
+      const fb = document.createElement("div");
+      fb.className = "feedback shown correct";
+      fb.innerHTML = "✓";
+      document.querySelector(".qblock").appendChild(fb);
+    }
+    const cont = document.createElement("div");
+    cont.className = "continue-row";
+    cont.innerHTML = `<button class="continue shown" id="continue">${idx + 1 < SESSION.length ? 'next' : 'finish'} <span class="kbd">↵</span></button>`;
+    document.querySelector(".qblock").appendChild(cont);
+    document.getElementById("continue").addEventListener("click", next);
+    document.getElementById("continue").focus();
+  };
+  submit.addEventListener("click", handle);
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); handle(); } });
+  document.querySelectorAll(".accent").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const c = btn.dataset.c;
+      const s = input.selectionStart ?? input.value.length;
+      const e = input.selectionEnd ?? input.value.length;
+      input.value = input.value.slice(0, s) + c + input.value.slice(e);
+      input.focus();
+      input.setSelectionRange(s + 1, s + 1);
+    });
+  });
+}
+
+function renderCue(item) {
+  const d = item.data;
+  card.className = "card type-cue";
+  card.innerHTML = `
+    <div class="qblock">
+      <div class="type-chip"><span class="dot"></span>cue-to-form</div>
+      <div class="chips" style="justify-content:center">
+        <div class="chip"><span class="k">verb</span><strong>${d.verb}</strong></div>
+        <span class="arrow">×</span>
+        <div class="chip"><span class="k">person</span><strong>${d.person}</strong></div>
+        <div class="arrow">·</div>
+        <div class="chip"><span class="k">tense</span><strong>${d.tense}</strong></div>
+      </div>
+      <input class="input" id="answer" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="?" style="text-align:center; font-size:1.5rem; padding:1rem" autofocus />
+      <div class="accents" style="justify-content:center">
+        <button class="accent" data-c="é">é</button>
+        <button class="accent" data-c="è">è</button>
+        <button class="accent" data-c="ê">ê</button>
+        <button class="accent" data-c="à">à</button>
+        <button class="accent" data-c="ù">ù</button>
+        <button class="accent" data-c="ç">ç</button>
+        <button class="accent" data-c="ô">ô</button>
+        <button class="accent" data-c="î">î</button>
+        <button class="accent" data-c="ë">ë</button>
+      </div>
+    </div>
+  `;
+  const input = document.getElementById("answer");
+  input.focus();
+  const handle = () => {
+    const v = input.value.trim();
+    if (!v) return;
+    const exact = v.toLowerCase() === d.answer;
+    const almost = !exact && isAlmost(v, d.answer);
+    results[idx] = exact ? "correct" : almost ? "almost" : "wrong";
+    input.value = d.answer;
+    input.classList.add(exact ? "correct" : almost ? "almost" : "wrong");
+    input.disabled = true;
+    const cont = document.createElement("div");
+    cont.className = "continue-row";
+    cont.innerHTML = `<button class="continue shown" id="continue">${idx + 1 < SESSION.length ? 'next' : 'finish'} <span class="kbd">↵</span></button>`;
+    document.querySelector(".qblock").appendChild(cont);
+    document.getElementById("continue").addEventListener("click", next);
+    document.getElementById("continue").focus();
+  };
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); handle(); } });
+  document.querySelectorAll(".accent").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const c = btn.dataset.c;
+      const s = input.selectionStart ?? input.value.length;
+      const e = input.selectionEnd ?? input.value.length;
+      input.value = input.value.slice(0, s) + c + input.value.slice(e);
+      input.focus();
+      input.setSelectionRange(s + 1, s + 1);
+    });
+  });
+}
+
+function renderSpot(item) {
+  const d = item.data;
+  card.className = "card type-spot";
+  let sHTML = d.sentence.replace("<blank>", '<span class="blank">?</span>');
+  if (d.cue) sHTML = sHTML.replace(new RegExp(`(${d.cue})`, "g"), '<span class="cue">$1</span>');
+  card.innerHTML = `
+    <div class="qblock">
+      <div class="type-chip"><span class="dot"></span>spot the tense</div>
+      <div class="sentence">${sHTML}</div>
+      <p style="color:var(--text-2); font-size:0.92rem; margin-bottom:0.85rem;">${d.gloss}</p>
+      <div class="choices-2" id="choices">
+        ${d.options.map((o, i) => `
+          <button class="choice-mini" data-i="${i}">
+            <span class="tense">${o.tense}</span>
+            ${o.form}
+          </button>
+        `).join("")}
+      </div>
+    </div>
+  `;
+  document.querySelectorAll(".choice-mini").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const i = parseInt(btn.dataset.i, 10);
+      const isRight = i === d.correct;
+      results[idx] = isRight ? "correct" : "wrong";
+      document.querySelectorAll(".choice-mini").forEach((b, j) => {
+        b.disabled = true;
+        b.style.cursor = "default";
+        if (j === d.correct) b.classList.add("right");
+        else if (j === i && !isRight) b.classList.add("wrong");
+        else b.classList.add("dimmed");
+      });
+      const fb = document.createElement("div");
+      fb.className = `feedback shown ${isRight ? 'correct' : 'wrong'}`;
+      fb.innerHTML = isRight ? "✓ correct — " + d.rule : `the right form is <span class="correction">${d.options[d.correct].form}</span> — ${d.rule}`;
+      document.querySelector(".qblock").appendChild(fb);
+      const cont = document.createElement("div");
+      cont.className = "continue-row";
+      cont.innerHTML = `<button class="continue shown" id="continue">${idx + 1 < SESSION.length ? 'next' : 'finish'} <span class="kbd">↵</span></button>`;
+      document.querySelector(".qblock").appendChild(cont);
+      document.getElementById("continue").addEventListener("click", next);
+      document.getElementById("continue").focus();
+    });
+  });
+}
+
+function next() { idx++; render(); }
+
+function renderSummary() {
+  progress.style.setProperty("--pct", "100%");
+  const c = results.filter(r => r === "correct").length;
+  const a = results.filter(r => r === "almost").length;
+  const w = results.filter(r => r === "wrong").length;
+  const total = c + a + w;
+  const acc = Math.round(((c + a) / total) * 100);
+  card.innerHTML = `
+    <div class="summary">
+      <div class="eyebrow">session complete</div>
+      <h2>10 minutes, 3 types, 8 items.</h2>
+      <div class="sub">${c} first-try · ${a} almost · ${w} to revisit</div>
+      <div class="arc">
+        ${results.map((r, i) => {
+          const type = SESSION[i].type;
+          const k = type === "cloze" ? "C" : type === "cue" ? "F" : "S";
+          return `<div class="step ${r}" title="${type}: ${r}"><span class="val">${k}</span></div>`;
+        }).join("")}
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="n" style="color:var(--emerald)">${c}</span><span class="l">first-try</span></div>
+        <div class="stat"><span class="n" style="color:#b07500">${a}</span><span class="l">almost</span></div>
+        <div class="stat"><span class="n" style="color:var(--coral)">${w}</span><span class="l">revisit</span></div>
+        <div class="stat"><span class="n">${acc}%</span><span class="l">accuracy</span></div>
+      </div>
+      <p class="note">Items you missed will come back tomorrow as the first thing you see. Items you nailed (${c}) will wait 3-7 days. <b>This is the spaced-repetition scheduler at work</b> — you only re-encounter what you're about to forget.</p>
+      <div class="row">
+        <a class="continue green" href="12-mixed-review.html">do another session</a>
+        <a class="continue ghost" href="index.html">back to all prototypes</a>
+      </div>
+    </div>
+  `;
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && phase === "start") { e.preventDefault(); phase = "answer"; render(); }
+});
+
+render();
+</script>
+</body>
+</html>

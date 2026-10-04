@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>06 — Sentence transformation chain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/*
+  LAWS OF UX APPLIED
+  ─────────────────
+  Zeigarnik Effect: the visible chain creates an urge to complete it.
+  Serial Position Effect: varied chains — different starting verbs, different
+    step orders. Don't always end with the same transformation.
+  Peak-End Rule: the final step is the "hardest" one (e.g., negative +
+    person switch) so the peak comes near the end. End screen celebrates
+    the whole chain, not just the last form.
+  Law of Proximity: previous form and instruction live close to the input.
+  Jakob's Law: stepper pattern, like a wizard.
+  Law of Common Region: the whole chain shares a card surface.
+  Aesthetic-Usability Effect: clean stepper, generous spacing.
+  Hick's Law: only ONE input per card, one decision.
+  Fitts's Law: input is the largest target; submit button is a thumb-friendly size.
+*/
+:root {
+  color-scheme: light;
+  --bg: #ffffff; --surface: #f7f5f2; --surface-2: #f0ece6;
+  --border: #ddd8d0; --border-subtle: #ece8e2; --border-bright: #b8b0a5;
+  --text: #1a1814; --text-2: #6b6560; --text-muted: #a09890;
+  --coral: #ff4757; --indigo: #3d5af1; --emerald: #00c48c; --amber: #ffb703; --violet: #8b5cf6;
+  --coral-soft: rgba(255, 71, 87, 0.10);
+  --indigo-soft: rgba(61, 90, 241, 0.10);
+  --emerald-soft: rgba(0, 196, 140, 0.10);
+  --amber-soft: rgba(255, 183, 3, 0.14);
+  --violet-soft: rgba(139, 92, 246, 0.10);
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --accent: #8b5cf6;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); line-height: 1.65; display: flex; flex-direction: column; min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; }
+
+.bar { position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-subtle); padding: 0.7rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; }
+.bar .back { color: var(--text-2); padding: 0.25rem 0.5rem; border-radius: 6px; }
+.bar .back:hover { background: var(--surface); color: var(--text); }
+.bar .badge { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); padding: 0.2rem 0.5rem; border: 1px solid var(--border-subtle); border-radius: 999px; }
+.bar .label { color: var(--text-2); }
+.bar .spacer { flex: 1; }
+.bar .counter { color: var(--text-2); font-variant-numeric: tabular-nums; }
+.bar .counter b { color: var(--text); font-weight: 500; }
+
+.progress { height: 3px; background: var(--surface-2); position: relative; overflow: hidden; }
+.progress::after { content: ''; position: absolute; top: 0; left: 0; height: 100%; width: var(--pct, 0%); background: var(--accent); transition: width 0.4s cubic-bezier(0.2, 0.7, 0.2, 1); }
+
+.stage { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding: 2rem 1.5rem 1.5rem; }
+.card { width: 100%; max-width: 38rem; }
+
+/* Chain visualization (Zeigarnik: the chain makes the work visible) */
+.chain {
+  display: flex; align-items: center; gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+}
+.chain .step {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.35rem 0.7rem;
+  background: var(--bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+.chain .step .n { color: var(--text-muted); font-size: 0.7rem; }
+.chain .step .f { color: var(--text); font-weight: 500; }
+.chain .step.done { background: var(--emerald-soft); border-color: rgba(0,196,140,0.4); }
+.chain .step.done .f { color: var(--emerald); }
+.chain .step.current { background: var(--violet-soft); border-color: var(--violet); }
+.chain .step.current .f { color: var(--violet); font-weight: 600; }
+.chain .arrow { color: var(--text-muted); font-size: 0.85rem; }
+
+/* The current step card */
+.step-card {
+  background: var(--bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.previous {
+  font-size: 0.85rem;
+  color: var(--text-2);
+  margin-bottom: 1rem;
+  display: flex; align-items: center; gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.previous .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+.previous .from-form { font-family: var(--font-mono); color: var(--text); font-weight: 500; background: var(--surface); padding: 0.15rem 0.5rem; border-radius: 4px; }
+
+.instr {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--violet);
+  background: var(--violet-soft);
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+}
+
+.prompt {
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 3.5vw, 1.85rem);
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin-bottom: 1.25rem;
+}
+.prompt .verb { color: var(--indigo); font-weight: 600; }
+.prompt .accent { color: var(--violet); }
+
+.input-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; }
+.input { flex: 1; font-family: var(--font-mono); font-size: 1.15rem; padding: 0.85rem 1rem; background: var(--surface); border: 1.5px solid var(--border-subtle); border-radius: 10px; color: var(--text); outline: none; transition: border-color 0.15s, background 0.15s; }
+.input:focus { border-color: var(--accent); background: var(--bg); }
+.input::placeholder { color: var(--text-muted); }
+
+.submit { display: inline-flex; align-items: center; justify-content: center; padding: 0.85rem 1.25rem; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-weight: 500; font-size: 0.95rem; cursor: pointer; min-width: 5rem; }
+.submit:hover { opacity: 0.92; }
+.submit .kbd { margin-left: 0.5rem; font-family: var(--font-mono); font-size: 0.7rem; padding: 0.1rem 0.4rem; background: rgba(255,255,255,0.18); border-radius: 4px; }
+
+.accents { display: flex; gap: 0.35rem; margin-top: 0.5rem; }
+.accent { width: 2.2rem; height: 2.2rem; display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 1.05rem; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-2); cursor: pointer; }
+.accent:hover { background: var(--surface-2); color: var(--text); border-color: var(--border-bright); }
+
+/* Inline feedback on the answer */
+.feedback {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+  display: none;
+  animation: slideIn 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.feedback.shown { display: block; }
+@keyframes slideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.feedback.correct { background: var(--emerald-soft); border-color: rgba(0,196,140,0.3); }
+.feedback.wrong   { background: var(--coral-soft); border-color: rgba(255,71,87,0.3); }
+.feedback .verdict { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.3rem; }
+.feedback.correct .verdict { color: var(--emerald); }
+.feedback.wrong   .verdict { color: var(--coral); }
+.feedback .diff { font-family: var(--font-mono); font-size: 0.95rem; }
+.feedback .diff .yours { color: var(--coral); text-decoration: line-through; }
+.feedback .diff .arrow { color: var(--text-muted); margin: 0 0.4rem; }
+.feedback .diff .theirs { color: var(--emerald); font-weight: 600; }
+.feedback .tip { font-size: 0.85rem; color: var(--text-2); margin-top: 0.4rem; line-height: 1.5; }
+
+.continue-row { display: flex; justify-content: flex-end; margin-top: 1.25rem; min-height: 3rem; }
+.continue { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.85rem 1.4rem; background: var(--text); color: var(--bg); border: none; border-radius: 10px; font-weight: 500; font-size: 0.95rem; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; text-decoration: none; }
+.continue.shown { opacity: 1; pointer-events: auto; }
+.continue.next { background: var(--accent); }
+.continue.done { background: var(--emerald); }
+.continue .kbd { font-family: var(--font-mono); font-size: 0.7rem; padding: 0.1rem 0.4rem; background: rgba(255,255,255,0.18); border-radius: 4px; font-weight: 400; }
+
+.summary { text-align: center; padding: 1.5rem 0; max-width: 32rem; margin: 0 auto; }
+.summary h2 { font-family: var(--font-display); font-size: 1.8rem; font-weight: 600; margin-bottom: 0.5rem; }
+.summary p { color: var(--text-2); margin-bottom: 1.5rem; }
+.summary .stats { display: inline-flex; gap: 1.5rem; margin-bottom: 1.5rem; }
+.summary .stat .n { font-family: var(--font-display); font-size: 2rem; font-weight: 600; display: block; }
+.summary .stat .l { font-size: 0.8rem; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.08em; }
+.summary .row { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+.continue.green { background: var(--emerald); }
+.continue.ghost { background: var(--surface); color: var(--text); }
+
+.foot { text-align: center; font-size: 0.8rem; color: var(--text-muted); padding: 1.5rem; border-top: 1px solid var(--border-subtle); }
+
+@media (max-width: 600px) {
+  .stage { padding: 1.5rem 1.25rem; }
+  .chain { padding: 0.6rem 0.75rem; }
+  .chain .step { font-size: 0.75rem; padding: 0.3rem 0.5rem; }
+  .step-card { padding: 1.25rem; }
+  .input-row { flex-direction: column; align-items: stretch; }
+  .submit { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <a class="back" href="index.html">← prototypes</a>
+  <span class="badge">06 · Transformation</span>
+  <span class="label">Chain</span>
+  <span class="spacer"></span>
+  <span class="counter"><b id="counter">1</b> / <span id="total">3</span></span>
+</div>
+<div class="progress" id="progress"></div>
+
+<main class="stage">
+  <div class="card" id="card"></div>
+</main>
+
+<div class="foot">Each step transforms the previous answer. The chain is the practice — person &amp; tense switching is where real errors live.</div>
+
+<script>
+// Each chain: starting form, then a sequence of transformations.
+// Each step has: instruction (chip), target person/tense, the correct form, optional tip.
+const CHAINS = [
+  {
+    name: "aller · passé composé · negative",
+    steps: [
+      { from: "je vais",        instruction: "switch to imparfait",     target: "j'allais",     tip: "aller in the imparfait: all- + endings (not allér-)." },
+      { from: "j'allais",       instruction: "switch to elle",          target: "elle allait" },
+      { from: "elle allait",    instruction: "now passé composé",       target: "elle est allée", tip: "passé composé of <em>aller</em> uses <em>être</em>, not avoir. Agreement in gender: allée (f.), allé (m.)." },
+      { from: "elle est allée", instruction: "make it negative",        target: "elle n'est pas allée", tip: "ne … pas wraps the auxiliary. <em>n'est pas allée</em>." },
+    ],
+  },
+  {
+    name: "finir · irregular stem · negation",
+    steps: [
+      { from: "je finis",       instruction: "passé composé, elle",     target: "elle a fini" },
+      { from: "elle a fini",    instruction: "imparfait, nous",         target: "nous finissions", tip: "-ir verbs in the imparfait double the i: finiss- + endings." },
+      { from: "nous finissions", instruction: "make it negative",        target: "nous ne finissions pas" },
+      { from: "nous ne finissions pas", instruction: "switch to vous",   target: "vous ne finissiez pas" },
+    ],
+  },
+  {
+    name: "avoir · être · chain",
+    steps: [
+      { from: "j'ai parlé",     instruction: "imparfait, je",           target: "j'avais parlé" },
+      { from: "j'avais parlé",  instruction: "switch to ils",           target: "ils avaient parlé" },
+      { from: "ils avaient parlé", instruction: "switch to elle (f.)",  target: "elle avait parlé" },
+    ],
+  },
+];
+
+let chainIdx = 0, stepIdx = 0;
+let phase = "answer";
+let chainHistory = [];   // history of attempts per step
+let chainCorrect = 0;     // total correct
+let chainTotal = 0;
+
+const card = document.getElementById("card");
+const counter = document.getElementById("counter");
+const total = document.getElementById("total");
+const progress = document.getElementById("progress");
+total.textContent = CHAINS.length;
+
+function norm(s) { return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim(); }
+function normalizeForCompare(s) {
+  // also strip the negation "ne ... pas" to compare structural equivalence
+  return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\bne\b|\bpas\b/g, "").replace(/\s+/g, "").trim();
+}
+function isAlmost(a, b) {
+  const na = normalizeForCompare(a), nb = normalizeForCompare(b);
+  if (na === nb) return true;
+  if (Math.abs(na.length - nb.length) > 2) return false;
+  const m = na.length, n = nb.length;
+  const dp = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]);
+  for (let j = 1; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = na[i-1] === nb[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+  return dp[m][n] <= 1;
+}
+
+function render() {
+  if (chainIdx >= CHAINS.length) return renderSummary();
+  const chain = CHAINS[chainIdx];
+  counter.textContent = chainIdx + 1;
+  progress.style.setProperty("--pct", `${(chainIdx / CHAINS.length) * 100}%`);
+
+  if (stepIdx >= chain.steps.length) {
+    // Chain complete
+    renderChainDone(chain);
+    return;
+  }
+
+  const step = chain.steps[stepIdx];
+  const isLast = stepIdx === chain.steps.length - 1;
+
+  // Chain visualization
+  const chainHTML = `
+    <div class="chain">
+      <div class="step done"><span class="n">1·</span><span class="f">${chain.steps[0].from}</span></div>
+      ${chain.steps.slice(1).map((s, i) => {
+        let cls = "";
+        if (i < stepIdx) cls = "done";
+        else if (i === stepIdx) cls = "current";
+        return `<span class="arrow">→</span><div class="step ${cls}"><span class="n">${i + 2}·</span><span class="f">${s.target}</span></div>`;
+      }).join("")}
+    </div>
+  `;
+
+  // Prompt — uses the verb highlight and instruction
+  const verb = chain.steps[0].from.split(" ")[0] === "j'ai" || chain.steps[0].from.split(" ")[0] === "j'avais"
+    ? chain.name.split(" ")[0]
+    : chain.steps[0].from.split(" ")[0];
+  const promptHTML = `<div class="prompt">take <span class="verb">${step.from}</span> and <span class="accent">${step.instruction}</span></div>`;
+
+  const inputHTML = phase === "answer"
+    ? `<div class="input-row">
+         <input class="input" id="answer" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="type the new form" autofocus />
+         <button class="submit" id="submit">check <span class="kbd">↵</span></button>
+       </div>
+       <div class="accents">
+         <button class="accent" data-c="é">é</button>
+         <button class="accent" data-c="è">è</button>
+         <button class="accent" data-c="ê">ê</button>
+         <button class="accent" data-c="à">à</button>
+         <button class="accent" data-c="ù">ù</button>
+         <button class="accent" data-c="ç">ç</button>
+         <button class="accent" data-c="ô">ô</button>
+         <button class="accent" data-c="î">î</button>
+         <button class="accent" data-c="ë">ë</button>
+       </div>`
+    : "";
+
+  let fbHTML = "";
+  if (phase === "feedback") {
+    const tried = chainHistory[chainHistory.length - 1] || "";
+    const ok = norm(tried) === norm(step.target);
+    const al = !ok && isAlmost(tried, step.target);
+    const cls = ok ? "correct" : "wrong";
+    const verdict = ok ? "✓ correct" : al ? "almost" : "✗ not quite";
+    fbHTML = `
+      <div class="feedback ${cls} shown">
+        <div class="verdict">${verdict}</div>
+        ${!ok ? `<div class="diff"><span class="yours">${tried}</span><span class="arrow">→</span><span class="theirs">${step.target}</span></div>` : ""}
+        ${step.tip ? `<div class="tip">${step.tip}</div>` : ""}
+      </div>
+    `;
+  }
+
+  const bottomHTML = phase === "feedback"
+    ? `<div class="continue-row">
+         <button class="continue ${isLast ? 'done' : 'next'} shown" id="continue">${isLast ? 'finish chain' : 'next step'} <span class="kbd">↵</span></button>
+       </div>`
+    : "";
+
+  card.innerHTML = `
+    ${chainHTML}
+    <div class="step-card">
+      <div class="instr">step ${stepIdx + 1} of ${chain.steps.length} · ${step.instruction}</div>
+      <div class="previous">
+        <span class="label">from</span>
+        <span class="from-form">${step.from}</span>
+      </div>
+      ${promptHTML}
+      ${inputHTML}
+      ${fbHTML}
+      ${bottomHTML}
+    </div>
+  `;
+
+  if (phase === "answer") {
+    const input = document.getElementById("answer");
+    const submit = document.getElementById("submit");
+    input.focus();
+    const handle = () => {
+      const v = input.value.trim();
+      if (!v) return;
+      chainHistory.push(v);
+      const ok = norm(v) === norm(step.target);
+      if (ok) chainCorrect++;
+      chainTotal++;
+      phase = "feedback";
+      render();
+    };
+    submit.addEventListener("click", handle);
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); handle(); } });
+    document.querySelectorAll(".accent").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const c = btn.dataset.c;
+        const s = input.selectionStart ?? input.value.length;
+        const e = input.selectionEnd ?? input.value.length;
+        input.value = input.value.slice(0, s) + c + input.value.slice(e);
+        input.focus();
+        input.setSelectionRange(s + 1, s + 1);
+      });
+    });
+  } else {
+    const cont = document.getElementById("continue");
+    if (cont) { cont.focus(); cont.addEventListener("click", nextStep); }
+  }
+}
+
+function nextStep() {
+  stepIdx++;
+  phase = "answer";
+  if (stepIdx >= CHAINS[chainIdx].steps.length) {
+    render(); // shows chain-done state
+  } else {
+    render();
+  }
+}
+
+function renderChainDone(chain) {
+  const correct = chainHistory.filter((v, i) => {
+    const step = chain.steps[i];
+    return norm(v) === norm(step.target);
+  }).length;
+  card.innerHTML = `
+    <div class="chain">
+      <div class="step done"><span class="n">1·</span><span class="f">${chain.steps[0].from}</span></div>
+      ${chain.steps.slice(1).map((s, i) => `<span class="arrow">→</span><div class="step done"><span class="n">${i + 2}·</span><span class="f">${s.target}</span></div>`).join("")}
+    </div>
+    <div class="summary">
+      <h2>Chain complete · ${correct} of ${chain.steps.length} on the first try</h2>
+      <p>Switching person and tense under load is where the real fluency lives.</p>
+      <div class="continue-row" style="justify-content:center">
+        <button class="continue next shown" id="next-chain">${chainIdx + 1 < CHAINS.length ? "next chain" : "see summary"} <span class="kbd">↵</span></button>
+      </div>
+    </div>
+  `;
+  const btn = document.getElementById("next-chain");
+  btn.focus();
+  btn.addEventListener("click", () => {
+    chainIdx++;
+    stepIdx = 0;
+    phase = "answer";
+    chainHistory = [];
+    render();
+  });
+}
+
+function renderSummary() {
+  progress.style.setProperty("--pct", "100%");
+  const total = chainTotal || 1;
+  const pct = Math.round((chainCorrect / total) * 100);
+  card.innerHTML = `
+    <div class="summary">
+      <h2>${chainCorrect} of ${total} chain steps right.</h2>
+      <p>${pct}% first-try across ${CHAINS.length} chains.</p>
+      <div class="stats">
+        <div class="stat"><span class="n" style="color:var(--emerald)">${chainCorrect}</span><span class="l">first-try</span></div>
+        <div class="stat"><span class="n" style="color:var(--coral)">${chainTotal - chainCorrect}</span><span class="l">retries</span></div>
+      </div>
+      <p style="font-size:0.9rem; color:var(--text-2); max-width: 30rem; margin: 0 auto 1.5rem;">The chain exercise builds the kind of switching you'll need in real conversation — <em>elle a fini</em> → <em>vous finissiez</em> → <em>nous ne finissions pas</em>. Real errors happen at the seams between transformations, not in isolation.</p>
+      <div class="row">
+        <a class="continue green" href="6-transformation-chain.html">try again</a>
+        <a class="continue ghost" href="7-rapid-fire.html">next: rapid-fire →</a>
+      </div>
+    </div>
+  `;
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && phase === "feedback") {
+    e.preventDefault();
+    nextStep();
+  }
+});
+
+render();
+</script>
+</body>
+</html>

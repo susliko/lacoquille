@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04 — Cue-to-form flashcard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/*
+  LAWS OF UX APPLIED
+  ─────────────────
+  Hick's Law: 3 chips + 1 input. One decision: recall the form.
+  Fitts's Law: input is the largest target on screen. Submit button is large.
+  Doherty Threshold: feedback appears in <50ms. No network, no spinner.
+  Postel's Law: accept missing accents as "almost". Don't punish.
+  Von Restorff Effect: streak counter is the most visually distinct element.
+  Peak-End Rule: end with a clear session summary.
+  Jakob's Law: card-style pattern, like Anki but adapted.
+  Aesthetic-Usability Effect: minimal, generous whitespace, large type.
+*/
+:root {
+  color-scheme: light;
+  --bg: #ffffff; --surface: #f7f5f2; --surface-2: #f0ece6;
+  --border: #ddd8d0; --border-subtle: #ece8e2; --border-bright: #b8b0a5;
+  --text: #1a1814; --text-2: #6b6560; --text-muted: #a09890;
+  --coral: #ff4757; --indigo: #3d5af1; --emerald: #00c48c; --amber: #ffb703;
+  --coral-soft: rgba(255, 71, 87, 0.10);
+  --indigo-soft: rgba(61, 90, 241, 0.10);
+  --emerald-soft: rgba(0, 196, 140, 0.10);
+  --amber-soft: rgba(255, 183, 3, 0.14);
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --accent: #ff4757;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); line-height: 1.65; display: flex; flex-direction: column; min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; }
+
+.bar { position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-subtle); padding: 0.7rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; }
+.bar .back { color: var(--text-2); padding: 0.25rem 0.5rem; border-radius: 6px; }
+.bar .back:hover { background: var(--surface); color: var(--text); }
+.bar .badge { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); padding: 0.2rem 0.5rem; border: 1px solid var(--border-subtle); border-radius: 999px; }
+.bar .label { color: var(--text-2); }
+.bar .spacer { flex: 1; }
+
+/* Streak (Von Restorff: the most distinct element) */
+.streak {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--coral);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.streak .flame { font-size: 1rem; }
+.streak.zero { color: var(--text-muted); }
+
+.stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
+.card { width: 100%; max-width: 32rem; }
+
+.chips {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+}
+.chip {
+  display: inline-flex; align-items: baseline; gap: 0.4rem;
+  padding: 0.7rem 1.1rem;
+  background: var(--surface);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 14px;
+  font-size: 1.05rem;
+  min-width: 6rem;
+  justify-content: center;
+}
+.chip .k { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+.chip .v { font-family: var(--font-display); font-size: 1.4rem; font-weight: 600; letter-spacing: -0.01em; color: var(--text); }
+.chip.verb .v { color: var(--indigo); }
+.chip.person .v { color: var(--text); }
+.chip.tense .v { color: var(--coral); }
+.times { color: var(--text-muted); font-size: 1rem; }
+
+/* Input — Fitts: largest target */
+.input {
+  width: 100%;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6vw, 2.8rem);
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: -0.01em;
+  padding: 1.25rem 1rem;
+  background: var(--bg);
+  border: 2px solid var(--border-subtle);
+  border-radius: 16px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.12s, background 0.12s, transform 0.08s;
+}
+.input:focus { border-color: var(--accent); }
+.input::placeholder { color: var(--text-muted); font-weight: 400; }
+.input.correct { border-color: var(--emerald); background: var(--emerald-soft); color: var(--emerald); }
+.input.almost  { border-color: var(--amber); background: var(--amber-soft); color: #b07500; }
+.input.wrong   { border-color: var(--coral); background: var(--coral-soft); color: var(--coral); animation: shake 0.32s; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+
+.accents { display: flex; gap: 0.4rem; justify-content: center; margin-top: 0.85rem; }
+.accent { width: 2.4rem; height: 2.4rem; display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 1.1rem; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 8px; color: var(--text-2); cursor: pointer; }
+.accent:hover { background: var(--surface-2); color: var(--text); border-color: var(--border-bright); }
+
+.hint-row { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted); }
+.hint-row .next { color: var(--text-2); }
+.hint-row kbd { font-family: var(--font-mono); font-size: 0.75rem; padding: 0.1rem 0.4rem; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 4px; }
+
+/* Feedback line (Doherty: <50ms) */
+.feedback-line {
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--text-2);
+  margin-top: 0.85rem;
+  min-height: 1.4em;
+  font-variant-numeric: tabular-nums;
+}
+.feedback-line .v { font-weight: 600; }
+.feedback-line .v.correct { color: var(--emerald); }
+.feedback-line .v.almost  { color: #b07500; }
+.feedback-line .v.wrong   { color: var(--coral); }
+.feedback-line .correction { font-family: var(--font-mono); font-weight: 600; color: var(--emerald); margin-left: 0.4rem; }
+
+.summary { text-align: center; padding: 2rem 0; max-width: 30rem; margin: 0 auto; }
+.summary h2 { font-family: var(--font-display); font-size: 2rem; font-weight: 600; margin-bottom: 0.4rem; }
+.summary p { color: var(--text-2); margin-bottom: 1.5rem; }
+.summary .big { font-family: var(--font-display); font-size: 4rem; font-weight: 600; color: var(--coral); line-height: 1; margin-bottom: 0.5rem; }
+.summary .stats { display: inline-flex; gap: 2rem; margin-bottom: 1.5rem; }
+.summary .stat .n { font-family: var(--font-display); font-size: 1.6rem; font-weight: 600; display: block; }
+.summary .stat .l { font-size: 0.75rem; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.08em; }
+.summary .note { font-size: 0.9rem; color: var(--text-2); margin-bottom: 1.5rem; line-height: 1.6; }
+.summary .row { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+.continue { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.85rem 1.4rem; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-weight: 500; font-size: 0.95rem; cursor: pointer; text-decoration: none; }
+.continue .kbd { font-family: var(--font-mono); font-size: 0.7rem; padding: 0.1rem 0.4rem; background: rgba(255,255,255,0.18); border-radius: 4px; font-weight: 400; }
+.continue.ghost { background: var(--surface); color: var(--text); }
+
+.foot { text-align: center; font-size: 0.8rem; color: var(--text-muted); padding: 1.5rem; border-top: 1px solid var(--border-subtle); }
+
+@media (max-width: 600px) {
+  .chips { gap: 0.4rem; margin-bottom: 1.5rem; }
+  .chip { padding: 0.55rem 0.85rem; min-width: 5rem; }
+  .chip .v { font-size: 1.15rem; }
+  .input { font-size: 1.8rem; padding: 1rem 0.75rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <a class="back" href="index.html">← prototypes</a>
+  <span class="badge">04 · Flashcard</span>
+  <span class="label">Cue-to-form</span>
+  <span class="spacer"></span>
+  <span class="streak" id="streak"><span class="flame">🔥</span><span id="streak-n">0</span></span>
+</div>
+
+<main class="stage">
+  <div class="card" id="card"></div>
+</main>
+
+<div class="foot">Enter to submit · ⌘/Ctrl+Enter to skip · missing accents count as almost, not wrong</div>
+
+<script>
+const ITEMS = [
+  { verb: "parler", person: "je",   tense: "présent",   answer: "parle" },
+  { verb: "finir",  person: "tu",   tense: "présent",   answer: "finis" },
+  { verb: "vendre", person: "il",   tense: "présent",   answer: "vend" },
+  { verb: "être",   person: "nous", tense: "imparfait", answer: "étions" },
+  { verb: "avoir",  person: "vous", tense: "présent",   answer: "avez" },
+  { verb: "aller",  person: "elle", tense: "imparfait", answer: "allait" },
+  { verb: "faire",  person: "je",   tense: "présent",   answer: "fais" },
+  { verb: "venir",  person: "ils",  tense: "imparfait", answer: "venaient" },
+  { verb: "parler", person: "vous", tense: "passé composé", answer: "avez parlé" },
+  { verb: "finir",  person: "il",   tense: "passé composé", answer: "a fini" },
+  { verb: "se lever", person: "je", tense: "présent",   answer: "me lève" },
+  { verb: "prendre",  person: "tu", tense: "présent",   answer: "prends" },
+];
+
+let idx = 0;
+let streak = 0, best = 0;
+let stats = { correct: 0, almost: 0, wrong: 0 };
+let phase = "answer"; // "answer" | "feedback"
+let lastVerdict = null;
+
+const card = document.getElementById("card");
+const streakEl = document.getElementById("streak");
+const streakN = document.getElementById("streak-n");
+
+function norm(s) { return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(); }
+function isAlmost(a, b) {
+  a = norm(a); b = norm(b);
+  if (a === b) return true;
+  if (Math.abs(a.length - b.length) > 1) return false;
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]);
+  for (let j = 1; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+  return dp[m][n] <= 1;
+}
+
+function updateStreak() {
+  streakN.textContent = streak;
+  streakEl.classList.toggle("zero", streak === 0);
+}
+
+function render() {
+  if (idx >= ITEMS.length) return renderSummary();
+  const item = ITEMS[idx];
+  const inputHTML = phase === "answer"
+    ? `<input class="input" id="answer" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="?" autofocus />`
+    : `<div class="input ${lastVerdict}">${item.answer}</div>`;
+
+  const fbHTML = phase === "feedback"
+    ? (lastVerdict === "correct"
+        ? `<div class="feedback-line"><span class="v correct">✓</span> streak <b>${streak}</b></div>`
+        : lastVerdict === "almost"
+          ? `<div class="feedback-line"><span class="v almost">almost</span> <span class="correction">${item.answer}</span> — watch the accent</div>`
+          : `<div class="feedback-line"><span class="v wrong">✗</span> the form is <span class="correction">${item.answer}</span></div>`)
+    : "";
+
+  const hintHTML = phase === "answer"
+    ? `<div class="hint-row"><span><kbd>↵</kbd> submit</span><span class="next"><kbd>⌘</kbd>+<kbd>↵</kbd> skip</span></div>`
+    : `<div class="hint-row"><span></span><span class="next">next in <span id="cd">1.5</span>s · or <kbd>↵</kbd></span></div>`;
+
+  card.innerHTML = `
+    <div class="chips">
+      <div class="chip verb"><span class="k">verb</span><span class="v">${item.verb}</span></div>
+      <span class="times">×</span>
+      <div class="chip person"><span class="k">person</span><span class="v">${item.person}</span></div>
+      <div class="chip tense"><span class="k">tense</span><span class="v">${item.tense}</span></div>
+    </div>
+    ${inputHTML}
+    ${phase === "answer" ? `
+      <div class="accents">
+        <button class="accent" data-c="é">é</button>
+        <button class="accent" data-c="è">è</button>
+        <button class="accent" data-c="ê">ê</button>
+        <button class="accent" data-c="à">à</button>
+        <button class="accent" data-c="ù">ù</button>
+        <button class="accent" data-c="ç">ç</button>
+        <button class="accent" data-c="ô">ô</button>
+        <button class="accent" data-c="î">î</button>
+        <button class="accent" data-c="ë">ë</button>
+      </div>
+    ` : ""}
+    ${hintHTML}
+    ${fbHTML}
+  `;
+
+  if (phase === "answer") {
+    const input = document.getElementById("answer");
+    input.focus();
+    const handle = () => {
+      const v = input.value.trim();
+      if (!v) return;
+      const item_ = ITEMS[idx];
+      const exact = v.toLowerCase() === item_.answer;
+      const almost = !exact && isAlmost(v, item_.answer);
+      if (exact) { lastVerdict = "correct"; stats.correct++; streak++; best = Math.max(best, streak); }
+      else if (almost) { lastVerdict = "almost"; stats.almost++; streak = 0; }
+      else { lastVerdict = "wrong"; stats.wrong++; streak = 0; }
+      updateStreak();
+      phase = "feedback";
+      render();
+      // Doherty: auto-advance after 1.5s (Peak-End: don't make user click for correct)
+      if (lastVerdict === "correct") {
+        setTimeout(() => { if (phase === "feedback" && ITEMS[idx] === item_) next(); }, 1500);
+        const cd = document.getElementById("cd");
+        if (cd) {
+          let t = 1.5;
+          const i = setInterval(() => {
+            t -= 0.1;
+            if (cd) cd.textContent = t.toFixed(1);
+            if (t <= 0) clearInterval(i);
+          }, 100);
+        }
+      } else {
+        // for almost/wrong, show correction for 2.5s
+        setTimeout(() => { if (phase === "feedback" && ITEMS[idx] === item_) next(); }, 2500);
+        const cd = document.getElementById("cd");
+        if (cd) {
+          let t = 2.5;
+          const i = setInterval(() => {
+            t -= 0.1;
+            if (cd) cd.textContent = t.toFixed(1);
+            if (t <= 0) clearInterval(i);
+          }, 100);
+        }
+      }
+    };
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        if (e.metaKey || e.ctrlKey) {
+          // skip — mark as wrong, advance
+          stats.wrong++;
+          streak = 0;
+          updateStreak();
+          lastVerdict = "wrong";
+          phase = "feedback";
+          render();
+          setTimeout(next, 800);
+        } else {
+          handle();
+        }
+      }
+    });
+    document.querySelectorAll(".accent").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const c = btn.dataset.c;
+        const s = input.selectionStart ?? input.value.length;
+        const e = input.selectionEnd ?? input.value.length;
+        input.value = input.value.slice(0, s) + c + input.value.slice(e);
+        input.focus();
+        input.setSelectionRange(s + 1, s + 1);
+      });
+    });
+  }
+}
+
+function next() { idx++; phase = "answer"; lastVerdict = null; render(); }
+
+function renderSummary() {
+  card.innerHTML = `
+    <div class="summary">
+      <p style="font-size:0.85rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); margin-bottom:0.5rem;">best streak</p>
+      <div class="big">${best}</div>
+      <h2>${stats.correct} of ${ITEMS.length} on the first try.</h2>
+      <p>Cue-to-form is the SRS backbone — short, frequent, and predictable.</p>
+      <div class="stats">
+        <div class="stat"><span class="n" style="color:var(--emerald)">${stats.correct}</span><span class="l">correct</span></div>
+        <div class="stat"><span class="n" style="color:#b07500">${stats.almost}</span><span class="l">almost</span></div>
+        <div class="stat"><span class="n" style="color:var(--coral)">${stats.wrong}</span><span class="l">wrong</span></div>
+      </div>
+      <p class="note">In production: items would be scheduled by spaced repetition. Wrong/almost items come back in a few cards; correct items wait days or weeks.</p>
+      <div class="row">
+        <a class="continue" href="4-cue-to-form.html">try again</a>
+        <a class="continue ghost" href="5-spot-the-tense.html">next: spot the tense →</a>
+      </div>
+    </div>
+  `;
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && phase === "feedback") {
+    e.preventDefault();
+    next();
+  }
+});
+
+updateStreak();
+render();
+</script>
+</body>
+</html>

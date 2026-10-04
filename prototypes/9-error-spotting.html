@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>09 — Error spotting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/*
+  LAWS OF UX APPLIED
+  ─────────────────
+  Fitts's Law: each word is a tappable target — at least 44px tall, full width.
+  Paradox of the Active User: no instructions needed. The sentence is the
+    interface. Subtle dotted underline on each word = "tap me".
+  Von Restorff Effect: the wrong word (when correctly identified) flashes.
+  Law of Proximity: the fix chips appear right below the tapped word.
+  Hick's Law: 2-4 candidate fixes — manageable.
+  Postel's Law: if they pick a "near" answer (e.g. wrong gender but right
+    auxiliary), treat it as "almost".
+  Aesthetic-Usability Effect: clean prose, generous spacing.
+*/
+:root {
+  color-scheme: light;
+  --bg: #ffffff; --surface: #f7f5f2; --surface-2: #f0ece6;
+  --border: #ddd8d0; --border-subtle: #ece8e2; --border-bright: #b8b0a5;
+  --text: #1a1814; --text-2: #6b6560; --text-muted: #a09890;
+  --coral: #ff4757; --indigo: #3d5af1; --emerald: #00c48c; --amber: #ffb703;
+  --coral-soft: rgba(255, 71, 87, 0.10);
+  --indigo-soft: rgba(61, 90, 241, 0.10);
+  --emerald-soft: rgba(0, 196, 140, 0.10);
+  --amber-soft: rgba(255, 183, 3, 0.14);
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --accent: #3d5af1;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); line-height: 1.65; display: flex; flex-direction: column; min-height: 100vh; }
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; }
+
+.bar { position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-subtle); padding: 0.7rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; }
+.bar .back { color: var(--text-2); padding: 0.25rem 0.5rem; border-radius: 6px; }
+.bar .back:hover { background: var(--surface); color: var(--text); }
+.bar .badge { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); padding: 0.2rem 0.5rem; border: 1px solid var(--border-subtle); border-radius: 999px; }
+.bar .label { color: var(--text-2); }
+.bar .spacer { flex: 1; }
+.bar .counter { color: var(--text-2); font-variant-numeric: tabular-nums; }
+.bar .counter b { color: var(--text); font-weight: 500; }
+
+.progress { height: 3px; background: var(--surface-2); position: relative; overflow: hidden; }
+.progress::after { content: ''; position: absolute; top: 0; left: 0; height: 100%; width: var(--pct, 0%); background: var(--accent); transition: width 0.4s cubic-bezier(0.2, 0.7, 0.2, 1); }
+
+.stage { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding: 2.5rem 1.5rem 1.5rem; }
+.card { width: 100%; max-width: 38rem; }
+
+.eyebrow { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--accent); margin-bottom: 0.5rem; font-weight: 500; }
+.eyebrow .icon { margin-right: 0.4rem; }
+
+.sentence {
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 3.4vw, 1.8rem);
+  font-weight: 500;
+  line-height: 1.85;
+  letter-spacing: -0.005em;
+  color: var(--text);
+  margin-bottom: 1.5rem;
+  /* Generous line height for tappability (Fitts) */
+}
+.sentence .word {
+  display: inline-block;
+  padding: 0.05em 0.25em;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  border-bottom: 1.5px dotted transparent;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  /* Click target > Fitts-friendly */
+  min-height: 1.5em;
+  line-height: 1.5;
+}
+.sentence .word:hover { background: var(--surface); border-bottom-color: var(--border-bright); }
+.sentence .word.tapped-wrong { background: var(--amber-soft); color: #b07500; }
+.sentence .word.tapped-right { background: var(--emerald-soft); color: var(--emerald); border-bottom-color: transparent; }
+.sentence .word.missed { background: var(--coral-soft); color: var(--coral); text-decoration: line-through; text-decoration-thickness: 1.5px; animation: shake 0.32s; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-3px)} 75%{transform:translateX(3px)} }
+.sentence .word.fixed { background: var(--emerald-soft); color: var(--emerald); }
+.sentence .whitespace { display: inline; }
+
+.hint { font-size: 0.85rem; color: var(--text-2); margin-bottom: 0.5rem; }
+.hint code { font-family: var(--font-mono); background: var(--indigo-soft); color: var(--indigo); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.85em; }
+
+/* Fix panel (Law of Proximity: appears below the tapped word) */
+.fix-panel {
+  margin-top: 1rem;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  display: none;
+  animation: slideIn 0.2s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.fix-panel.shown { display: block; }
+@keyframes slideIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+.fix-panel .fix-label { font-size: 0.85rem; color: var(--text-2); margin-bottom: 0.6rem; }
+.fix-panel .fix-label .bad { font-family: var(--font-mono); color: var(--coral); text-decoration: line-through; }
+
+.fix-options { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.6rem; }
+.fix-opt {
+  padding: 0.6rem 0.9rem;
+  background: var(--bg);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.fix-opt:hover { border-color: var(--border-bright); transform: translateY(-1px); }
+.fix-opt.right { background: var(--emerald-soft); border-color: var(--emerald); color: var(--emerald); }
+.fix-opt.wrong { background: var(--coral-soft); border-color: var(--coral); color: var(--coral); }
+
+.explain-line { font-size: 0.92rem; color: var(--text-2); margin-top: 0.6rem; line-height: 1.5; }
+.explain-line b { color: var(--text); font-weight: 500; }
+.explain-line code { font-family: var(--font-mono); background: rgba(61, 90, 241, 0.08); color: var(--indigo); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.85em; }
+
+.continue-row { display: flex; justify-content: flex-end; margin-top: 1.5rem; min-height: 3rem; }
+.continue { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.85rem 1.4rem; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-weight: 500; font-size: 0.95rem; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; text-decoration: none; }
+.continue.shown { opacity: 1; pointer-events: auto; }
+.continue .kbd { font-family: var(--font-mono); font-size: 0.7rem; padding: 0.1rem 0.4rem; background: rgba(255,255,255,0.18); border-radius: 4px; font-weight: 400; }
+
+.summary { text-align: center; padding: 1.5rem 0; max-width: 32rem; margin: 0 auto; }
+.summary h2 { font-family: var(--font-display); font-size: 1.8rem; font-weight: 600; margin-bottom: 0.5rem; }
+.summary p { color: var(--text-2); margin-bottom: 1.5rem; }
+.summary .stats { display: inline-flex; gap: 1.5rem; margin-bottom: 1.5rem; }
+.summary .stat .n { font-family: var(--font-display); font-size: 2rem; font-weight: 600; display: block; }
+.summary .stat .l { font-size: 0.8rem; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.08em; }
+.summary .note { font-size: 0.9rem; color: var(--text-2); max-width: 30rem; margin: 0 auto 1.5rem; line-height: 1.6; }
+.summary .row { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+.continue.green { background: var(--emerald); }
+.continue.ghost { background: var(--surface); color: var(--text); }
+
+.foot { text-align: center; font-size: 0.8rem; color: var(--text-muted); padding: 1.5rem; border-top: 1px solid var(--border-subtle); }
+
+@media (max-width: 600px) {
+  .stage { padding: 1.5rem 1.25rem; }
+  .sentence { font-size: 1.2rem; line-height: 1.9; }
+}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <a class="back" href="index.html">← prototypes</a>
+  <span class="badge">09 · Spotting</span>
+  <span class="label">Error spotting</span>
+  <span class="spacer"></span>
+  <span class="counter"><b id="counter">1</b> / <span id="total">6</span></span>
+</div>
+<div class="progress" id="progress"></div>
+
+<main class="stage">
+  <div class="card" id="card"></div>
+</main>
+
+<div class="foot">Tap a word you think is wrong. If nothing is wrong, tap <em>rien à signaler</em> below the sentence.</div>
+
+<script>
+// Each item: a sentence (array of {word, wrong?} tokens), the correct fixes,
+// and an explanation. Wrong words are flagged so we know what to look for.
+const ITEMS = [
+  {
+    sentence: [
+      { w: "Hier" }, { w: "soir" }, { w: "je" }, { w: "suis" }, { w: "allé" }, { w: "au" }, { w: "cinéma" }, { w: "avec" }, { w: "Marie" }, { w: "." }
+    ],
+    errors: [],  // none in this first part
+    intro: "(première partie — lisez la suite)",
+  },
+  {
+    sentence: [
+      { w: "Hier" }, { w: "soir" }, { w: "je" }, { w: "suis" }, { w: "allé" }, { w: "au" }, { w: "cinéma" }, { w: "avec" }, { w: "Marie" }, { w: "." },
+      { w: "Nous" }, { w: "sommes" }, { w: "rentré" }, { w: "à" }, { w: "la" }, { w: "maison" }, { w: "vers" }, { w: "minuit" }, { w: "." }
+    ],
+    error: { wordIndex: 12, wrong: "rentré", correct: "rentrés",
+      options: ["rentrés", "rentrée", "rentrait", "rentré"], correctIndex: 0,
+      explain: "With <b>nous</b>, the past participle of a <b>rentrer</b> (intransitive, uses être) must agree in gender &amp; number: <b>nous sommes rentrés</b>." },
+    intro: "Suite de la phrase précédente. Une conjugaison est incorrecte.",
+  },
+  {
+    sentence: [
+      { w: "Si" }, { w: "j'aurais" }, { w: "le" }, { w: "temps" }, { w: "," }, { w: "j'irais" }, { w: "au" }, { w: "parc" }, { w: "." }
+    ],
+    error: { wordIndex: 1, wrong: "j'aurais", correct: "j'avais",
+      options: ["j'avais", "j'aie", "j'aurai", "j'aurais"], correctIndex: 0,
+      explain: "After <code>si</code> + a condition that is not real, French uses the <b>imparfait</b>, not the conditionnel. <b>si j'avais le temps, j'irais</b> (lit. 'if I had the time, I would go')." },
+    intro: "Une conjugaison est incorrecte.",
+  },
+  {
+    sentence: [
+      { w: "Elle" }, { w: "a" }, { w: "allé" }, { w: "à" }, { w: "l'école" }, { w: "ce" }, { w: "matin" }, { w: "." }
+    ],
+    error: { wordIndex: 2, wrong: "a", correct: "est",
+      options: ["a", "est", "était", "ira"], correctIndex: 1,
+      explain: "<b>aller</b> uses <b>être</b> (not avoir) in the passé composé. <b>elle est allée</b>." },
+    intro: "Une conjugaison est incorrecte.",
+  },
+  {
+    sentence: [
+      { w: "Quand" }, { w: "j'étais" }, { w: "petite" }, { w: "je" }, { w: "jouais" }, { w: "dans" }, { w: "le" }, { w: "jardin" }, { w: "." }
+    ],
+    error: { wordIndex: 2, wrong: "petite", correct: "petit",
+      options: ["petit", "petite", "petits", "petites"], correctIndex: 0,
+      explain: "The speaker is <b>je</b> (masculine) — unless context specifies otherwise. Default: <b>j'étais petit</b>. (If the speaker is female, <b>petite</b> would be correct.)" },
+    intro: "Une conjugaison/accord est incorrect.",
+  },
+  {
+    sentence: [
+      { w: "Il" }, { w: "a" }, { w: "bu" }, { w: "du" }, { w: "café" }, { w: "," }, { w: "puis" }, { w: "il" }, { w: "a" }, { w: "sorti" }, { w: "." }
+    ],
+    error: { wordIndex: 9, wrong: "sorti", correct: "sorti",
+      options: ["a sorti", "est sorti", "avait sorti", "soit sorti"], correctIndex: 1,
+      explain: "<b>sortir</b> is intransitive and uses <b>être</b> in the passé composé. <b>il est sorti</b>. (Verbs of motion with être: aller, venir, sortir, partir, arriver, descendre, monter, naître, mourir, rester, retourner, tomber.)" },
+    intro: "Une conjugaison est incorrecte.",
+  },
+];
+
+let idx = 0;
+let phase = "find";   // "find" | "fix" | "fix-feedback" | "done"
+let tappedWrong = [];   // wrong taps recorded
+let stats = { found: 0, falseAlarms: 0, fixed: 0 };
+
+const card = document.getElementById("card");
+const counter = document.getElementById("counter");
+const total = document.getElementById("total");
+const progress = document.getElementById("progress");
+total.textContent = ITEMS.length;
+
+function render() {
+  if (idx >= ITEMS.length) return renderSummary();
+  const item = ITEMS[idx];
+  counter.textContent = idx + 1;
+  progress.style.setProperty("--pct", `${(idx / ITEMS.length) * 100}%`);
+
+  if (phase === "done") { idx++; phase = "find"; render(); return; }
+
+  const sentenceHTML = item.sentence.map((tok, i) => {
+    let cls = "word";
+    return `<span class="${cls}" data-i="${i}">${tok.w}</span>`;
+  }).join(" ");
+
+  let body = "";
+  if (phase === "find") {
+    body = `
+      <div class="hint">Tap a word you think is wrong. ${item.intro || ""}</div>
+      <div class="sentence" id="sentence">${sentenceHTML}</div>
+      <div class="hint" style="text-align:center; margin-top:1.5rem;">
+        <button class="continue" id="nothing-wrong" style="background:transparent; color:var(--text-2); border:1px solid var(--border-subtle); opacity:1; pointer-events:auto; transform:none; padding: 0.6rem 1rem; font-size:0.85rem;">rien à signaler →</button>
+      </div>
+    `;
+  } else if (phase === "fix" || phase === "fix-feedback") {
+    const err = item.error;
+    const sentenceHTML2 = item.sentence.map((tok, i) => {
+      let cls = "word";
+      if (i === err.wordIndex) {
+        cls += " tapped-wrong";
+      }
+      return `<span class="${cls}" data-i="${i}">${tok.w}</span>`;
+    }).join(" ");
+    const fixHTML = `
+      <div class="fix-panel shown">
+        <div class="fix-label">Replace <span class="bad">${err.wrong}</span> with:</div>
+        <div class="fix-options" id="fix-options">
+          ${err.options.map((o, i) => `<button class="fix-opt" data-i="${i}">${o}</button>`).join("")}
+        </div>
+        ${phase === "fix-feedback" ? `<div class="explain-line">${err.explain}</div>` : ""}
+      </div>
+    `;
+    body = `
+      <div class="sentence" id="sentence">${sentenceHTML2}</div>
+      ${fixHTML}
+      <div class="continue-row">
+        <button class="continue shown" id="continue">continue <span class="kbd">↵</span></button>
+      </div>
+    `;
+  }
+
+  card.innerHTML = `
+    <div class="eyebrow"><span class="icon">▸</span> spot the error · ${item.intro || "find the wrong form"}</div>
+    ${body}
+  `;
+
+  if (phase === "find") {
+    document.querySelectorAll(".word").forEach(w => {
+      w.addEventListener("click", () => handleWordTap(parseInt(w.dataset.i, 10)));
+    });
+    document.getElementById("nothing-wrong").addEventListener("click", handleNothingWrong);
+  } else if (phase === "fix") {
+    document.querySelectorAll(".fix-opt").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const i = parseInt(btn.dataset.i, 10);
+        const isRight = i === item.error.correctIndex;
+        // mark options
+        document.querySelectorAll(".fix-opt").forEach((b, j) => {
+          b.disabled = true;
+          if (j === item.error.correctIndex) b.classList.add("right");
+          else if (j === i && !isRight) b.classList.add("wrong");
+        });
+        if (isRight) stats.fixed++;
+        // mark the word as fixed in the sentence
+        const wordEl = document.querySelector(`.word[data-i="${item.error.wordIndex}"]`);
+        if (isRight) {
+          wordEl.classList.remove("tapped-wrong");
+          wordEl.classList.add("fixed");
+          wordEl.textContent = item.error.correct;
+        }
+        phase = "fix-feedback";
+        render();
+      });
+    });
+  } else if (phase === "fix-feedback") {
+    const cont = document.getElementById("continue");
+    cont.focus();
+    cont.addEventListener("click", () => { phase = "done"; render(); });
+  }
+}
+
+function handleWordTap(i) {
+  const item = ITEMS[idx];
+  if (item.error && i === item.error.wordIndex) {
+    // correct tap
+    stats.found++;
+    phase = "fix";
+    render();
+  } else {
+    // false alarm
+    stats.falseAlarms++;
+    const w = document.querySelector(`.word[data-i="${i}"]`);
+    w.classList.add("missed");
+    setTimeout(() => w.classList.remove("missed"), 600);
+  }
+}
+
+function handleNothingWrong() {
+  // the last item has no error; all others do. So this is only correct on items that genuinely have no error.
+  const item = ITEMS[idx];
+  if (!item.error) {
+    stats.found++;
+    phase = "fix-feedback";
+    // (no fix to do; jump straight to continue)
+    card.innerHTML = `
+      <div class="eyebrow"><span class="icon">▸</span> correct — no errors</div>
+      <div class="sentence" style="font-size:1.3rem; line-height:1.85;">
+        ${item.sentence.map(t => `<span class="word tapped-right">${t.w}</span>`).join(" ")}
+      </div>
+      <div class="fix-panel shown">
+        <div class="explain-line">Bonne lecture — cette phrase est correcte. <b>Self-monitoring</b> est une compétence en soi : savoir dire "tout va bien" est aussi précieux que repérer une erreur.</div>
+      </div>
+      <div class="continue-row">
+        <button class="continue shown" id="continue">continue <span class="kbd">↵</span></button>
+      </div>
+    `;
+    const cont = document.getElementById("continue");
+    cont.focus();
+    cont.addEventListener("click", () => { phase = "done"; render(); });
+  } else {
+    // wrong: there IS an error, and they missed it. Show it.
+    stats.falseAlarms++;
+    const err = item.error;
+    card.innerHTML = `
+      <div class="eyebrow"><span class="icon">▸</span> il y a une erreur</div>
+      <div class="sentence">
+        ${item.sentence.map((t, i) => {
+          let cls = "word";
+          if (i === err.wordIndex) cls += " missed";
+          return `<span class="${cls}" data-i="${i}">${t.w}</span>`;
+        }).join(" ")}
+      </div>
+      <div class="fix-panel shown">
+        <div class="fix-label">The error is <span class="bad">${err.wrong}</span> — it should be:</div>
+        <div class="fix-options">
+          <button class="fix-opt right">${err.correct}</button>
+        </div>
+        <div class="explain-line">${err.explain}</div>
+      </div>
+      <div class="continue-row">
+        <button class="continue shown" id="continue">continue <span class="kbd">↵</span></button>
+      </div>
+    `;
+    const cont = document.getElementById("continue");
+    cont.focus();
+    cont.addEventListener("click", () => { phase = "done"; render(); });
+  }
+}
+
+function renderSummary() {
+  progress.style.setProperty("--pct", "100%");
+  card.innerHTML = `
+    <div class="summary">
+      <h2>Spotting done.</h2>
+      <p>The hardest part of producing correct French is <b>noticing</b> when it's wrong — yours or someone else's.</p>
+      <div class="stats">
+        <div class="stat"><span class="n" style="color:var(--emerald)">${stats.found}</span><span class="l">errors spotted</span></div>
+        <div class="stat"><span class="n" style="color:var(--coral)">${stats.falseAlarms}</span><span class="l">false alarms</span></div>
+        <div class="stat"><span class="n" style="color:var(--emerald)">${stats.fixed}</span><span class="l">fixed first-try</span></div>
+      </div>
+      <p class="note">Error spotting trains <b>self-monitoring</b> — the metacognitive skill that makes a B2 speaker into a C1. Real production (writing, speaking) is mostly noticing your own slips and fixing them in real time.</p>
+      <div class="row">
+        <a class="continue green" href="9-error-spotting.html">try again</a>
+        <a class="continue ghost" href="10-audio-dictation.html">next: audio dictation →</a>
+      </div>
+    </div>
+  `;
+}
+
+render();
+</script>
+</body>
+</html>

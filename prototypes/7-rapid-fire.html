@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>07 — Rapid-fire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/*
+  LAWS OF UX APPLIED
+  ─────────────────
+  Doherty Threshold: feedback in <50ms. The whole point of this exercise.
+  Fitts's Law: input is the dominant element. Everything else recedes.
+  Aesthetic-Usability Effect: stripped-down, dramatic, focused.
+  Von Restorff Effect: the streak number is the most distinct visual.
+  Peak-End Rule: end screen shows the personal best with a clear delta.
+  Parkinson's Law: time pressure. BUT: the lock-condition in the description
+    mitigates the risk — this should only be unlocked after accuracy >85%.
+  Postel's Law: missing accents = almost (not wrong). Typos in 1s count as
+    speed of recall, not as accuracy errors.
+  Hick's Law: one decision per item.
+*/
+:root {
+  color-scheme: light;
+  --bg: #ffffff; --surface: #f7f5f2;
+  --border: #ddd8d0; --border-subtle: #ece8e2; --border-bright: #b8b0a5;
+  --text: #1a1814; --text-2: #6b6560; --text-muted: #a09890;
+  --coral: #ff4757; --indigo: #3d5af1; --emerald: #00c48c; --amber: #ffb703;
+  --coral-soft: rgba(255, 71, 87, 0.10);
+  --indigo-soft: rgba(61, 90, 241, 0.10);
+  --emerald-soft: rgba(0, 196, 140, 0.10);
+  --amber-soft: rgba(255, 183, 3, 0.14);
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --accent: #ff6b35;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); line-height: 1.65; display: flex; flex-direction: column; min-height: 100vh; overflow: hidden; }
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; }
+
+.bar { background: rgba(255,255,255,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-subtle); padding: 0.85rem 1.5rem; display: flex; align-items: center; gap: 1rem; font-size: 0.85rem; }
+.bar .back { color: var(--text-2); padding: 0.25rem 0.5rem; border-radius: 6px; }
+.bar .back:hover { background: var(--surface); color: var(--text); }
+.bar .badge { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); padding: 0.2rem 0.5rem; border: 1px solid var(--border-subtle); border-radius: 999px; }
+.bar .label { color: var(--text-2); }
+.bar .spacer { flex: 1; }
+
+/* Lock notice (Parkinson mitigation) */
+.lock {
+  background: var(--amber-soft);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0.6rem 1.5rem;
+  font-size: 0.82rem;
+  color: #b07500;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.lock code { font-family: var(--font-mono); background: rgba(255,183,3,0.15); padding: 0.1rem 0.4rem; border-radius: 4px; color: #b07500; font-size: 0.8em; }
+
+/* Timer bar (Doherty: feedback always visible) */
+.timer-track {
+  height: 4px;
+  background: var(--surface);
+  position: relative;
+  overflow: hidden;
+}
+.timer-track::after {
+  content: '';
+  position: absolute; top: 0; left: 0; height: 100%;
+  width: var(--pct, 100%);
+  background: var(--accent);
+  transition: width 0.1s linear;
+}
+.timer-track.warning::after { background: var(--coral); }
+
+.stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; position: relative; }
+
+.timer-big {
+  font-family: var(--font-mono);
+  font-size: 4rem;
+  font-weight: 500;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+.timer-big.warning { color: var(--coral); animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.5; } }
+
+.streak-display {
+  display: flex; align-items: baseline; gap: 0.5rem;
+  margin-bottom: 2rem;
+  font-family: var(--font-display);
+}
+.streak-display .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted); }
+.streak-display .n { font-size: 2.4rem; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; line-height: 1; }
+.streak-display.cold .n { color: var(--text-muted); }
+.streak-display.hot .n { color: var(--coral); }
+
+.chips-mini {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.4rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.chip-mini {
+  padding: 0.5rem 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+.chip-mini.verb { color: var(--indigo); }
+.chip-mini.person { color: var(--text); }
+.chip-mini.tense { color: var(--coral); }
+.chip-mini .k { display: none; }
+.chip-mini .v { font-size: 1.15rem; }
+.chip-mini.x { color: var(--text-muted); padding: 0.5rem 0.4rem; background: transparent; border: none; }
+
+.input {
+  width: 100%;
+  max-width: 28rem;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6vw, 2.6rem);
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: -0.01em;
+  padding: 1.1rem 1rem;
+  background: var(--bg);
+  border: 2px solid var(--border-subtle);
+  border-radius: 14px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.1s, background 0.1s;
+}
+.input:focus { border-color: var(--accent); }
+.input::placeholder { color: var(--text-muted); font-weight: 400; }
+.input.correct { border-color: var(--emerald); background: var(--emerald-soft); color: var(--emerald); }
+.input.almost  { border-color: var(--amber); background: var(--amber-soft); color: #b07500; }
+.input.wrong   { border-color: var(--coral); background: var(--coral-soft); color: var(--coral); }
+
+.accents { display: flex; gap: 0.3rem; justify-content: center; margin-top: 0.75rem; }
+.accent { width: 2rem; height: 2rem; display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 1rem; background: var(--surface); border: 1px solid var(--border-subtle); border-radius: 6px; color: var(--text-2); cursor: pointer; }
+.accent:hover { background: #f0ece6; color: var(--text); }
+
+.counter-mini {
+  position: absolute;
+  bottom: 1rem;
+  right: 1.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.counter-mini b { color: var(--text); }
+
+/* Start screen */
+.start { text-align: center; max-width: 32rem; }
+.start .eyebrow { font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--accent); margin-bottom: 0.5rem; }
+.start h1 { font-family: var(--font-display); font-size: clamp(2.5rem, 6vw, 3.5rem); font-weight: 500; line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 0.75rem; }
+.start h1 em { font-family: 'DM Serif Display', serif; font-style: italic; font-weight: 400; color: var(--accent); }
+.start p { color: var(--text-2); font-size: 1.05rem; max-width: 28rem; margin: 0 auto 1.5rem; line-height: 1.55; }
+.start .rules { background: var(--surface); border-radius: 12px; padding: 1.25rem 1.5rem; text-align: left; margin-bottom: 1.5rem; border: 1px solid var(--border-subtle); }
+.start .rules h3 { font-family: var(--font-display); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-2); margin-bottom: 0.5rem; }
+.start .rules ul { list-style: none; padding: 0; margin: 0; font-size: 0.92rem; color: var(--text-2); }
+.start .rules li { padding: 0.25rem 0; display: flex; align-items: flex-start; gap: 0.5rem; }
+.start .rules li::before { content: '·'; color: var(--accent); font-weight: bold; }
+
+.start-btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 1rem 2rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 1.05rem;
+  cursor: pointer;
+  font-family: var(--font-display);
+}
+.start-btn:hover { opacity: 0.92; }
+.start-btn .kbd { font-family: var(--font-mono); font-size: 0.75rem; padding: 0.15rem 0.5rem; background: rgba(255,255,255,0.2); border-radius: 4px; }
+
+.summary { text-align: center; max-width: 32rem; padding: 1rem; }
+.summary h2 { font-family: var(--font-display); font-size: 1.8rem; font-weight: 600; margin-bottom: 0.4rem; }
+.summary .big { font-family: var(--font-display); font-size: 4.5rem; font-weight: 700; color: var(--accent); line-height: 1; margin: 0.5rem 0; font-variant-numeric: tabular-nums; }
+.summary .sub { font-size: 1rem; color: var(--text-2); margin-bottom: 1.5rem; }
+.summary .stats { display: inline-flex; gap: 2rem; margin-bottom: 1.5rem; padding: 1rem 1.5rem; background: var(--surface); border-radius: 12px; }
+.summary .stat .n { font-family: var(--font-display); font-size: 1.8rem; font-weight: 600; display: block; font-variant-numeric: tabular-nums; }
+.summary .stat .l { font-size: 0.75rem; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.08em; }
+.summary .note { font-size: 0.9rem; color: var(--text-2); margin-bottom: 1.5rem; line-height: 1.6; max-width: 30rem; }
+.summary .row { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+.continue { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.85rem 1.4rem; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-weight: 500; font-size: 0.95rem; cursor: pointer; text-decoration: none; }
+.continue.ghost { background: var(--surface); color: var(--text); }
+.continue .kbd { font-family: var(--font-mono); font-size: 0.7rem; padding: 0.1rem 0.4rem; background: rgba(255,255,255,0.18); border-radius: 4px; }
+
+.foot { text-align: center; font-size: 0.8rem; color: var(--text-muted); padding: 1.5rem; border-top: 1px solid var(--border-subtle); }
+
+@media (max-width: 600px) {
+  .stage { padding: 1.5rem 1rem; }
+  .timer-big { font-size: 3rem; }
+  .input { font-size: 1.6rem; padding: 0.85rem 0.75rem; }
+  .chip-mini { padding: 0.4rem 0.7rem; font-size: 1rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <a class="back" href="index.html">← prototypes</a>
+  <span class="badge">07 · Fluency</span>
+  <span class="label">Rapid-fire</span>
+  <span class="spacer"></span>
+  <a class="back" href="index.html" style="font-size:0.85rem">all prototypes →</a>
+</div>
+
+<div class="lock">
+  <strong>Unlock condition:</strong> your recent accuracy in cue-to-form is &gt; <code>85%</code>. Rapid-fire is for fluency, not for learning new material — speed without accuracy is just sloppy recall.
+</div>
+
+<div class="timer-track" id="timer-track" style="--pct:100%"></div>
+
+<main class="stage" id="stage">
+  <div class="start" id="start">
+    <div class="eyebrow">fluency drill · 60 seconds</div>
+    <h1>Rapid-<em>fire</em></h1>
+    <p>Sixty seconds. As many cue-to-form items as you can. The clock is the teacher — accuracy still comes first, but speed will follow.</p>
+    <div class="rules">
+      <h3>How it works</h3>
+      <ul>
+        <li>Three chips: verb · person · tense</li>
+        <li>Type the conjugated form, hit <b>Enter</b></li>
+        <li>Correct → next item, no pause</li>
+        <li>Wrong → brief flash of the correct form, then continue</li>
+        <li>Almost (missing accent) → counted, no streak break</li>
+        <li>Wrong breaks your streak. Build a new one.</li>
+      </ul>
+    </div>
+    <button class="start-btn" id="start-btn">start 60-second drill <span class="kbd">↵</span></button>
+  </div>
+</main>
+
+<div class="foot" id="foot">Rapid-fire builds automatization — the form comes out before you think.</div>
+
+<script>
+const POOL = [
+  { verb: "parler",  person: "je",   tense: "présent",   answer: "parle" },
+  { verb: "parler",  person: "tu",   tense: "présent",   answer: "parles" },
+  { verb: "parler",  person: "il",   tense: "présent",   answer: "parle" },
+  { verb: "parler",  person: "nous", tense: "présent",   answer: "parlons" },
+  { verb: "parler",  person: "vous", tense: "présent",   answer: "parlez" },
+  { verb: "parler",  person: "ils",  tense: "présent",   answer: "parlent" },
+  { verb: "parler",  person: "je",   tense: "imparfait", answer: "parlais" },
+  { verb: "parler",  person: "tu",   tense: "imparfait", answer: "parlais" },
+  { verb: "parler",  person: "il",   tense: "imparfait", answer: "parlait" },
+  { verb: "parler",  person: "nous", tense: "imparfait", answer: "parlions" },
+  { verb: "parler",  person: "vous", tense: "imparfait", answer: "parliez" },
+  { verb: "parler",  person: "ils",  tense: "imparfait", answer: "parlaient" },
+  { verb: "finir",   person: "je",   tense: "présent",   answer: "finis" },
+  { verb: "finir",   person: "tu",   tense: "présent",   answer: "finis" },
+  { verb: "finir",   person: "il",   tense: "présent",   answer: "finit" },
+  { verb: "finir",   person: "nous", tense: "présent",   answer: "finissons" },
+  { verb: "finir",   person: "vous", tense: "présent",   answer: "finissez" },
+  { verb: "finir",   person: "ils",  tense: "présent",   answer: "finissent" },
+  { verb: "finir",   person: "je",   tense: "imparfait", answer: "finissais" },
+  { verb: "finir",   person: "tu",   tense: "imparfait", answer: "finissais" },
+  { verb: "finir",   person: "il",   tense: "imparfait", answer: "finissait" },
+  { verb: "vendre",  person: "je",   tense: "présent",   answer: "vends" },
+  { verb: "vendre",  person: "tu",   tense: "présent",   answer: "vends" },
+  { verb: "vendre",  person: "il",   tense: "présent",   answer: "vend" },
+  { verb: "vendre",  person: "nous", tense: "présent",   answer: "vendons" },
+  { verb: "vendre",  person: "vous", tense: "présent",   answer: "vendez" },
+  { verb: "vendre",  person: "ils",  tense: "présent",   answer: "vendent" },
+  { verb: "être",    person: "je",   tense: "présent",   answer: "suis" },
+  { verb: "être",    person: "tu",   tense: "présent",   answer: "es" },
+  { verb: "être",    person: "il",   tense: "présent",   answer: "est" },
+  { verb: "être",    person: "nous", tense: "présent",   answer: "sommes" },
+  { verb: "être",    person: "vous", tense: "présent",   answer: "êtes" },
+  { verb: "être",    person: "ils",  tense: "présent",   answer: "sont" },
+  { verb: "être",    person: "j'",   tense: "imparfait", answer: "étais" },
+  { verb: "être",    person: "il",   tense: "imparfait", answer: "était" },
+  { verb: "avoir",   person: "j'",   tense: "présent",   answer: "ai" },
+  { verb: "avoir",   person: "tu",   tense: "présent",   answer: "as" },
+  { verb: "avoir",   person: "il",   tense: "présent",   answer: "a" },
+  { verb: "avoir",   person: "nous", tense: "présent",   answer: "avons" },
+  { verb: "avoir",   person: "vous", tense: "présent",   answer: "avez" },
+  { verb: "avoir",   person: "ils",  tense: "présent",   answer: "ont" },
+  { verb: "aller",   person: "je",   tense: "présent",   answer: "vais" },
+  { verb: "aller",   person: "il",   tense: "présent",   answer: "va" },
+  { verb: "aller",   person: "nous", tense: "présent",   answer: "allons" },
+  { verb: "aller",   person: "vous", tense: "présent",   answer: "allez" },
+  { verb: "aller",   person: "ils",  tense: "présent",   answer: "vont" },
+  { verb: "faire",   person: "je",   tense: "présent",   answer: "fais" },
+  { verb: "faire",   person: "tu",   tense: "présent",   answer: "fais" },
+  { verb: "faire",   person: "il",   tense: "présent",   answer: "fait" },
+  { verb: "faire",   person: "nous", tense: "présent",   answer: "faisons" },
+  { verb: "faire",   person: "vous", tense: "présent",   answer: "faites" },
+  { verb: "faire",   person: "ils",  tense: "présent",   answer: "font" },
+  { verb: "venir",   person: "je",   tense: "présent",   answer: "viens" },
+  { verb: "venir",   person: "tu",   tense: "présent",   answer: "viens" },
+  { verb: "venir",   person: "il",   tense: "présent",   answer: "vient" },
+  { verb: "venir",   person: "nous", tense: "présent",   answer: "venons" },
+  { verb: "venir",   person: "vous", tense: "présent",   answer: "venez" },
+  { verb: "venir",   person: "ils",  tense: "présent",   answer: "viennent" },
+];
+
+let state = "start";   // "start" | "running" | "done"
+let timeLeft = 60;
+let current = null;
+let streak = 0, bestStreak = 0;
+let stats = { correct: 0, almost: 0, wrong: 0, total: 0 };
+let timerInterval = null;
+let correctStartTime = 0;
+
+const stage = document.getElementById("stage");
+const startBtn = document.getElementById("start-btn");
+const timerTrack = document.getElementById("timer-track");
+const foot = document.getElementById("foot");
+
+function norm(s) { return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/['']/g, "'").trim(); }
+function isAlmost(a, b) {
+  a = norm(a); b = norm(b);
+  if (a === b) return true;
+  if (Math.abs(a.length - b.length) > 1) return false;
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]);
+  for (let j = 1; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+  return dp[m][n] <= 1;
+}
+
+function pickRandom() { return POOL[Math.floor(Math.random() * POOL.length)]; }
+
+function startGame() {
+  state = "running";
+  timeLeft = 60;
+  streak = 0; bestStreak = 0;
+  stats = { correct: 0, almost: 0, wrong: 0, total: 0 };
+  current = pickRandom();
+  correctStartTime = performance.now();
+  renderRunning();
+  timerInterval = setInterval(() => {
+    timeLeft -= 0.1;
+    if (timeLeft <= 0) {
+      timeLeft = 0;
+      endGame();
+    } else {
+      const pct = (timeLeft / 60) * 100;
+      timerTrack.style.setProperty("--pct", pct + "%");
+      timerTrack.classList.toggle("warning", timeLeft < 10);
+      const tb = document.getElementById("timer-big");
+      if (tb) { tb.textContent = timeLeft.toFixed(1); tb.classList.toggle("warning", timeLeft < 10); }
+    }
+  }, 100);
+}
+
+function endGame() {
+  state = "done";
+  clearInterval(timerInterval);
+  renderSummary();
+}
+
+function renderRunning() {
+  stage.innerHTML = `
+    <div class="timer-big" id="timer-big">${timeLeft.toFixed(1)}</div>
+    <div class="streak-display ${streak === 0 ? 'cold' : streak >= 5 ? 'hot' : ''}">
+      <span class="label">streak</span>
+      <span class="n">${streak}</span>
+    </div>
+    <div class="chips-mini">
+      <div class="chip-mini verb">${current.verb}</div>
+      <div class="chip-mini x">×</div>
+      <div class="chip-mini person">${current.person}</div>
+      <div class="chip-mini x">·</div>
+      <div class="chip-mini tense">${current.tense}</div>
+    </div>
+    <input class="input" id="answer" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="?" autofocus />
+    <div class="accents">
+      <button class="accent" data-c="é">é</button>
+      <button class="accent" data-c="è">è</button>
+      <button class="accent" data-c="ê">ê</button>
+      <button class="accent" data-c="à">à</button>
+      <button class="accent" data-c="ù">ù</button>
+      <button class="accent" data-c="ç">ç</button>
+      <button class="accent" data-c="ô">ô</button>
+      <button class="accent" data-c="î">î</button>
+      <button class="accent" data-c="ë">ë</button>
+    </div>
+    <div class="counter-mini"><b>${stats.correct + stats.almost + stats.wrong}</b> answered</div>
+  `;
+  const input = document.getElementById("answer");
+  input.focus();
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const v = input.value.trim();
+      if (!v) return;
+      const exact = v.toLowerCase() === current.answer;
+      const almost = !exact && isAlmost(v, current.answer);
+      stats.total++;
+      if (exact) { stats.correct++; streak++; bestStreak = Math.max(bestStreak, streak); }
+      else if (almost) { stats.almost++; /* streak not broken on almost */ }
+      else { stats.wrong++; streak = 0; }
+      // brief flash, then next
+      input.classList.add(exact ? "correct" : almost ? "almost" : "wrong");
+      if (!exact) {
+        // Doherty: show correct form briefly, then continue
+        input.value = current.answer;
+        setTimeout(() => {
+          if (state === "running") {
+            current = pickRandom();
+            renderRunning();
+          }
+        }, 380);
+      } else {
+        // Doherty: correct auto-advances fast
+        current = pickRandom();
+        setTimeout(renderRunning, 60);
+      }
+    }
+  });
+  document.querySelectorAll(".accent").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const c = btn.dataset.c;
+      const s = input.selectionStart ?? input.value.length;
+      const e = input.selectionEnd ?? input.value.length;
+      input.value = input.value.slice(0, s) + c + input.value.slice(e);
+      input.focus();
+      input.setSelectionRange(s + 1, s + 1);
+    });
+  });
+}
+
+function renderSummary() {
+  timerTrack.style.setProperty("--pct", "0%");
+  const total = stats.correct + stats.almost + stats.wrong;
+  const accuracy = total > 0 ? Math.round(((stats.correct + stats.almost) / total) * 100) : 0;
+  const avg = total > 0 ? (60 / total).toFixed(1) : "—";
+  stage.innerHTML = `
+    <div class="summary">
+      <h2>60 seconds. ${total} forms.</h2>
+      <div class="big">${stats.correct}</div>
+      <div class="sub">correct on the first try</div>
+      <div class="stats">
+        <div class="stat"><span class="n">${stats.correct}</span><span class="l">correct</span></div>
+        <div class="stat"><span class="n" style="color:#b07500">${stats.almost}</span><span class="l">almost</span></div>
+        <div class="stat"><span class="n" style="color:var(--coral)">${stats.wrong}</span><span class="l">wrong</span></div>
+        <div class="stat"><span class="n">${accuracy}%</span><span class="l">accuracy</span></div>
+        <div class="stat"><span class="n">${avg}s</span><span class="l">per form</span></div>
+        <div class="stat"><span class="n">${bestStreak}</span><span class="l">best streak</span></div>
+      </div>
+      <p class="note">If accuracy is below 80%, slow down — speed without accuracy is sloppy recall. If you're above 90%, try a harder pool (less common verbs, subjunctive).</p>
+      <div class="row">
+        <button class="continue" id="again">try again</button>
+        <a class="continue ghost" href="8-pattern-discovery.html">next: pattern discovery →</a>
+      </div>
+    </div>
+  `;
+  document.getElementById("again").addEventListener("click", () => { state = "start"; renderStart(); });
+}
+
+function renderStart() {
+  state = "start";
+  timerTrack.style.setProperty("--pct", "100%");
+  stage.innerHTML = `
+    <div class="start">
+      <div class="eyebrow">fluency drill · 60 seconds</div>
+      <h1>Rapid-<em>fire</em></h1>
+      <p>Sixty seconds. As many cue-to-form items as you can.</p>
+      <button class="start-btn" id="start-btn">start drill <span class="kbd">↵</span></button>
+    </div>
+  `;
+  document.getElementById("start-btn").addEventListener("click", startGame);
+}
+
+startBtn.addEventListener("click", startGame);
+
+document.addEventListener("keydown", (e) => {
+  if (state === "start" && e.key === "Enter") { e.preventDefault(); startGame(); }
+});
+</script>
+</body>
+</html>
