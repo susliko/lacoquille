@@ -83,7 +83,7 @@ git commit -m "chore: remove unused design system package and prototypes"
 - Delete: `docs/superpowers/plans/2026-04-23-article-of-the-day-plan.md`
 - Delete: `docs/superpowers/specs/2026-04-23-article-of-the-day-design.md`
 - Delete: `dogfood-output/` (29 tracked files)
-- Delete: `outputs/` (19 tracked files)
+- Delete: `outputs/` (18 tracked files)
 - Delete: `papers/` (3 tracked files)
 - Keep: `docs/superpowers/specs/2026-11-07-repo-cleanup-design.md` and `docs/superpowers/plans/2026-11-07-repo-cleanup-plan.md`
 

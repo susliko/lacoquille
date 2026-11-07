@@ -83,7 +83,7 @@ the repository contains only what builds, ships, and is read.
 | `design/` | 30 | No import from `src/`; skill registered nowhere; stale palette |
 | `docs/specs/`, `docs/SPEC-*.md`, `docs/superpowers/plans/` | 4 | Article-of-the-day work is shipped |
 | `dogfood-output/` | 29 | Audit evidence for a finished QA round; already gitignored |
-| `outputs/` | 19 | Research outputs, drafts, and provenance for finished topics |
+| `outputs/` | 18 | Research outputs, drafts, and provenance for finished topics |
 | `papers/` | 3 | Superseded research papers |
 | `prototypes/` | 13 | Standalone HTML mockups superseded by the shipped drill pages |
 
