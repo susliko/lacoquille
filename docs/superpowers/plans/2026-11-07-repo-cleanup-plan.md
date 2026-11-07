@@ -13,7 +13,10 @@
 ## Global Constraints
 
 - `npm run build` (Astro build + `scripts/check-links.mjs`) must pass after every task.
-- `npx astro check` must pass after every task.
+- `npx astro check` must introduce **no new** errors. Baseline at `fecd9b0` is 2 pre-existing
+  errors — `src/components/TypingRace.tsx:97` (`Set<unknown>` inference) and
+  `src/pages/index.astro:6` (`hideNav` prop absent from `Base.astro`'s `Props`). Both are
+  outside this change's scope and are documented in `README.md`.
 - Nothing imported by live code may be deleted.
 - No change to the site's appearance, behaviour, routes, content, or content collections.
 - Do not touch `dist/`, `.astro/`, `.opencode/`, `.claude/`, `.vscode/`, `lacq/`, `public/`, or `scripts/`.
