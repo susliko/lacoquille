@@ -3,9 +3,7 @@
  * scheduler, no progress. Each array is hand-tuned to mix difficulty and
  * cover a useful spread of verbs and tenses.
  *
- * NOTE: the prototypes directory (`/prototypes/`) had the same data inline
- * in each HTML file. This file is the single source of truth for the
- * production drills.
+ * This file is the single source of truth for the production drills.
  */
 
 /* ── Cloze (three-state + retyping) ───────────────────────────── */
