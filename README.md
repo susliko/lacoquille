@@ -1,6 +1,6 @@
 # La Coquille
 
-An interactive French grammar reference site. The centerpiece is a single SVG diagram connecting all verb tenses by their semantic relations (auxiliary composition, aspect pairs, stem sharing, mood swaps, anteriority). Built with Astro, SolidJS islands, and Pico.css.
+An interactive French grammar reference site. The centerpiece is a single SVG diagram connecting all verb tenses by their semantic relations (auxiliary composition, aspect pairs, stem sharing, mood swaps, anteriority). Built with Astro, SolidJS islands, and a hand-authored CSS design system.
 
 ## Prerequisites
 
@@ -39,35 +39,46 @@ npx astro check
 
 Runs Astro's TypeScript checker across `.astro`, `.tsx`, and `.ts` files. Run this before committing if you touched components or content schemas.
 
+> **Known baseline errors (pre-existing, unrelated to your change):**
+> `src/components/TypingRace.tsx` (`setErrorSet(new Set())` infers `Set<unknown>`) and
+> `src/pages/index.astro` (passes a `hideNav` prop that `Base.astro` does not declare).
+> Compare against this list rather than expecting a clean run.
+
 ## Project layout
 
 ```
 src/
   components/
-    GrammarMap/         # Shared kit primitives (types, AspectIcon) — reused by all topic diagrams
-    VerbDiagram.tsx     # SolidJS island: the interactive tense diagram
+    GrammarMap/types.ts  # Shared diagram node/edge types
+    drills/              # Practice drill islands + their shared data and views
+    VerbDiagram.tsx      # SolidJS island: the interactive tense diagram
+    GrammarDiagram.tsx   # SolidJS island: the generic grammar-topic diagram
     ConjugationTable.astro
   content/
     verbs/
-      tenses/           # One .md per tense — prose + structured frontmatter
-      choice/           # Tense-choice guide pages (imparfait vs PC, si-clauses, …)
-      diagram.json      # Nodes + edges for the verb diagram (single source of truth)
-  content.config.ts     # Astro Content Collections schema
+      tenses/            # One .md per tense — prose + structured frontmatter
+      choice/            # Tense-choice guide pages (imparfait vs PC, si-clauses, …)
+      groups/            # Verb-group reference pages
+      movement/          # Movement-verb reference pages
+      non-finite/        # Infinitive, gerondif, participles
+      diagram.json       # Nodes + edges for the verb diagram (single source of truth)
+    grammar/             # Grammar reference pages by topic
+  content.config.ts      # Astro Content Collections schema
   data/
-    conjugations/       # Hand-authored verb forms (parler, être, avoir, aller, faire)
+    conjugations/        # Hand-authored verb forms (parler, être, avoir, aller, faire, …)
   layouts/
-    Base.astro          # Shared layout: nav, breadcrumb, Pico.css import
+    Base.astro           # Shared layout: nav, breadcrumb, global.css import
   pages/
-    index.astro         # Topic grid home
-    verbs/
-      index.astro       # Verb hub — diagram island + tense index
-      tenses/[slug].astro
-      choice/[slug].astro
+    index.astro          # Topic grid home
+    reference/
+      verbs/             # Verb hub, tense pages, choice/groups/movement/non-finite pages
+      grammar/           # Grammar topic pages (adjectifs, adverbs, pronouns, …)
+    practice/            # Practice hub and the individual drill pages
+    stories/             # Article of the day
   styles/
-    global.css          # Pico.css import + Grammar Map kit CSS custom properties
-design/
-  grammar-map-kit.md    # Living spec for the shared diagram design language
-plan.md                 # Project plan (mirrors ~/.claude/plans/…)
+    global.css           # Design tokens + base styles (the live palette)
+    drills.css           # Practice drill styles
+lacq/                    # Rust (Axum) backend — article of the day API
 ```
 
 ## Adding a tense page
@@ -89,7 +100,7 @@ plan.md                 # Project plan (mirrors ~/.claude/plans/…)
    ---
    ```
 2. Write the body in Markdown (What it is / When to use / How to form / Pitfalls).
-3. The tense appears automatically in the diagram if its `id` matches a node in `diagram.json`, and at `/verbs/tenses/<slug>`.
+3. The tense appears automatically in the diagram if its `id` matches a node in `diagram.json`, and at `/reference/verbs/tenses/<slug>`.
 
 ## Adding a conjugation verb
 
@@ -101,9 +112,9 @@ plan.md                 # Project plan (mirrors ~/.claude/plans/…)
 
 | Layer | Choice |
 |---|---|
-| Framework | [Astro 5](https://astro.build) — static-first, near-zero JS on reference pages |
+| Framework | [Astro 6](https://astro.build) — static-first, near-zero JS on reference pages |
 | Interactive islands | [SolidJS](https://solidjs.com) — fine-grained reactivity for the diagram |
-| CSS | [Pico.css](https://picocss.com) — classless, dark-mode-aware, mobile-first |
+| CSS | Hand-authored CSS with custom-property tokens (`src/styles/global.css`) |
 | Diagram | Hand-authored SVG inside the SolidJS island |
 | Content | Astro Content Collections (Markdown + JSON) |
-| Deploy | Cloudflare Pages (CI via GitHub Actions) |
+| Deploy | Fly.io — one Machine serves the Astro build and the Rust backend |
