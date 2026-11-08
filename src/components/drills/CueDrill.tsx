@@ -45,7 +45,7 @@ export default function CueDrill() {
   };
 
   return (
-    <div class="drill-root" style={{ "--accent": "#ff4757", "--accent-soft": "rgba(255, 71, 87, 0.10)" }}>
+    <div class="drill-root" style={{ "--accent": "var(--p2)", "--accent-soft": "var(--accent-soft)" }}>
       <DrillHeader
         title="Cue-to-form"
         eyebrow={
@@ -60,7 +60,7 @@ export default function CueDrill() {
         <span class="drill-spacer" />
         <span
           class="drill-eyebrow"
-          style={{ color: streak() === 0 ? "var(--text-muted)" : "var(--coral)", "font-weight": "500" }}
+          style={{ color: streak() === 0 ? "var(--text-muted)" : "var(--accent-ink)", "font-weight": "500" }}
         >
           🔥 streak <b>{streak()}</b>
         </span>
@@ -74,10 +74,10 @@ export default function CueDrill() {
               <SummaryPanel
                 title={`${stats().correct} of ${CUE_ITEMS.length} on the first try.`}
                 stats={[
-                  { label: "correct", value: stats().correct, color: "var(--emerald)" },
-                  { label: "almost",  value: stats().almost,  color: "#b07500" },
-                  { label: "wrong",   value: stats().wrong,   color: "var(--coral)" },
-                  { label: "best streak", value: bestStreak(), color: "var(--coral)" },
+                  { label: "correct", value: stats().correct, color: "var(--ok-ink)" },
+                  { label: "almost",  value: stats().almost,  color: "var(--accent-ink)" },
+                  { label: "wrong",   value: stats().wrong,   color: "var(--review-text)" },
+                  { label: "best streak", value: bestStreak(), color: "var(--accent-ink)" },
                 ]}
                 note="Pure retrieval at speed. The streak counter creates a <em>don't break it</em> pressure — the strongest loop in the set."
                 retryHref="/practice/cue"

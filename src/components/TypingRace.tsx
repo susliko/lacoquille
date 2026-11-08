@@ -200,14 +200,14 @@ export default function TypingRace() {
           user-select: none;
         }
         .tr-text-area:focus-visible {
-          outline: 2px solid var(--coral, #ff4757);
+          outline: 2px solid var(--focus-ring);
           outline-offset: 2px;
         }
         .tr-cursor {
           display: inline-block;
           width: 2px;
           height: 1.25em;
-          background: var(--coral);
+          background: var(--accent);
           vertical-align: text-bottom;
           animation: blink 0.85s step-end infinite;
         }
@@ -216,13 +216,13 @@ export default function TypingRace() {
           50%       { opacity: 0; }
         }
         .tc-idle    { color: var(--text-muted); }
-        .tc-correct { color: #4ade80; }
-        .tc-error   { color: #f87171; text-decoration: underline; text-decoration-style: wavy; }
+        .tc-correct { color: var(--ok-dot); }
+        .tc-error   { color: var(--review); text-decoration: underline; text-decoration-style: wavy; }
         /* Results */
         .tr-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(0, 0, 0, 0.55);
+          background: var(--scrim);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -262,10 +262,10 @@ export default function TypingRace() {
           align-items: center;
         }
         .tr-result-value {
-          font-family: var(--font-display);
+          font-family: var(--font);
           font-size: 3.25rem;
-          font-weight: 700;
-          color: var(--coral);
+          font-weight: 800;
+          color: var(--ink);
           line-height: 1;
         }
         .tr-result-label {
@@ -280,8 +280,8 @@ export default function TypingRace() {
           align-items: center;
           gap: 0.5rem;
           padding: 0.7rem 2.25rem;
-          background: var(--coral);
-          color: #fff;
+          background: var(--ink);
+          color: var(--paper);
           border: none;
           border-radius: 9999px;
           cursor: pointer;
@@ -289,7 +289,7 @@ export default function TypingRace() {
           font-weight: 600;
           transition: background 0.15s, transform 0.1s;
         }
-        .tr-restart:hover  { background: #e63946; transform: translateY(-1px); }
+        .tr-restart:hover  { transform: translateY(-1px); }
         .tr-restart:active { transform: translateY(0); }
         .tr-hint {
           margin-top: 1.25rem;

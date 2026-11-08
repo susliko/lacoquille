@@ -111,8 +111,8 @@ export default function VocabularyPractice() {
         }
 
         .back-link:hover {
-          border-color: var(--coral);
-          color: var(--coral);
+          border-color: var(--ink);
+          color: var(--accent-ink);
         }
 
         .alt-link {
@@ -120,8 +120,8 @@ export default function VocabularyPractice() {
           align-items: center;
           gap: 0.5rem;
           padding: 0.6rem 1.25rem;
-          background: var(--coral);
-          color: #fff;
+          background: var(--ink);
+          color: var(--paper);
           border-radius: var(--radius-sm);
           text-decoration: none;
           font-size: 0.9rem;
@@ -130,7 +130,7 @@ export default function VocabularyPractice() {
         }
 
         .alt-link:hover {
-          background: #e63946;
+          background: var(--p3);
         }
 
         @media (max-width: 600px) {

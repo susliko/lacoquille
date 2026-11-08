@@ -38,7 +38,7 @@ export default function ClozeDrill() {
   };
 
   return (
-    <div class="drill-root" style={{ "--accent": "#ffb703", "--accent-soft": "rgba(255, 183, 3, 0.14)" }}>
+    <div class="drill-root" style={{ "--accent": "var(--p2)", "--accent-soft": "var(--accent-soft)" }}>
       <DrillHeader
         title="Cloze · three-state"
         eyebrow={
@@ -57,10 +57,10 @@ export default function ClozeDrill() {
               <SummaryPanel
                 title={`${stats().firstTry} of ${CLOZE_ITEMS.length} on the first try.`}
                 stats={[
-                  { label: "first-try", value: stats().firstTry, color: "var(--emerald)" },
-                  { label: "almost",    value: stats().almost,    color: "#b07500" },
-                  { label: "wrong",     value: stats().wrong,     color: "var(--coral)" },
-                  { label: "retyped",   value: stats().retypeOk,  color: "var(--emerald)" },
+                  { label: "first-try", value: stats().firstTry, color: "var(--ok-ink)" },
+                  { label: "almost",    value: stats().almost,    color: "var(--accent-ink)" },
+                  { label: "wrong",     value: stats().wrong,     color: "var(--review-text)" },
+                  { label: "retyped",   value: stats().retypeOk,  color: "var(--accent-ink)" },
                 ]}
                 note={
                   "First-try rate: <b>" +

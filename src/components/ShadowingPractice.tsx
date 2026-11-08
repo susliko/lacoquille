@@ -100,7 +100,7 @@ function ComingSoon() {
           font-weight: 500;
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: var(--coral);
+          color: var(--accent-ink);
           margin-bottom: 1rem;
         }
 
@@ -135,7 +135,7 @@ function ComingSoon() {
         }
 
         .sc-hint-icon {
-          color: var(--emerald);
+          color: var(--ok-dot);
           font-size: 1rem;
         }
 
@@ -152,8 +152,8 @@ function ComingSoon() {
         }
 
         .sc-back:hover {
-          border-color: var(--coral);
-          color: var(--coral);
+          border-color: var(--ink);
+          color: var(--accent-ink);
         }
 
         @media (max-width: 480px) {
@@ -424,7 +424,7 @@ export default function ShadowingPractice() {
         }
 
         .story-select:focus {
-          border-color: var(--coral);
+          border-color: var(--ink);
         }
 
         .mode-tabs {
@@ -444,14 +444,14 @@ export default function ShadowingPractice() {
         }
 
         .mode-tab:hover {
-          border-color: var(--coral);
+          border-color: var(--ink);
           color: var(--text);
         }
 
         .mode-tab.active {
-          background: var(--coral);
-          color: #fff;
-          border-color: var(--coral);
+          background: var(--p2);
+          color: var(--p2-ink);
+          border-color: var(--p2);
         }
 
         .sentence-nav {
@@ -480,8 +480,8 @@ export default function ShadowingPractice() {
         }
 
         .nav-btn:hover:not(:disabled) {
-          border-color: var(--coral);
-          color: var(--coral);
+          border-color: var(--ink);
+          color: var(--accent-ink);
         }
 
         .nav-btn:disabled {
@@ -532,20 +532,20 @@ export default function ShadowingPractice() {
         }
 
         .speed-pill:hover {
-          border-color: var(--coral);
+          border-color: var(--ink);
           color: var(--text);
         }
 
         .speed-pill.active {
-          background: var(--coral);
-          color: #fff;
-          border-color: var(--coral);
+          background: var(--p2);
+          color: var(--p2-ink);
+          border-color: var(--p2);
         }
 
         .play-btn {
           padding: 0.6rem 1.5rem;
-          background: var(--coral);
-          color: #fff;
+          background: var(--ink);
+          color: var(--paper);
           border: none;
           border-radius: var(--radius-pill);
           cursor: pointer;
@@ -555,7 +555,7 @@ export default function ShadowingPractice() {
         }
 
         .play-btn:hover:not(:disabled) {
-          background: #e63946;
+          background: var(--p3);
           transform: translateY(-1px);
         }
 
@@ -604,7 +604,7 @@ export default function ShadowingPractice() {
         }
 
         .dictation-input:focus {
-          border-color: var(--coral);
+          border-color: var(--ink);
         }
 
         .dictation-input:disabled {
@@ -621,8 +621,8 @@ export default function ShadowingPractice() {
 
         .submit-btn {
           padding: 0.5rem 1.25rem;
-          background: var(--coral);
-          color: #fff;
+          background: var(--ink);
+          color: var(--paper);
           border: none;
           border-radius: 6px;
           cursor: pointer;
@@ -632,7 +632,7 @@ export default function ShadowingPractice() {
         }
 
         .submit-btn:hover {
-          background: #e63946;
+          background: var(--p3);
         }
 
         .submit-btn:disabled {
@@ -652,8 +652,8 @@ export default function ShadowingPractice() {
         }
 
         .retry-btn:hover {
-          border-color: var(--coral);
-          color: var(--coral);
+          border-color: var(--ink);
+          color: var(--accent-ink);
         }
 
         .dictation-result {
@@ -665,12 +665,12 @@ export default function ShadowingPractice() {
 
         .dictation-result.correct {
           background: var(--emerald-soft);
-          border: 1px solid var(--emerald);
+          border: 1px solid var(--ok-dot);
         }
 
         .dictation-result.incorrect {
-          background: var(--coral-soft);
-          border: 1px solid var(--coral);
+          background: var(--no-bg);
+          border: 1px solid var(--review);
         }
 
         .accuracy-badge {
@@ -681,11 +681,11 @@ export default function ShadowingPractice() {
         }
 
         .dictation-result.correct .accuracy-badge {
-          color: var(--emerald);
+          color: var(--ok-dot);
         }
 
         .dictation-result.incorrect .accuracy-badge {
-          color: var(--coral);
+          color: var(--review-text);
         }
 
         .dictation-original {
@@ -744,12 +744,12 @@ export default function ShadowingPractice() {
         }
 
         .mc-option.correct {
-          border-color: var(--emerald);
+          border-color: var(--ok-dot);
           background: var(--emerald-soft);
         }
 
         .mc-option.incorrect {
-          border-color: var(--coral);
+          border-color: var(--ink);
           background: var(--coral-soft);
         }
 
@@ -768,14 +768,14 @@ export default function ShadowingPractice() {
 
         .mc-feedback.correct {
           background: var(--emerald-soft);
-          border: 1px solid var(--emerald);
-          color: var(--emerald);
+          border: 1px solid var(--ok-dot);
+          color: var(--ok-dot);
         }
 
         .mc-feedback.incorrect {
-          background: var(--coral-soft);
-          border: 1px solid var(--coral);
-          color: var(--coral);
+          background: var(--no-bg);
+          border: 1px solid var(--review);
+          color: var(--review-text);
         }
 
         .mc-feedback-text {

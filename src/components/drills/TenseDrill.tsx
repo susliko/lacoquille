@@ -33,7 +33,7 @@ export default function TenseDrill() {
   };
 
   return (
-    <div class="drill-root" style={{ "--accent": "#00c48c", "--accent-soft": "rgba(0, 196, 140, 0.10)" }}>
+    <div class="drill-root" style={{ "--accent": "var(--p2)", "--accent-soft": "var(--accent-soft)" }}>
       <DrillHeader
         title="Spot the tense"
         eyebrow={
@@ -52,8 +52,8 @@ export default function TenseDrill() {
               <SummaryPanel
                 title="The cue makes the call."
                 stats={[
-                  { label: "right",       value: stats().right, color: "var(--emerald)" },
-                  { label: "to revisit",  value: stats().wrong, color: "var(--coral)" },
+                  { label: "right",       value: stats().right, color: "var(--ok-ink)" },
+                  { label: "to revisit",  value: stats().wrong, color: "var(--review-text)" },
                 ]}
                 note={`${stats().right} of ${TENSE_ITEMS.length} right. The cue words (<em>quand, pendant que, soudain, tous les jours</em>) tell you which lens to use — imparfait is the camera's wide shot; passé composé is the cut to a specific action.`}
                 retryHref="/practice/tense"
@@ -68,7 +68,7 @@ export default function TenseDrill() {
       </main>
 
       <footer class="drill-foot">
-        Tap a form, or use ← → keys. Enter to continue. The <mark style="background:var(--amber-soft); color:#b07500; padding:0.05em 0.3em; border-radius:4px; font-weight:600">cue word</mark> tells you which tense fits.
+        Tap a form, or use ← → keys. Enter to continue. The <mark style="background:var(--accent-soft); color:var(--accent-ink); padding:0.05em 0.3em; border-radius:4px; font-weight:600">cue word</mark> tells you which tense fits.
       </footer>
     </div>
   );

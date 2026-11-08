@@ -3,6 +3,14 @@ import Base from "../layouts/Base.astro";
 import HomepageTabs from "../components/HomepageTabs";
 ---
 
-<Base title="La Coquille" hideNav={true}>
+<Base title="La Coquille">
   <HomepageTabs client:load />
 </Base>
+
+<style>
+  /* The homepage is a full-bleed menu; drop the content-page frame. */
+  :global(main#main-content) {
+    padding: 0;
+    max-width: none;
+  }
+</style>

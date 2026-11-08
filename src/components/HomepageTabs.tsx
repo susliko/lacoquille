@@ -1,34 +1,26 @@
 import { createSignal, For, onMount } from "solid-js";
 
-/* ── Knowledge tiles ─────────────────────────────────────────── */
+/* ── Knowledge tiles ───────────────────────────────────────────
+   Quiet paper menu — colour is meaning-reserved in this design
+   system (indigo = progress, vermillon = review/miss), so tiles
+   are white cards with ink names. See global.css. */
 const REGIONS = [
-  { id: "adjectifs", name: "Adjectifs",  sub: "accord · ordre",      color: "#d97706" },
-  { id: "adverbes",  name: "Adverbes",   sub: "formation",            color: "#16a34a" },
-  { id: "articles",  name: "Articles",   sub: "défini · partitif",    color: "#059669" },
-  { id: "negation",  name: "Négation",  sub: "ne…pas · jamais",      color: "#0891b2" },
-  { id: "pronoms",   name: "Pronoms",    sub: "personal · relative",  color: "#7c3aed" },
-  { id: "preps",     name: "Prép.",     sub: "à · de · en",          color: "#0d9488" },
-  { id: "syntaxe",   name: "Syntaxe",   sub: "word order",            color: "#6366f1" },
-  { id: "verbs",     name: "Verbes",     sub: "tenses & conjugation", color: "#2563eb" },
+  { id: "adjectifs", name: "Adjectifs",  sub: "accord · ordre",      path: "/reference/grammar/adjectifs" },
+  { id: "adverbes",  name: "Adverbes",   sub: "formation",           path: "/reference/grammar/adverbs" },
+  { id: "articles",  name: "Articles",   sub: "défini · partitif",   path: "/reference/grammar/articles" },
+  { id: "negation",  name: "Négation",   sub: "ne…pas · jamais",     path: "/reference/grammar/negation" },
+  { id: "pronoms",   name: "Pronoms",    sub: "personal · relative", path: "/reference/grammar/pronouns" },
+  { id: "preps",     name: "Prép.",      sub: "à · de · en",         path: "/reference/grammar/prepositions" },
+  { id: "syntaxe",   name: "Syntaxe",    sub: "word order",          path: "/reference/grammar/syntax" },
+  { id: "verbs",     name: "Verbes",     sub: "tenses & conjugation", path: "/reference/verbs" },
 ];
-
-const PATHS: Record<string, string> = {
-  syntaxe:   "/reference/grammar/syntax",
-  verbs:     "/reference/verbs",
-  pronoms:   "/reference/grammar/pronouns",
-  adjectifs: "/reference/grammar/adjectifs",
-  articles:  "/reference/grammar/articles",
-  negation:  "/reference/grammar/negation",
-  preps:     "/reference/grammar/prepositions",
-  adverbes:  "/reference/grammar/adverbs",
-};
 
 /* ── Practice tiles ───────────────────────────────────────────── */
 const PRACTICE = [
-  { id: "article",   name: "Article of Day",   sub: "daily Maupassant story", color: "#ff4757", path: "/stories/article-of-the-day" },
-  { id: "typing",    name: "Typing Race",       sub: "speed conjugate drills", color: "#ff6b35", path: "/practice/typing" },
-  { id: "shadowing", name: "Shadowing",         sub: "listen & repeat",        color: "#ff9f43", path: "/practice/shadowing" },
-  { id: "vocabulary", name: "Vocabulary Mining", sub: "mine texts for words",  color: "#f7b731", path: "/practice/vocabulary" },
+  { id: "article",    name: "Article of Day",    sub: "daily Maupassant story", path: "/stories/article-of-the-day" },
+  { id: "typing",     name: "Typing Race",       sub: "speed conjugate drills", path: "/practice/typing" },
+  { id: "shadowing",  name: "Shadowing",         sub: "listen & repeat",        path: "/practice/shadowing" },
+  { id: "vocabulary", name: "Vocabulary Mining", sub: "mine texts for words",   path: "/practice/vocabulary" },
 ];
 
 /* ── Component ────────────────────────────────────────────────── */
@@ -86,11 +78,7 @@ export default function HomepageTabs() {
         <div class="poly-grid">
           <For each={REGIONS}>
             {(region, i) => (
-              <a
-                href={PATHS[region.id]}
-                class={`poly-card poly-card-${i()}`}
-                style={{ "--card-color": region.color }}
-              >
+              <a href={region.path} class={`poly-card poly-card-${i()}`}>
                 <div class="poly-card-name">{region.name}</div>
                 <div class="poly-card-sub">{region.sub}</div>
                 <div class="poly-card-cta">explore →</div>
@@ -98,8 +86,8 @@ export default function HomepageTabs() {
             )}
           </For>
         </div>
-        <p style="margin-top: 1rem; text-align: center;">
-          <a href="/reference/grammar" style="font-size: 0.875rem; color: var(--text-muted);">
+        <p style="margin-top: var(--s-3); text-align: center;">
+          <a href="/reference/grammar" style="font-size: var(--t-sm); color: var(--muted);">
             See all grammar →
           </a>
         </p>
@@ -114,11 +102,7 @@ export default function HomepageTabs() {
         <div class="poly-grid">
           <For each={PRACTICE}>
             {(item, i) => (
-              <a
-                href={item.path}
-                class={`poly-card poly-card-${i()}`}
-                style={{ "--card-color": item.color }}
-              >
+              <a href={item.path} class={`poly-card poly-card-${i()}`}>
                 <div class="poly-card-name">{item.name}</div>
                 <div class="poly-card-sub">{item.sub}</div>
                 <div class="poly-card-cta">start →</div>

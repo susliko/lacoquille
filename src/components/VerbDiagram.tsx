@@ -1,7 +1,7 @@
 import { createSignal, createMemo, For, Show, onMount, onCleanup } from "solid-js";
 import type { DiagramData, DiagramNode, DiagramEdge, MoodId } from "./GrammarMap/types";
 import {
-  TIME_COLUMNS, MOOD_LABELS, MOOD_ORDER, MOOD_HUE,
+  TIME_COLUMNS, MOOD_LABELS, MOOD_ORDER, MOOD_FILL,
   EDGE_COLOR, EDGE_DASH,
 } from "./GrammarMap/types";
 import { VERBS, PERSONS, VERB_OPTIONS } from "../data/conjugations/index";
@@ -246,7 +246,7 @@ export default function VerbDiagram({ data, tenseTitles }: Props) {
   }) => {
     const { node, x, y, cardW, cardH, fontSize } = props;
     const isHighlighted = () => highlightedTense() === node.id;
-    const hue = MOOD_HUE[node.lane as MoodId];
+    const laneFill = MOOD_FILL[node.lane as MoodId];
     const isPresent = () => node.id === "present-indicatif";
     const isLiterary = () => node.literary;
 
@@ -262,33 +262,35 @@ export default function VerbDiagram({ data, tenseTitles }: Props) {
       >
         {/* Opaque base — blocks edge lines from showing through */}
         <rect x={x} y={y} width={cardW} height={cardH} rx="6" fill="var(--surface-2)" />
-        {/* Beginner's start indicator: gold ring on présent */}
+        {/* Beginner's start indicator: accent ring on présent */}
         {isPresent() && (
           <rect x={x - 2} y={y - 2} width={cardW + 4} height={cardH + 4} rx="8"
             fill="none"
-            stroke="var(--gold)"
+            stroke="var(--accent)"
             stroke-width="1.5"
-            opacity="0.5"
+            opacity="0.8"
           />
         )}
         {/* Color overlay */}
         <rect x={x} y={y} width={cardW} height={cardH} rx="6"
-          fill={isHighlighted() ? `hsl(${hue} 55% 45% / 0.18)` : isLiterary() ? "none" : "none"}
-          stroke={isHighlighted() ? `hsl(${hue} 65% 55%)` : isLiterary() ? `hsl(${hue} 40% 50% / 0.2)` : `hsl(${hue} 40% 50% / 0.4)`}
+          fill={isHighlighted() ? laneFill : "none"}
+          fill-opacity={isHighlighted() ? 0.16 : undefined}
+          stroke={laneFill}
+          stroke-opacity={isHighlighted() ? 1 : isLiterary() ? 0.25 : 0.45}
           stroke-width={isHighlighted() ? 1.5 : 1}
           opacity={isLiterary() ? 0.65 : 1}
         />
         {/* Left accent stripe */}
         <line
           x1={x + 4} y1={y + 9} x2={x + 4} y2={y + cardH - 9}
-          stroke={`hsl(${hue} 65% 55%)`}
+          stroke={laneFill}
           stroke-width="3" stroke-linecap="round"
           opacity={isHighlighted() ? 1 : isLiterary() ? 0.35 : 0.55}
         />
         {/* Tense name */}
         <text x={x + 11} y={y + 14 + fontSize.title * 0.35}
           font-size={String(fontSize.title)} font-weight="600"
-          fill={`hsl(${hue} 65% 62%)`}
+          fill="var(--accent-ink)"
           opacity={isLiterary() ? 0.7 : 1}
           style={{ "word-break": "break-word", "max-width": `${cardW - 20}px` }}
         >
@@ -313,8 +315,8 @@ export default function VerbDiagram({ data, tenseTitles }: Props) {
         {isPresent() && (
           <text x={x + cardW / 2} y={y + cardH + 10}
             text-anchor="middle" font-size="7"
-            fill="var(--amber)"
-            opacity={0.7}
+            fill="var(--accent-ink)"
+            opacity={0.9}
           >
             start here
           </text>
@@ -331,7 +333,7 @@ export default function VerbDiagram({ data, tenseTitles }: Props) {
         <p class="legend-section-title">Difficulty</p>
         <div class="legend-grid">
           <div class="legend-item">
-            <span class="legend-dot" style={{ background: "var(--amber)", opacity: "0.6" }} />
+            <span class="legend-dot" style={{ background: "var(--accent)", opacity: "0.8" }} />
             <span>Présent — start here</span>
           </div>
           <div class="legend-item">
@@ -458,7 +460,7 @@ export default function VerbDiagram({ data, tenseTitles }: Props) {
                 <rect
                   x={mbColX(i())} y={MB_MOOD_HEADER_H - 4}
                   width={MB_CARD_W} height={MB_SVG_H - MB_MOOD_HEADER_H + 4}
-                  fill={`hsl(${MOOD_HUE[mood]} 55% 50% / 0.04)`} rx="4"
+                  fill={MOOD_FILL[mood]} fill-opacity="0.05" rx="4"
                 />
               )}
             </For>
@@ -469,7 +471,7 @@ export default function VerbDiagram({ data, tenseTitles }: Props) {
                 <text
                   x={mbColX(i()) + MB_CARD_W / 2} y={MB_MOOD_HEADER_H - 8}
                   text-anchor="middle" font-size="8" font-weight="700"
-                  fill={`hsl(${MOOD_HUE[mood]} 60% 58%)`}
+                  fill="var(--muted)"
                 >
                   {mood === "indicatif" ? "Ind." : mood === "conditionnel" ? "Cond." : mood === "subjonctif" ? "Subj." : "Imp."}
                 </text>
@@ -574,7 +576,7 @@ export default function VerbDiagram({ data, tenseTitles }: Props) {
                 <rect
                   x={DK_LANE_HEADER_W} y={dkLaneY(i()) - DK_LANE_GAP / 2}
                   width={DK_SVG_W - DK_LANE_HEADER_W} height={DK_LANE_H}
-                  fill={`hsl(${MOOD_HUE[mood]} 55% 50% / 0.04)`} rx="4"
+                  fill={MOOD_FILL[mood]} fill-opacity="0.05" rx="4"
                 />
               )}
             </For>
@@ -599,7 +601,7 @@ export default function VerbDiagram({ data, tenseTitles }: Props) {
               {(mood, i) => (
                 <text x={DK_LANE_HEADER_W - 8} y={dkLaneY(i()) + DK_CARD_H / 2 + 4}
                   text-anchor="end" font-size="10" font-weight="600"
-                  fill={`hsl(${MOOD_HUE[mood]} 60% 55%)`}
+                  fill="var(--muted)"
                 >
                   {MOOD_LABELS[mood]}
                 </text>

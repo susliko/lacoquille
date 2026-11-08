@@ -34,7 +34,7 @@ export default function ChainDrill() {
   };
 
   return (
-    <div class="drill-root" style={{ "--accent": "#8b5cf6", "--accent-soft": "rgba(139, 92, 246, 0.10)" }}>
+    <div class="drill-root" style={{ "--accent": "var(--p2)", "--accent-soft": "var(--accent-soft)" }}>
       <DrillHeader
         title="Transformation chain"
         eyebrow={
@@ -53,8 +53,8 @@ export default function ChainDrill() {
               <SummaryPanel
                 title={`${stats().firstTry} of ${stats().total} chains right.`}
                 stats={[
-                  { label: "first-try", value: stats().firstTry, color: "var(--emerald)" },
-                  { label: "retries",   value: stats().total - stats().firstTry, color: "var(--coral)" },
+                  { label: "first-try", value: stats().firstTry, color: "var(--ok-ink)" },
+                  { label: "retries",   value: stats().total - stats().firstTry, color: "var(--review-text)" },
                 ]}
                 note="The chain exercise builds the kind of switching you'll need in real conversation — <em>elle a fini → vous finissiez → nous ne finissions pas</em>. Real errors happen at the seams between transformations, not in isolation."
                 retryHref="/practice/chain"

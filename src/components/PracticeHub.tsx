@@ -1,24 +1,27 @@
 import { For } from "solid-js";
 
-/* ── Practice tiles ────────────────────────────────────────────── */
+/* ── Practice tiles ──────────────────────────────────────────────
+   Colour carries meaning in this app (indigo = progress, vermillon
+   = review/miss), so the menu itself stays quiet: white cards on
+   paper, ink names, one indigo call to action. See global.css. */
 const PRACTICE = [
   /* The designed exercise session: six-plus mixed items with the
      ok/miss feedback system. tokens.css design system experience. */
-  { id: "session",       name: "Exercise session",  sub: "mixed items · instant feedback", color: "#4A5AA8", path: "/practice/session" },
+  { id: "session",       name: "Exercise session",  sub: "mixed items · instant feedback", path: "/practice/session" },
 
   /* The endless feed: the coach picks a grammar topic per run from the
      learner's level + history, generator families fill it. */
-  { id: "feed",          name: "Endless feed",      sub: "adaptive grammar · always ready", color: "#232D5C", path: "/practice/feed" },
+  { id: "feed",          name: "Endless feed",      sub: "adaptive grammar · always ready", path: "/practice/feed" },
 
   /* The single verb-conjugation entry. Mixes cloze, cue-to-form,
      spot-the-tense, and transformation chains in an endless stream. */
-  { id: "conjugations", name: "Conjugations", sub: "endless mixed drills", color: "#3d5af1", path: "/practice/conjugations" },
+  { id: "conjugations", name: "Conjugations", sub: "endless mixed drills", path: "/practice/conjugations" },
 
   /* The four non-conjugation practices. */
-  { id: "article-of-day", name: "Article of Day",    sub: "daily Maupassant story",  color: "#ff4757", path: "/stories/article-of-the-day" },
-  { id: "typing",         name: "Typing Race",       sub: "speed conjugate drills",  color: "#ff6b35", path: "/practice/typing" },
-  { id: "shadowing",      name: "Shadowing",         sub: "listen & repeat",         color: "#ff9f43", path: "/practice/shadowing" },
-  { id: "vocabulary",     name: "Vocabulary Mining", sub: "mine texts for words",    color: "#f7b731", path: "/practice/vocabulary" },
+  { id: "article-of-day", name: "Article of Day",    sub: "daily Maupassant story",  path: "/stories/article-of-the-day" },
+  { id: "typing",         name: "Typing Race",       sub: "speed conjugate drills",  path: "/practice/typing" },
+  { id: "shadowing",      name: "Shadowing",         sub: "listen & repeat",         path: "/practice/shadowing" },
+  { id: "vocabulary",     name: "Vocabulary Mining", sub: "mine texts for words",    path: "/practice/vocabulary" },
 ];
 
 export default function PracticeHub() {
@@ -27,11 +30,7 @@ export default function PracticeHub() {
       <div class="practice-hub-grid">
         <For each={PRACTICE}>
           {(item, i) => (
-            <a
-              href={item.path}
-              class={`practice-card practice-card-${i()}`}
-              style={{ "--card-color": item.color }}
-            >
+            <a href={item.path} class={`practice-card practice-card-${i()}`}>
               <div class="poly-card-name">{item.name}</div>
               <div class="poly-card-sub">{item.sub}</div>
               <div class="poly-card-cta">start →</div>

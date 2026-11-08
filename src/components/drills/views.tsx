@@ -279,7 +279,7 @@ export function TenseView(props: TenseViewProps) {
   let sentence = props.item.sentence.replace("<blank>", "{BLANK}");
   if (props.item.cue) {
     const re = new RegExp(`(${escapeRe(props.item.cue)})`, "g");
-    sentence = sentence.replace(re, '<mark style="background:var(--amber-soft); color:#b07500; padding:0.05em 0.3em; border-radius:4px; font-weight:600">$1</mark>');
+    sentence = sentence.replace(re, '<mark style="background:var(--accent-soft); color:var(--accent-ink); padding:0.05em 0.3em; border-radius:4px; font-weight:600">$1</mark>');
   }
   const [before, after] = sentence.split("{BLANK}");
 

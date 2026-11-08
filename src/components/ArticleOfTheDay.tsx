@@ -163,12 +163,12 @@ export default function ArticleOfTheDay() {
           margin: 0;
         }
         .tokenization-error {
-          background: var(--warning, #fef3c7);
-          color: var(--warning-text, #92400e);
+          background: var(--accent-soft);
+          color: var(--accent-ink);
           padding: 0.75rem 1rem;
-          border-radius: 0.5rem;
+          border-radius: var(--r-sm);
           margin-bottom: 1.5rem;
-          font-size: 0.9rem;
+          font-size: var(--t-sm);
         }
         .article-body {
           display: grid;
@@ -185,13 +185,19 @@ export default function ArticleOfTheDay() {
           font-size: 1.1rem;
           white-space: pre-wrap;
         }
+        /* The French story text is the one reading surface set in
+           DM Serif Display (allowed only inside Article of the Day). */
+        .language-col:first-child p.article-paragraphs,
+        .language-col:first-child .article-paragraphs p {
+          font-family: var(--font-serif);
+        }
         .language-col h2 {
-          font-size: 1.25rem;
+          font-size: var(--t-sm);
           font-weight: 600;
           margin: 0 0 1rem 0;
           text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: var(--text-2);
+          letter-spacing: 0.06em;
+          color: var(--muted);
         }
         .token {
           cursor: pointer;
@@ -199,8 +205,8 @@ export default function ArticleOfTheDay() {
           border-radius: 2px;
         }
         .token.active {
-          background-color: rgba(59, 130, 246, 0.4);
-          outline: 3px solid var(--accent, #3b82f6);
+          background-color: var(--accent-soft);
+          outline: 3px solid var(--accent);
           outline-offset: 1px;
         }
         .en-token {
@@ -208,7 +214,7 @@ export default function ArticleOfTheDay() {
           padding: 0 1px;
         }
         .en-token.active {
-          background-color: rgba(59, 130, 246, 0.4);
+          background-color: var(--accent-soft);
         }
         .fr-token {
           cursor: pointer;
@@ -216,7 +222,7 @@ export default function ArticleOfTheDay() {
           position: relative;
         }
         .fr-token.active {
-          background-color: rgba(59, 130, 246, 0.4);
+          background-color: var(--accent-soft);
         }
         @media (max-width: 768px) {
           .article-body {
@@ -234,17 +240,18 @@ export default function ArticleOfTheDay() {
             left: 50%;
             transform: translateX(-50%);
             margin-top: 4px;
-            background: var(--accent, #3b82f6);
-            color: white;
+            background: var(--ink);
+            color: var(--paper);
             padding: 4px 8px;
             border-radius: 4px;
-            font-size: 0.8rem;
+            font-size: var(--t-xs);
+            font-family: var(--font);
             z-index: 100;
             pointer-events: none;
             max-width: 200px;
             white-space: normal;
             text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: var(--shadow-1);
           }
         }
         .loading-state,
@@ -254,7 +261,7 @@ export default function ArticleOfTheDay() {
           color: var(--text-2);
         }
         .error-state {
-          color: var(--error);
+          color: var(--review-text);
         }
       `}</style>
 

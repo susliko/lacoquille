@@ -93,7 +93,7 @@ export default function ConjugationsDrill() {
   // (Each view handles its own focus via autofocus on its input.)
 
   return (
-    <div class="drill-root" style={{ "--accent": "#3d5af1", "--accent-soft": "rgba(61, 90, 241, 0.10)" }}>
+    <div class="drill-root" style={{ "--accent": "var(--p2)", "--accent-soft": "var(--accent-soft)" }}>
       <DrillHeader
         title="Conjugations"
         eyebrow={ended() ? "session ended" : `#${count() + 1}`}
@@ -124,18 +124,18 @@ export default function ConjugationsDrill() {
                 title="Session ended."
                 stats={[
                   { label: "answered", value: count(), color: "var(--text)" },
-                  { label: "correct",  value: stats().correct, color: "var(--emerald)" },
-                  { label: "almost",   value: stats().almost, color: "#b07500" },
-                  { label: "wrong",    value: stats().wrong, color: "var(--coral)" },
+                  { label: "correct",  value: stats().correct, color: "var(--ok-ink)" },
+                  { label: "almost",   value: stats().almost, color: "var(--accent-ink)" },
+                  { label: "wrong",    value: stats().wrong, color: "var(--review-text)" },
                   {
                     label: "accuracy",
                     value:
                       count() === 0
                         ? "—"
                         : Math.round(((stats().correct + stats().almost) / count()) * 100) + "%",
-                    color: "var(--accent)",
+                    color: "var(--accent-ink)",
                   },
-                  { label: "best streak", value: streak(), color: "var(--accent)" },
+                  { label: "best streak", value: streak(), color: "var(--accent-ink)" },
                 ]}
                 note={`${count()} mixed exercises across cloze, cue-to-form, spot-the-tense, and transformation chains. Interleaving the types — even when it feels harder than blocking — is what transfers best to real use.`}
                 retryHref="/practice/conjugations"
@@ -200,12 +200,12 @@ function SessionStrip(props: SessionStripProps) {
       <span
         class="drill-eyebrow"
         style={{
-          color: props.streak === 0 ? "var(--text-muted)" : "var(--accent)",
+          color: props.streak === 0 ? "var(--text-muted)" : "var(--accent-ink)",
           "font-weight": "500",
           "font-variant-numeric": "tabular-nums",
         }}
       >
-        🔥 <b style={props.streak === 0 ? { color: "var(--text-muted)" } : { color: "var(--accent)" }}>{props.streak}</b>
+        🔥 <b style={props.streak === 0 ? { color: "var(--text-muted)" } : { color: "var(--accent-ink)" }}>{props.streak}</b>
       </span>
       <span class="drill-spacer" />
       <button

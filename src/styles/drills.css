@@ -1,15 +1,15 @@
 /* ───────────────────────────────────────────────────────────────
-   Drills · shared styles for the four conjugation drill types.
-   Each .drill-root sets `--accent` to its own colour. Children
-   reference `var(--accent)` everywhere it matters.
+   Drills · shared styles for the four conjugation drill types,
+   on the design tokens ("Paper & encre de travail"). The accent
+   is the system accent (bleu-de-travail indigo); children
+   reference `var(--accent)` everywhere it matters. Correct uses
+   the ok family, wrong the vermillon review family, and "almost"
+   (a nudge, not a failure) the accent-soft hint family.
    ─────────────────────────────────────────────────────────────── */
 
 /* ── Page chrome ─────────────────────────────────────────────── */
 
 .drill-root {
-  --accent: #ffb703;
-  --accent-soft: rgba(255, 183, 3, 0.14);
-
   min-height: 100vh;
   background: var(--bg);
   color: var(--text);
@@ -22,7 +22,7 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(255, 255, 255, 0.92);
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border-subtle);
@@ -156,27 +156,27 @@
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 .drill-blank-correct {
-  color: var(--emerald);
-  background: var(--emerald-soft);
-  border-bottom-color: var(--emerald);
+  color: var(--ok-ink);
+  background: var(--ok-bg);
+  border-bottom-color: var(--ok-dot);
   font-family: var(--font-display);
   font-size: 1em;
   font-weight: 600;
   letter-spacing: 0;
 }
 .drill-blank-almost {
-  color: #b07500;
-  background: var(--amber-soft);
-  border-bottom-color: var(--amber);
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border-bottom-color: var(--accent);
   font-family: var(--font-display);
   font-size: 1em;
   font-weight: 600;
   letter-spacing: 0;
 }
 .drill-blank-wrong {
-  color: var(--coral);
-  background: var(--coral-soft);
-  border-bottom-color: var(--coral);
+  color: var(--no-ink);
+  background: var(--no-bg);
+  border-bottom-color: var(--review);
   font-family: var(--font-display);
   font-size: 1em;
   font-weight: 600;
@@ -185,12 +185,12 @@
   text-decoration-thickness: 1.5px;
 }
 
-.drill-blank-stem { color: var(--indigo); font-weight: 500; }
-.drill-blank-ending { color: var(--coral); font-weight: 600; }
+.drill-blank-stem { color: var(--muted); font-weight: 500; }
+.drill-blank-ending { color: var(--accent-ink); font-weight: 600; }
 
 mark.drill-cue {
-  background: var(--amber-soft);
-  color: #b07500;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
   padding: 0.05em 0.3em;
   border-radius: 4px;
   font-weight: 600;
@@ -229,12 +229,12 @@ mark.drill-cue {
 .drill-input:focus { border-color: var(--accent); background: var(--bg); }
 .drill-input::placeholder { color: var(--text-muted); }
 .drill-input:disabled { opacity: 0.5; cursor: not-allowed; }
-.drill-input-correct { border-color: var(--emerald); background: var(--emerald-soft); color: var(--emerald); }
-.drill-input-almost  { border-color: var(--amber);   background: var(--amber-soft);   color: #b07500; }
+.drill-input-correct { border-color: var(--ok-dot); background: var(--ok-bg); color: var(--ok-ink); }
+.drill-input-almost  { border-color: var(--accent);  background: var(--accent-soft); color: var(--accent-ink); }
 .drill-input-wrong   {
-  border-color: var(--coral);
-  background: var(--coral-soft);
-  color: var(--coral);
+  border-color: var(--review);
+  background: var(--no-bg);
+  color: var(--no-ink);
   animation: drill-shake 0.32s;
 }
 @keyframes drill-shake {
@@ -248,10 +248,10 @@ mark.drill-cue {
   align-items: center;
   justify-content: center;
   padding: 0.85rem 1.25rem;
-  background: var(--accent);
-  color: #fff;
+  background: var(--ink);
+  color: var(--paper);
   border: none;
-  border-radius: 10px;
+  border-radius: var(--r-md);
   font-weight: 500;
   font-size: 0.95rem;
   cursor: pointer;
@@ -266,7 +266,7 @@ mark.drill-cue {
   font-family: var(--font-mono);
   font-size: 0.7rem;
   padding: 0.1rem 0.4rem;
-  background: rgba(255, 255, 255, 0.18);
+  background: color-mix(in srgb, var(--paper) 18%, transparent);
   border-radius: 4px;
   font-weight: 400;
 }
@@ -308,9 +308,9 @@ mark.drill-cue {
   border-radius: 999px;
   text-transform: lowercase;
 }
-.drill-verdict-correct { color: var(--emerald); background: var(--emerald-soft); }
-.drill-verdict-almost  { color: #b07500;     background: var(--amber-soft); }
-.drill-verdict-wrong   { color: var(--coral);  background: var(--coral-soft); }
+.drill-verdict-correct { color: var(--ok-ink); background: var(--ok-bg); }
+.drill-verdict-almost  { color: var(--accent-ink); background: var(--accent-soft); }
+.drill-verdict-wrong   { color: var(--no-ink);  background: var(--no-bg); }
 
 /* ── Feedback panel ───────────────────────────────────────────── */
 
@@ -326,9 +326,9 @@ mark.drill-cue {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: none; }
 }
-.drill-feedback-correct { background: var(--emerald-soft); border-color: rgba(0, 196, 140, 0.3); }
-.drill-feedback-almost  { background: var(--amber-soft);   border-color: rgba(255, 183, 3, 0.4); }
-.drill-feedback-wrong   { background: var(--coral-soft);   border-color: rgba(255, 71, 87, 0.3); }
+.drill-feedback-correct { background: var(--ok-bg); border-color: color-mix(in srgb, var(--ok-dot) 35%, transparent); }
+.drill-feedback-almost  { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+.drill-feedback-wrong   { background: var(--no-bg); border-color: color-mix(in srgb, var(--review) 35%, transparent); }
 
 .drill-feedback-verdict {
   font-weight: 600;
@@ -337,9 +337,9 @@ mark.drill-cue {
   letter-spacing: 0.08em;
   margin-bottom: 0.5rem;
 }
-.drill-feedback-correct .drill-feedback-verdict { color: var(--emerald); }
-.drill-feedback-almost  .drill-feedback-verdict { color: #b07500; }
-.drill-feedback-wrong   .drill-feedback-verdict { color: var(--coral); }
+.drill-feedback-correct .drill-feedback-verdict { color: var(--ok-ink); }
+.drill-feedback-almost  .drill-feedback-verdict { color: var(--accent-ink); }
+.drill-feedback-wrong   .drill-feedback-verdict { color: var(--no-ink); }
 
 .drill-feedback-diff {
   font-family: var(--font-mono);
@@ -347,13 +347,13 @@ mark.drill-cue {
   margin-bottom: 0.4rem;
 }
 .drill-feedback-yours {
-  color: var(--coral);
+  color: var(--review-text);
   text-decoration: line-through;
   text-decoration-thickness: 1.5px;
   margin-right: 0.4rem;
 }
 .drill-feedback-arrow { color: var(--text-muted); margin-right: 0.4rem; }
-.drill-feedback-theirs { color: var(--emerald); font-weight: 600; }
+.drill-feedback-theirs { color: var(--ok-ink); font-weight: 600; }
 
 .drill-feedback-decomp {
   display: inline-flex;
@@ -363,9 +363,9 @@ mark.drill-cue {
   font-size: 0.95rem;
   margin: 0.3rem 0 0.6rem;
 }
-.drill-feedback-stem { color: var(--indigo); font-weight: 500; }
+.drill-feedback-stem { color: var(--muted); font-weight: 500; }
 .drill-feedback-plus { color: var(--text-muted); }
-.drill-feedback-ending { color: var(--coral); font-weight: 600; }
+.drill-feedback-ending { color: var(--accent-ink); font-weight: 600; }
 
 .drill-feedback-rule {
   font-size: 0.9rem;
@@ -374,8 +374,8 @@ mark.drill-cue {
 }
 .drill-feedback-rule code {
   font-family: var(--font-mono);
-  background: rgba(61, 90, 241, 0.08);
-  color: var(--indigo);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
   padding: 0.1rem 0.4rem;
   border-radius: 4px;
   font-size: 0.85em;
@@ -409,8 +409,8 @@ mark.drill-cue {
   align-items: center;
   gap: 0.5rem;
   padding: 0.85rem 1.4rem;
-  background: var(--text);
-  color: var(--bg);
+  background: var(--ink);
+  color: var(--paper);
   border: none;
   border-radius: 10px;
   font-weight: 500;
@@ -461,8 +461,8 @@ mark.drill-cue {
 }
 .drill-gloss code {
   font-family: var(--font-mono);
-  background: rgba(61, 90, 241, 0.08);
-  color: var(--indigo);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
   padding: 0.1rem 0.4rem;
   border-radius: 4px;
   font-style: normal;
@@ -478,7 +478,7 @@ mark.drill-cue {
 .drill-choice {
   position: relative;
   padding: 1.4rem 1rem;
-  background: var(--bg);
+  background: var(--card);
   border: 2px solid var(--border-subtle);
   border-radius: 14px;
   cursor: pointer;
@@ -512,12 +512,12 @@ mark.drill-cue {
   font-style: italic;
 }
 .drill-choice.is-right {
-  border-color: var(--emerald);
-  background: var(--emerald-soft);
+  border-color: var(--ok-dot);
+  background: var(--ok-bg);
 }
 .drill-choice.is-wrong {
-  border-color: var(--coral);
-  background: var(--coral-soft);
+  border-color: var(--review);
+  background: var(--no-bg);
 }
 .drill-choice.is-dimmed { opacity: 0.45; }
 
@@ -539,7 +539,7 @@ mark.drill-cue {
   align-items: center;
   gap: 0.4rem;
   padding: 0.35rem 0.7rem;
-  background: var(--bg);
+  background: var(--card);
   border: 1px solid var(--border-subtle);
   border-radius: 999px;
   font-family: var(--font-mono);
@@ -550,10 +550,10 @@ mark.drill-cue {
   font-size: 0.65rem;
 }
 .drill-chain-step.is-done {
-  background: var(--emerald-soft);
-  border-color: rgba(0, 196, 140, 0.4);
+  background: var(--ok-bg);
+  border-color: color-mix(in srgb, var(--ok-dot) 40%, transparent);
 }
-.drill-chain-step.is-done .drill-chain-step-f { color: var(--emerald); }
+.drill-chain-step.is-done .drill-chain-step-f { color: var(--ok-ink); }
 .drill-chain-step.is-current {
   background: var(--accent-soft);
   border-color: var(--accent);
@@ -562,7 +562,7 @@ mark.drill-cue {
 .drill-chain-arrow { color: var(--text-muted); font-size: 0.85rem; }
 
 .drill-step-card {
-  background: var(--bg);
+  background: var(--card);
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
   padding: 1.5rem;
@@ -572,11 +572,10 @@ mark.drill-cue {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  font-family: var(--font-mono);
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--accent);
+  color: var(--accent-ink);
   background: var(--accent-soft);
   padding: 0.3rem 0.7rem;
   border-radius: 999px;
@@ -616,11 +615,11 @@ mark.drill-cue {
   margin-bottom: 1.25rem;
 }
 .drill-step-prompt b {
-  color: var(--indigo);
+  color: var(--accent-ink);
   font-weight: 600;
 }
 .drill-step-prompt em {
-  color: var(--accent);
+  color: var(--accent-ink);
   font-style: normal;
   font-weight: 500;
 }
@@ -654,7 +653,7 @@ mark.drill-cue {
   justify-content: center;
   align-items: center;
 }
-.drill-summary-trail .drill-chain-step { background: var(--bg); }
+.drill-summary-trail .drill-chain-step { background: var(--card); }
 .drill-summary-trail .drill-chain-arrow { color: var(--text-muted); }
 
 .drill-summary-stats {
@@ -715,7 +714,7 @@ mark.drill-cue {
   transition: opacity 0.15s;
 }
 .drill-btn:hover { opacity: 0.92; }
-.drill-btn-primary { background: var(--accent); color: #fff; }
+.drill-btn-primary { background: var(--ink); color: var(--paper); }
 .drill-btn-ghost { background: var(--surface); color: var(--text); border: 1px solid var(--border-subtle); }
 
 /* ── Mobile ───────────────────────────────────────────────────── */

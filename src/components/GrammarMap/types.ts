@@ -54,21 +54,26 @@ export const MOOD_LABELS: Record<MoodId, string> = {
 
 export const MOOD_ORDER: MoodId[] = ["indicatif", "conditionnel", "subjonctif", "imperatif"];
 
-export const MOOD_HUE: Record<MoodId, number> = {
-  indicatif:    217,
-  conditionnel: 263,
-  subjonctif:   38,
-  imperatif:    160,
+/* Mood lane fills — the system's only four-step scale (bleu de
+   travail). On the map these are category colours for the lanes,
+   not progress states: stripes, borders and washes. Node text
+   stays readable ink so 8px labels never sit on pale fills. */
+export const MOOD_FILL: Record<MoodId, string> = {
+  indicatif:    "var(--p2)",  // workwear indigo
+  conditionnel: "var(--p1)",  // pale indigo
+  subjonctif:   "var(--p3)",  // deep indigo
+  imperatif:    "var(--p0)",  // warm grey
 };
 
 // Each edge type gets a distinct COLOR — primary differentiator.
 // Dash pattern is kept as a secondary, subtle reinforcement only.
+// Palette: the system's indigos + vermillon + warm greys only.
 export const EDGE_COLOR: Record<EdgeType, string> = {
-  "auxiliary-compound": "#3d5af1",  // indigo
-  "aspect-pair":        "#ff4757",  // coral
-  "stem-share":         "#ffb703",  // amber
-  "mood-swap":          "#8b5cf6",  // violet
-  "anteriority":        "#94a3b8",  // slate
+  "auxiliary-compound": "var(--p2)",     // workwear indigo
+  "aspect-pair":        "var(--review)", // vermillon
+  "stem-share":         "var(--muted)",  // warm grey
+  "mood-swap":          "var(--p3)",     // deep indigo
+  "anteriority":        "var(--faint)",  // faded grey
 };
 
 export const EDGE_DASH: Record<EdgeType, string> = {

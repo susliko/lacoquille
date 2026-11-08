@@ -3,15 +3,21 @@ import Base from "../../layouts/Base.astro";
 import PracticeHub from "../../components/PracticeHub";
 ---
 
-<Base title="Practice Hub" section="practice">
-  <main>
+<Base title="Practice" section="practice">
+  <div class="hub-shell">
     <PracticeHub client:only="solid-js" />
-  </main>
+  </div>
 </Base>
 
 <style>
-  main {
-    height: calc(100dvh - 52px);
+  /* The hub is a full-bleed menu; drop the content-page frame. */
+  :global(main#main-content) {
+    padding: 0;
+    max-width: none;
+  }
+
+  .hub-shell {
+    height: 100dvh;
     overflow: hidden;
   }
 </style>

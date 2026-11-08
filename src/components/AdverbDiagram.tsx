@@ -32,12 +32,14 @@ export default function AdverbDiagram(props: Props) {
   const cy = svgH / 2;
 
   const angleStep = (2 * Math.PI) / props.nodes.length;
+  /* Category colours from the system palette only: two indigos,
+     vermillon, and two warm greys. */
   const typeColors: Record<string, string> = {
-    manner: "#4d8eff",
-    time: "#9d6cf0",
-    place: "#2dbe96",
-    degree: "#f0a030",
-    frequency: "#e05c5c",
+    manner: "var(--p2)",
+    time: "var(--p3)",
+    place: "var(--review)",
+    degree: "var(--muted)",
+    frequency: "var(--faint)",
   };
 
   function getNodePosition(index: number) {
