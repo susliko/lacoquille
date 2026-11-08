@@ -2,9 +2,9 @@
  * Progress grid — the designed 6×4 matrix from the handoff
  * (docs/01-concept.md, 02-topics.md, 06-ux-findings.md): CEFR rows ×
  * four family columns (Tense · Mood · Noun group · Sentence), each
- * cell counting how many of its topics are solid, filled on the
- * four-step indigo scale, vermillon dot = time to review. Tapping a
- * cell opens the topic sheet below it. No aggregate percentage —
+ * cell holding one mini-square per topic on the four-step indigo
+ * scale, vermillon ring on minis = time to review. Tapping a cell
+ * opens the topic sheet below it. No aggregate percentage —
  * user testing removed it.
  */
 
@@ -114,7 +114,6 @@ export default function ProgressGrid(props: { visible: boolean }) {
                       return (
                         <button
                           class="pg-cell"
-                          data-tier={cell.empty ? "none" : cell.tier}
                           disabled={cell.empty}
                           aria-expanded={isOpen() ? "true" : "false"}
                           aria-controls="pg-panel"
@@ -127,10 +126,16 @@ export default function ProgressGrid(props: { visible: boolean }) {
                             when={!cell.empty}
                             fallback={<span class="pg-empty">—</span>}
                           >
-                            <span class="pg-count">{cell.solid}/{cell.total}</span>
-                          </Show>
-                          <Show when={cell.review}>
-                            <span class="pg-dot" aria-hidden="true" />
+                            <For each={cell.topics}>
+                              {(t) => (
+                                <span
+                                  class="pg-mini"
+                                  data-tier={t.tier}
+                                  classList={{ "is-review": t.review }}
+                                  aria-hidden="true"
+                                />
+                              )}
+                            </For>
                           </Show>
                         </button>
                       );

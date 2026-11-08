@@ -126,16 +126,14 @@ export interface CellState {
   solid: number;
   mastered: number;
   review: boolean;
-  /** Fill tier — the whole cell, not any single topic. */
-  tier: Tier;
   /** No catalog topic lives here yet; the cell renders hollow. */
   empty: boolean;
 }
 
 /**
- * The full matrix, rows × columns. A cell fills p3 only when every
- * topic in it is mastered; any solid topic fills p2; any started topic
- * fills p1 — the count tells the rest.
+ * The full matrix, rows × columns. The cell itself stays a quiet
+ * container — each topic renders as its own mini-square, so the
+ * per-topic state stays legible inside the cell.
  */
 export function cellGrid(states: TopicStates): CellState[][] {
   return LEVELS.map((level) =>
@@ -143,13 +141,8 @@ export function cellGrid(states: TopicStates): CellState[][] {
       const topics = Object.values(states).filter(
         (t) => t.topic.section === section && t.topic.levels.includes(level),
       );
-      const started = topics.filter((t) => t.tier > 0);
       const solid = topics.filter((t) => t.tier >= 2);
       const mastered = topics.filter((t) => t.tier === 3);
-      let tier: Tier = 0;
-      if (topics.length > 0 && mastered.length === topics.length) tier = 3;
-      else if (solid.length > 0) tier = 2;
-      else if (started.length > 0) tier = 1;
       return {
         level,
         section,
@@ -158,7 +151,6 @@ export function cellGrid(states: TopicStates): CellState[][] {
         solid: solid.length,
         mastered: mastered.length,
         review: topics.some((t) => t.review),
-        tier,
         empty: topics.length === 0,
       };
     }),

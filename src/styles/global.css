@@ -847,9 +847,10 @@ article {
 
 /* ── Progress grid (homepage · Progress tab) ────────────────────
    The designed matrix (handoff docs/02-topics.md, 06-ux-findings):
-   CEFR rows × four family columns; cells count solid topics on the
-   four-step indigo scale (--p0..--p3, never five); vermillon dot =
-   time to review. A cell opens the topic sheet below the grid. */
+   CEFR rows × four family columns. Each cell is a quiet container
+   holding one mini-square per topic on the four-step indigo scale
+   (--p0..--p3, never five); a vermillon inset ring marks a topic
+   as time to review. Tapping a cell opens the topic sheet below. */
 .pg-root {
   height: 100%;
   overflow-y: auto;
@@ -933,18 +934,20 @@ article {
 .pg-cell {
   position: relative;
   min-height: var(--tap);
-  padding: 0;
+  padding: var(--s-1);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: center;
+  justify-content: center;
+  gap: 4px;
   font-family: var(--font);
-  font-size: var(--t-sm);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
   border: 1px solid var(--line);
   border-radius: var(--r-md);
-  background: var(--p0);
-  color: var(--p0-ink);
+  background: var(--card);
   cursor: pointer;
   box-shadow: var(--shadow-1);
-  transition: transform var(--fast) var(--ease), background var(--panel) var(--ease);
+  transition: transform var(--fast) var(--ease);
 }
 
 .pg-cell:active:not(:disabled) { transform: scale(0.95); }
@@ -952,24 +955,6 @@ article {
 .pg-cell:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
-}
-
-.pg-cell[data-tier="1"] {
-  background: var(--p1);
-  border-color: var(--p1);
-  color: var(--p1-ink);
-}
-
-.pg-cell[data-tier="2"] {
-  background: var(--p2);
-  border-color: var(--p2);
-  color: var(--p2-ink);
-}
-
-.pg-cell[data-tier="3"] {
-  background: var(--p3);
-  border-color: var(--p3);
-  color: var(--p3-ink);
 }
 
 /* Hollow cell — the catalog has no topic here yet. */
@@ -984,15 +969,35 @@ article {
 
 .pg-empty { font-size: var(--t-sm); }
 
-/* Vermillon review pip — same marker everywhere (06-ux-findings). */
-.pg-dot {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  width: 8px;
-  height: 8px;
-  border-radius: var(--r-pill);
-  background: var(--review);
+/* One mini-square per topic, on the four-step scale (tokens.css:
+   --r-sm is the "mini squares" radius). The vermillon inset ring
+   marks the topic as time to review — the marker stays on the
+   exact topic, not the whole cell. */
+.pg-mini {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  background: var(--p0);
+}
+
+.pg-mini[data-tier="1"] {
+  background: var(--p1);
+  border-color: var(--p1);
+}
+
+.pg-mini[data-tier="2"] {
+  background: var(--p2);
+  border-color: var(--p2);
+}
+
+.pg-mini[data-tier="3"] {
+  background: var(--p3);
+  border-color: var(--p3);
+}
+
+.pg-mini.is-review {
+  box-shadow: inset 0 0 0 2px var(--review);
 }
 
 .pg-legend {
