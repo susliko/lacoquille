@@ -6,6 +6,10 @@ const PRACTICE = [
      ok/miss feedback system. tokens.css design system experience. */
   { id: "session",       name: "Exercise session",  sub: "mixed items · instant feedback", color: "#4A5AA8", path: "/practice/session" },
 
+  /* The endless feed: the coach picks a grammar topic per run from the
+     learner's level + history, generator families fill it. */
+  { id: "feed",          name: "Endless feed",      sub: "adaptive grammar · always ready", color: "#232D5C", path: "/practice/feed" },
+
   /* The single verb-conjugation entry. Mixes cloze, cue-to-form,
      spot-the-tense, and transformation chains in an endless stream. */
   { id: "conjugations", name: "Conjugations", sub: "endless mixed drills", color: "#3d5af1", path: "/practice/conjugations" },

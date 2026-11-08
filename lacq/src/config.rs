@@ -9,6 +9,8 @@ pub struct Config {
     pub openrouter_models: Vec<String>,
     pub gemini_api_key: Option<String>,
     pub groq_api_key: Option<String>,
+    /// Key for the coach's external decision model (optional).
+    pub typesafe_api_key: Option<String>,
     pub groq_models: Vec<String>,
     pub gemini_models: Vec<String>,
     pub translation_timeout_secs: u64,
@@ -44,6 +46,7 @@ impl Config {
             openrouter_models,
             gemini_api_key: env::var("GEMINI_API_KEY").ok(),
             groq_api_key: env::var("GROQ_API_KEY").ok(),
+            typesafe_api_key: env::var("TYPESAFE_API_KEY").ok(),
             groq_models,
             gemini_models,
             translation_timeout_secs: env::var("TRANSLATION_TIMEOUT_SECS")
@@ -155,6 +158,7 @@ mod tests {
             openrouter_api_key: Some("test-openrouter".to_string()),
             openrouter_models: vec!["z-ai/glm-4.5-air:free".to_string()],
             groq_api_key: Some("test-groq".to_string()),
+            typesafe_api_key: None,
             gemini_api_key: Some("test-gemini".to_string()),
             groq_models: vec!["llama-3.1-8b-instant".to_string()],
             gemini_models: vec!["gemini-3.1-flash-lite".to_string()],
@@ -175,6 +179,7 @@ mod tests {
             openrouter_api_key: Some("test-openrouter".to_string()),
             openrouter_models: vec!["z-ai/glm-4.5-air:free".to_string()],
             groq_api_key: Some("test-groq".to_string()),
+            typesafe_api_key: None,
             gemini_api_key: Some("test-gemini".to_string()),
             groq_models: vec!["llama-3.1-8b-instant".to_string()],
             gemini_models: vec!["gemini-3.1-flash-lite".to_string()],
@@ -194,6 +199,7 @@ mod tests {
             openrouter_api_key: None,
             openrouter_models: vec![],
             groq_api_key: Some("test-groq".to_string()),
+            typesafe_api_key: None,
             gemini_api_key: None,
             groq_models: vec![
                 "llama-3.1-8b-instant".to_string(),

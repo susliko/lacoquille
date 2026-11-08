@@ -1,0 +1,13 @@
+---
+import Base from "../../layouts/Base.astro";
+import EndlessFeed from "../../components/exercise/EndlessFeed";
+import "../../styles/tokens.css";
+---
+
+<Base title="Endless feed — La Coquille" section="practice">
+  <EndlessFeed client:only="solid-js" />
+</Base>
+
+<style is:global>
+  @import "../../styles/session.css";
+</style>

@@ -1,21 +1,23 @@
 use axum::{
     extract::{Query, State},
     http::StatusCode,
-    routing::get,
+    routing::{get, post},
     Router,
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::sync::Arc;
 
 use crate::{AppState, ArticleResponse};
+use crate::coach::{self, LearnerContext};
 use crate::exercises::gen::{self, ItemType, ALL_TYPES};
-use crate::exercises::ExercisesResponse;
+use crate::exercises::{corpus, families, topics, ExercisesResponse};
 
 pub fn routes() -> Router<Arc<AppState>> {
     Router::new()
         .route("/health", get(health))
         .route("/api/article-of-the-day", get(article_of_the_day))
         .route("/api/exercises", get(exercises))
+        .route("/api/exercises/feed", post(feed))
 }
 
 async fn health() -> &'static str {
@@ -83,10 +85,10 @@ async fn exercises(
     let level = match &q.level {
         Some(l) if !l.is_empty() => {
             let l = l.trim().to_ascii_uppercase();
-            if !exercises::corpus::ALL_LEVELS.contains(&l.as_str()) {
+            if !corpus::ALL_LEVELS.contains(&l.as_str()) {
                 return Err(bad(format!(
                     "invalid level {:?} (expected one of {:?})",
-                    l, exercises::corpus::ALL_LEVELS
+                    l, corpus::ALL_LEVELS
                 )));
             }
             Some(l)
@@ -109,4 +111,52 @@ async fn exercises(
     }
 }
 
-use crate::exercises;
+/* ── Endless feed: coach decides the topic, generators fill the run ── */
+
+/// Items per coach decision — one run drills one topic.
+const FEED_RUN_LEN: usize = 5;
+/// Cap on the client's recent-item list we honor for dedupe.
+const FEED_RECENT_CAP: usize = 40;
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct FeedResponse {
+    plan: coach::DrillPlan,
+    items: Vec<crate::exercises::ExerciseItem>,
+    run_length: usize,
+}
+
+async fn feed(
+    State(state): State<Arc<AppState>>,
+    axum::Json(ctx): axum::Json<LearnerContext>,
+) -> Result<axum::Json<FeedResponse>, (StatusCode, axum::Json<ErrorResponse>)> {
+    let plan = coach::decide(state.config.typesafe_api_key.as_deref(), &ctx).await;
+
+    let topic = topics::by_slug(&plan.topic)
+        .ok_or_else(|| (StatusCode::INTERNAL_SERVER_ERROR, axum::Json(ErrorResponse {
+            error: format!("plan picked unknown topic {}", plan.topic),
+        })))?;
+
+    let recent: std::collections::HashSet<String> = ctx
+        .recent_items
+        .iter()
+        .take(FEED_RECENT_CAP)
+        .cloned()
+        .collect();
+
+    let seed = gen::time_seed();
+    // Family first; curated corpus covers topics without one; anything
+    // at all keeps the feed moving rather than erroring mid-session.
+    let items = families::generate(topic, Some(&plan.level), FEED_RUN_LEN, &recent, seed);
+    let items = if items.is_empty() {
+        gen::curated_for_topic(topic.title, FEED_RUN_LEN, seed)
+    } else {
+        items
+    };
+
+    Ok(axum::Json(FeedResponse {
+        plan,
+        run_length: items.len(),
+        items,
+    }))
+}

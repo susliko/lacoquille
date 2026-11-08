@@ -18,6 +18,8 @@ interface Base {
   kind: string;
   level: Level;
   topic: string;
+  /** Catalog slug — present when the topic is in the server catalog. */
+  topicSlug?: string;
   /** Instruction line(s) under the topic chip. */
   task: string[];
   /** Grammar rule shown in the feedback panel, as wrapped lines. */

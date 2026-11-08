@@ -1,4 +1,5 @@
 pub mod config;
+pub mod coach;
 pub mod exercises;
 pub mod routes;
 pub mod gutenberg;

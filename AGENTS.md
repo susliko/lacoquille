@@ -120,6 +120,33 @@ The `lacq/` directory is a Rust (Axum) backend server that:
 - Caches translations and story metadata in `lacq/data/`
 - Run with: `npm run dev:all` (both frontend + backend)
 
+## Exercise generation (endless feed)
+
+Two-tier, **stateless** system — all learner state stays client-side:
+
+- `GET /api/exercises` — seeded curated generator (fixed sessions).
+- `POST /api/exercises/feed` — endless feed. Body = learner context ONLY
+  (`{level, topics[{slug,attempts,correct,lastAt}], recentTopics, recentItems}`,
+  camelCase). Server attaches all pedagogy (topic catalog, blurbs, level
+  taxonomy) and its **coach** (`lacq/src/coach.rs`) picks the next topic:
+  external decision model when `TYPESAFE_API_KEY` is set (Jev via
+  `POST api.typesafe.ai/v1/systemone` — naming stays domain-level:
+  coach/DrillPlan/built-in, never vendor terms in the API), built-in
+  weakest-topic heuristic otherwise or on timeout/error.
+- Topic catalog: `lacq/src/exercises/topics.rs` (slugs + blurbs + levels +
+  family). Generator families (`families.rs`): tagged banks × slot combos
+  → endless items (pc-aux, pc-etre agreement, COD/COI pronouns, subjonctif,
+  imparfait-vs-pc). Topics without a family fall back to the curated corpus
+  (`curated_for_topic`). Items carry `topicSlug` for client aggregation.
+- Client: `/practice/feed` (`EndlessFeed.tsx`) — continuous, run-of-5,
+  prefetches next run at 2 items left; misses requeue in-run. Learner state
+  in `lacoquille.feed.v1` (`feedStore.ts`): per-topic aggregates, recent
+  rings, rolling-window level estimate. The fixed session keeps its own
+  `lacoquille.exercises.v1` store.
+- Add a topic: append to `TOPICS` in topics.rs (+ family in families.rs or
+  curated templates). Slugs are the wire contract — never rename them.
+
+
 ## Adding tenses
 
 1. Create `src/content/verbs/tenses/<slug>.md` with required frontmatter (see README.md)

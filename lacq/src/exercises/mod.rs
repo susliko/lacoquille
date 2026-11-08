@@ -7,12 +7,18 @@
 //! - `gen`    — seeded selection + per-type assembly
 
 pub mod corpus;
+pub mod families;
 pub mod gen;
+pub mod topics;
 
 use serde::Serialize;
 
 /// A single exercise item. Serialized with a `kind` tag so the client's
 /// discriminated union parses it directly (`camelCase` field names).
+///
+/// `topic_slug` is the machine key from the topic catalog — the client
+/// aggregates its history on it. Curated items whose title maps into the
+/// catalog carry one; items outside the catalog omit it.
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "kind", rename_all = "kebab-case")]
 pub enum ExerciseItem {
@@ -47,6 +53,8 @@ pub struct ClozeItem {
     pub id: String,
     pub level: &'static str,
     pub topic: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub topic_slug: Option<String>,
     pub task: Vec<String>,
     pub head: String,
     pub tail: String,
@@ -64,6 +72,7 @@ impl ClozeItem {
             id: format!("{}-{}", t.id, p.key),
             level: t.level,
             topic: t.topic,
+            topic_slug: topics::slug_for_title(t.topic).map(|s| s.to_string()),
             task: strs(t.task),
             head: p.head.to_string(),
             tail: p.tail.to_string(),
@@ -80,8 +89,10 @@ pub struct ChoiceItem {
     pub id: String,
     pub level: &'static str,
     pub topic: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub topic_slug: Option<String>,
     pub task: Vec<String>,
-    pub sentence: &'static str,
+    pub sentence: String,
     pub options: Vec<String>,
     pub correct: usize,
     pub rule: Vec<String>,
@@ -93,6 +104,8 @@ pub struct TilesItem {
     pub id: String,
     pub level: &'static str,
     pub topic: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub topic_slug: Option<String>,
     pub task: Vec<String>,
     pub prompt: &'static str,
     pub target: Vec<String>,
@@ -106,9 +119,11 @@ pub struct TransformItem {
     pub id: String,
     pub level: &'static str,
     pub topic: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub topic_slug: Option<String>,
     pub task: Vec<String>,
-    pub source: &'static str,
-    pub answer: &'static str,
+    pub source: String,
+    pub answer: String,
     pub rule: Vec<String>,
 }
 
@@ -118,10 +133,12 @@ pub struct ErrorSpotItem {
     pub id: String,
     pub level: &'static str,
     pub topic: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub topic_slug: Option<String>,
     pub task: Vec<String>,
     pub words: Vec<String>,
     pub wrong: usize,
-    pub fix: &'static str,
+    pub fix: String,
     pub fix_task: &'static str,
     pub rule: Vec<String>,
 }
@@ -132,6 +149,8 @@ pub struct DictationItem {
     pub id: String,
     pub level: &'static str,
     pub topic: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub topic_slug: Option<String>,
     pub task: Vec<String>,
     pub speech: &'static str,
     pub answer: &'static str,

@@ -134,8 +134,9 @@ fn build_choice(rng: &mut Rng, t: &c::ChoiceTemplate) -> ChoiceItem {
         id: t.id.to_string(),
         level: t.level,
         topic: t.topic,
+        topic_slug: crate::exercises::topics::slug_for_title(t.topic).map(|s| s.to_string()),
         task: strs(t.task),
-        sentence: t.sentence,
+        sentence: t.sentence.to_string(),
         options: opts.into_iter().map(|(o, _)| o).collect(),
         correct,
         rule: strs(t.rule),
@@ -150,6 +151,7 @@ fn build_tiles(rng: &mut Rng, t: &c::TilesTemplate) -> TilesItem {
         id: t.id.to_string(),
         level: t.level,
         topic: t.topic,
+        topic_slug: crate::exercises::topics::slug_for_title(t.topic).map(|s| s.to_string()),
         task: strs(t.task),
         prompt: t.prompt,
         target: strs(t.target),
@@ -324,9 +326,10 @@ pub fn generate(req: &GenRequest) -> Result<Vec<ExerciseItem>, String> {
                     id: t.id.to_string(),
                     level: t.level,
                     topic: t.topic,
+        topic_slug: crate::exercises::topics::slug_for_title(t.topic).map(|s| s.to_string()),
                     task: strs(t.task),
-                    source: t.source,
-                    answer: t.answer,
+                    source: t.source.to_string(),
+                    answer: t.answer.to_string(),
                     rule: strs(t.rule),
                 })
             }
@@ -337,10 +340,11 @@ pub fn generate(req: &GenRequest) -> Result<Vec<ExerciseItem>, String> {
                     id: t.id.to_string(),
                     level: t.level,
                     topic: t.topic,
+        topic_slug: crate::exercises::topics::slug_for_title(t.topic).map(|s| s.to_string()),
                     task: strs(t.task),
                     words: strs(t.words),
                     wrong: t.wrong,
-                    fix: t.fix,
+                    fix: t.fix.to_string(),
                     fix_task: t.fix_task,
                     rule: strs(t.rule),
                 })
@@ -352,6 +356,7 @@ pub fn generate(req: &GenRequest) -> Result<Vec<ExerciseItem>, String> {
                     id: t.id.to_string(),
                     level: t.level,
                     topic: t.topic,
+        topic_slug: crate::exercises::topics::slug_for_title(t.topic).map(|s| s.to_string()),
                     task: strs(t.task),
                     speech: t.speech,
                     answer: t.answer,
@@ -376,6 +381,67 @@ fn take_index_pair(
         rng.shuffle(remaining);
     }
     remaining.swap_remove(rng.below(remaining.len()))
+}
+
+/// Curated items whose topic matches `title` — the fallback for topics
+/// that have no generator family yet. Level-agnostic; shuffled.
+pub fn curated_for_topic(title: &str, count: usize, seed: u64) -> Vec<ExerciseItem> {
+    let mut rng = Rng::new(seed);
+    let mut pool: Vec<ExerciseItem> = Vec::new();
+
+    for t in c::CLOZE.iter().filter(|t| t.topic == title) {
+        for p in t.persons.iter() {
+            pool.push(ExerciseItem::Cloze(ClozeItem::from_template(t, p)));
+        }
+    }
+    for t in c::CHOICE.iter().filter(|t| t.topic == title) {
+        pool.push(ExerciseItem::Choice(build_choice(&mut rng, t)));
+    }
+    for t in c::TILES.iter().filter(|t| t.topic == title) {
+        pool.push(ExerciseItem::Tiles(build_tiles(&mut rng, t)));
+    }
+    for t in c::TRANSFORM.iter().filter(|t| t.topic == title) {
+        pool.push(ExerciseItem::Transform(TransformItem {
+            id: t.id.to_string(),
+            level: t.level,
+            topic: t.topic,
+            topic_slug: crate::exercises::topics::slug_for_title(t.topic).map(|s| s.to_string()),
+            task: strs(t.task),
+            source: t.source.to_string(),
+            answer: t.answer.to_string(),
+            rule: strs(t.rule),
+        }));
+    }
+    for t in c::ERROR_SPOT.iter().filter(|t| t.topic == title) {
+        pool.push(ExerciseItem::ErrorSpot(ErrorSpotItem {
+            id: t.id.to_string(),
+            level: t.level,
+            topic: t.topic,
+            topic_slug: crate::exercises::topics::slug_for_title(t.topic).map(|s| s.to_string()),
+            task: strs(t.task),
+            words: strs(t.words),
+            wrong: t.wrong,
+            fix: t.fix.to_string(),
+            fix_task: t.fix_task,
+            rule: strs(t.rule),
+        }));
+    }
+    for t in c::DICTATION.iter().filter(|t| t.topic == title) {
+        pool.push(ExerciseItem::Dictation(DictationItem {
+            id: t.id.to_string(),
+            level: t.level,
+            topic: t.topic,
+            topic_slug: crate::exercises::topics::slug_for_title(t.topic).map(|s| s.to_string()),
+            task: strs(t.task),
+            speech: t.speech,
+            answer: t.answer,
+            rule: strs(t.rule),
+        }));
+    }
+
+    rng.shuffle(&mut pool);
+    pool.truncate(count);
+    pool
 }
 
 /* ── Tests ──────────────────────────────────────────────────────── */

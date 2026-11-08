@@ -16,6 +16,26 @@
   font-weight: 500;
 }
 
+/* ── Feed (continuous practice) ─────────────────────────────────── */
+
+.ex-feed-top {
+  justify-content: space-between;
+}
+
+.ex-feed-focus {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.ex-streak {
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
 .ex-root {
   min-height: 100dvh;
   background: var(--paper);
