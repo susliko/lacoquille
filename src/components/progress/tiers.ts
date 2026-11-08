@@ -12,15 +12,19 @@
  *  - Review dot (vermillon): items still due from the fixed session,
  *    or a topic drilled ≥3 times that still sits under 80%.
  *
- * History comes from two client-side stores: the endless feed
+ * State lands on taxonomy entries (taxonomy.ts), not raw catalog
+ * topics: the grid draws the designed 121-topic skeleton, and the
+ * catalog's 11 drillable topics light up the entries they cover.
+ * History comes from two client-side stores — the endless feed
  * (lacoquille.feed.v1, keyed by slug) and the fixed session
- * (lacoquille.exercises.v1, keyed by curated title). The server's
- * curatedTitles map folds the latter into catalog topics.
+ * (lacoquille.exercises.v1, keyed by curated title); the server's
+ * curatedTitles map folds the latter into catalog slugs.
  */
 
 import { feedTopicStats } from "../exercise/feedStore";
 import { topicSummaries } from "../exercise/store";
-import type { CatalogTopic, Section, TopicsCatalog } from "./topicsApi";
+import { GG_LEVELS, GG_KEYS, TAXONOMY, type FamKey, type TaxonomyEntry } from "./taxonomy";
+import type { TopicsCatalog } from "./topicsApi";
 
 export const SOLID_ATTEMPTS = 5;
 export const SOLID_ACC = 0.8;
@@ -30,16 +34,11 @@ export const MASTERED_WITHIN_DAYS = 21;
 export const REVIEW_ATTEMPTS = 3;
 export const REVIEW_ACC = 0.8;
 
-/** Grid rows — our level model spans A1–B2 (see feedStore LEVELS). */
-export const LEVELS = ["A1", "A2", "B1", "B2"] as const;
-/** Grid columns — the four sections settled in the design (02-topics.md). */
-export const SECTIONS: Section[] = ["tense", "mood", "nouns", "sentence"];
-
 export type Tier = 0 | 1 | 2 | 3;
 export const TIER_LABELS = ["Not started", "Learning", "Solid", "Mastered"] as const;
 
-export interface TopicState {
-  topic: CatalogTopic;
+export interface EntryState {
+  entry: TaxonomyEntry;
   attempts: number;
   correct: number;
   /** 0..1, or -1 when never attempted. */
@@ -50,8 +49,6 @@ export interface TopicState {
   /** Vermillon dot — time to review. */
   review: boolean;
 }
-
-export type TopicStates = Record<string, TopicState>;
 
 interface Aggregate {
   attempts: number;
@@ -69,8 +66,8 @@ function daysSince(sec: number): number {
   return (Date.now() / 1000 - sec) / 86400;
 }
 
-/** Fold both stores into per-slug aggregates keyed by catalog slug. */
-function aggregates(catalog: TopicsCatalog): Map<string, Aggregate> {
+/** Fold both stores into per-slug aggregates. */
+function slugAggregates(catalog: TopicsCatalog): Map<string, Aggregate> {
   const agg = new Map<string, Aggregate>();
   const merge = (slug: string, part: Partial<Aggregate>) => {
     const cur = agg.get(slug) ?? { attempts: 0, correct: 0, due: 0, lastAt: 0 };
@@ -92,14 +89,24 @@ function aggregates(catalog: TopicsCatalog): Map<string, Aggregate> {
   return agg;
 }
 
-export function topicStates(catalog: TopicsCatalog): TopicStates {
-  const agg = aggregates(catalog);
-  const out: TopicStates = {};
-  for (const topic of catalog.topics) {
-    const a = agg.get(topic.slug);
-    const attempts = a?.attempts ?? 0;
-    const correct = a?.correct ?? 0;
-    const lastAt = a?.lastAt ?? 0;
+/** Per-taxonomy-entry state: the full designed skeleton, filled
+    where our drills cover it, honestly "Not started" elsewhere. */
+export function entryStates(catalog: TopicsCatalog): Map<string, EntryState> {
+  const agg = slugAggregates(catalog);
+  const out = new Map<string, EntryState>();
+  for (const entry of TAXONOMY) {
+    let attempts = 0;
+    let correct = 0;
+    let due = 0;
+    let lastAt = 0;
+    for (const slug of entry.slugs) {
+      const a = agg.get(slug);
+      if (!a) continue;
+      attempts += a.attempts;
+      correct += a.correct;
+      due += a.due;
+      lastAt = Math.max(lastAt, a.lastAt);
+    }
     const accuracy = attempts > 0 ? correct / attempts : -1;
 
     let tier: Tier = 1;
@@ -111,48 +118,48 @@ export function topicStates(catalog: TopicsCatalog): TopicStates {
     ) tier = 3;
     else if (attempts >= SOLID_ATTEMPTS && accuracy >= SOLID_ACC) tier = 2;
 
-    const review = (a?.due ?? 0) > 0 || (attempts >= REVIEW_ATTEMPTS && accuracy < REVIEW_ACC);
+    const review = due > 0 || (attempts >= REVIEW_ATTEMPTS && accuracy < REVIEW_ACC);
 
-    out[topic.slug] = { topic, attempts, correct, accuracy, lastAt, tier, review };
+    out.set(entry.id, { entry, attempts, correct, accuracy, lastAt, tier, review });
   }
   return out;
 }
 
-export interface CellState {
-  level: string;
-  section: Section;
-  topics: TopicState[];
-  total: number;
-  solid: number;
-  mastered: number;
-  review: boolean;
-  /** No catalog topic lives here yet; the cell renders hollow. */
-  empty: boolean;
+/** Count of Solid-or-better entries in a list. */
+export function solidOf(list: EntryState[]): number {
+  return list.filter((t) => t.tier >= 2).length;
 }
 
-/**
- * The full matrix, rows × columns. The cell itself stays a quiet
- * container — each topic renders as its own mini-square, so the
- * per-topic state stays legible inside the cell.
- */
-export function cellGrid(states: TopicStates): CellState[][] {
-  return LEVELS.map((level) =>
-    SECTIONS.map((section) => {
-      const topics = Object.values(states).filter(
-        (t) => t.topic.section === section && t.topic.levels.includes(level),
-      );
-      const solid = topics.filter((t) => t.tier >= 2);
-      const mastered = topics.filter((t) => t.tier === 3);
-      return {
-        level,
-        section,
-        topics,
-        total: topics.length,
-        solid: solid.length,
-        mastered: mastered.length,
-        review: topics.some((t) => t.review),
-        empty: topics.length === 0,
-      };
-    }),
+/** The entries of one scope — a cell (level+family), or a whole
+    row/column when only one axis is given. */
+export function entriesIn(
+  states: Map<string, EntryState>,
+  lv?: string,
+  fam?: FamKey,
+): EntryState[] {
+  return [...states.values()].filter(
+    (t) => (!lv || t.entry.lv === lv) && (!fam || t.entry.cat === fam),
   );
 }
+
+export interface LevelStat {
+  id: string;
+  total: number;
+  solid: number;
+  pct: number;
+}
+
+/** One row head's numbers: solid share of the whole level. */
+export function levelStats(states: Map<string, EntryState>): LevelStat[] {
+  return GG_LEVELS.map((id) => {
+    const list = entriesIn(states, id);
+    const solid = solidOf(list);
+    return { id, total: list.length, solid, pct: Math.round((100 * solid) / list.length) };
+  });
+}
+
+/** Sanity for dev: the four columns × six rows all exist. */
+export const GRID_SHAPE_OK =
+  GG_LEVELS.length === 6 &&
+  GG_KEYS.length === 4 &&
+  TAXONOMY.length === 121;
