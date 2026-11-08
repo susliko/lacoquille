@@ -1,5 +1,7 @@
 import { createSignal, For, onMount } from "solid-js";
 
+import ProgressGrid from "./progress/ProgressGrid";
+
 /* ── Knowledge tiles ───────────────────────────────────────────
    Quiet paper menu — colour is meaning-reserved in this design
    system (indigo = progress, vermillon = review/miss), so tiles
@@ -24,26 +26,32 @@ const PRACTICE = [
 ];
 
 /* ── Component ────────────────────────────────────────────────── */
+type Tab = "knowledge" | "practice" | "progress";
+
 export default function HomepageTabs() {
-  const getTab = (): "knowledge" | "practice" => {
+  const getTab = (): Tab => {
     if (typeof window === "undefined") return "knowledge";
     const p = new URLSearchParams(window.location.search).get("tab");
-    return p === "practice" ? "practice" : "knowledge";
+    return p === "practice" || p === "progress" ? p : "knowledge";
   };
 
-  const [tab, setTab] = createSignal<"knowledge" | "practice">(getTab());
+  // Start at the SSR-safe default, then sync from the URL once mounted.
+  // Initializing straight from the URL leaves hydration mismatched (the
+  // panel switches but the buttons keep their server-rendered state).
+  const [tab, setTab] = createSignal<Tab>("knowledge");
 
   onMount(() => {
+    setTab(getTab());
     const handler = () => setTab(getTab());
     window.addEventListener("popstate", handler);
     return () => window.removeEventListener("popstate", handler);
   });
 
-  const switchTab = (t: "knowledge" | "practice") => {
+  const switchTab = (t: Tab) => {
     setTab(t);
     const url = new URL(window.location.href);
     if (t === "knowledge") url.searchParams.delete("tab");
-    else url.searchParams.set("tab", "practice");
+    else url.searchParams.set("tab", t);
     history.replaceState(null, "", url.toString());
   };
 
@@ -66,6 +74,14 @@ export default function HomepageTabs() {
           onClick={() => switchTab("practice")}
         >
           Practice
+        </button>
+        <button
+          role="tab"
+          aria-selected={tab() === "progress"}
+          class={`homepage-tab-btn ${tab() === "progress" ? "homepage-tab-active" : "homepage-tab-inactive"}`}
+          onClick={() => switchTab("progress")}
+        >
+          Progress
         </button>
       </div>
 
@@ -110,6 +126,15 @@ export default function HomepageTabs() {
             )}
           </For>
         </div>
+      </div>
+
+      {/* Progress tab */}
+      <div
+        role="tabpanel"
+        class="homepage-tab-panel"
+        style={{ display: tab() === "progress" ? "block" : "none" }}
+      >
+        <ProgressGrid visible={tab() === "progress"} />
       </div>
     </div>
   );

@@ -17,6 +17,7 @@ pub fn routes() -> Router<Arc<AppState>> {
         .route("/health", get(health))
         .route("/api/article-of-the-day", get(article_of_the_day))
         .route("/api/exercises", get(exercises))
+        .route("/api/exercises/topics", get(list_topics))
         .route("/api/exercises/feed", post(feed))
 }
 
@@ -109,6 +110,44 @@ async fn exercises(
         }
         Err(e) => Err(bad(e)),
     }
+}
+
+/* ── Progress grid: the topic catalog, learner-facing ───────────── */
+
+#[derive(serde::Serialize)]
+struct TopicEntry {
+    slug: &'static str,
+    title: &'static str,
+    blurb: &'static str,
+    levels: &'static [&'static str],
+    section: topics::Section,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct TopicsResponse {
+    topics: Vec<TopicEntry>,
+    /// Curated corpus title → catalog slug, so the client's fixed-session
+    /// history (keyed by curated title) rolls up under catalog topics.
+    curated_titles: std::collections::BTreeMap<&'static str, &'static str>,
+}
+
+/// The topic catalog with its grid placement. Server-owned pedagogy:
+/// sections, level spans and the title roll-up all come from here.
+async fn list_topics() -> axum::Json<TopicsResponse> {
+    axum::Json(TopicsResponse {
+        topics: topics::TOPICS
+            .iter()
+            .map(|t| TopicEntry {
+                slug: t.slug,
+                title: t.title,
+                blurb: t.blurb,
+                levels: t.levels,
+                section: t.section,
+            })
+            .collect(),
+        curated_titles: topics::CURATED_TITLES.iter().copied().collect(),
+    })
 }
 
 /* ── Endless feed: coach decides the topic, generators fill the run ── */

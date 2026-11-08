@@ -22,6 +22,21 @@ pub enum Family {
     Curated,
 }
 
+/// Where a topic sits on the progress grid — the learner-facing map
+/// on the main page. Four columns, settled after the UX rounds (see
+/// handoff docs/02-topics.md "Why four families"): verbs split into
+/// Tense and Mood, the noun-related threads merged into Noun group,
+/// sentence-level threads into Sentence. Display taxonomy only —
+/// orthogonal to `Family`, which picks the generator.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Section {
+    Tense,
+    Mood,
+    Nouns,
+    Sentence,
+}
+
 #[derive(Debug)]
 pub struct Topic {
     pub slug: &'static str,
@@ -34,6 +49,8 @@ pub struct Topic {
     /// Valid CEFR levels, low → high.
     pub levels: &'static [&'static str],
     pub family: Family,
+    /// Grid section this topic fills.
+    pub section: Section,
 }
 
 pub const A1A2: &[&str] = &["A1", "A2"];
@@ -46,6 +63,7 @@ pub const TOPICS: &[Topic] = &[
         blurb: "Forming the passé composé with être and making the participle agree with the subject (elle est allée, ils sont partis).",
         levels: A2B1,
         family: Family::PcEtre,
+        section: Section::Tense,
     },
     Topic {
         slug: "pc-aux",
@@ -53,6 +71,7 @@ pub const TOPICS: &[Topic] = &[
         blurb: "Choosing between être and avoir in the passé composé (elle est tombée, not elle a tombée).",
         levels: &["A2"],
         family: Family::PcAux,
+        section: Section::Tense,
     },
     Topic {
         slug: "imparfait-vs-pc",
@@ -60,6 +79,7 @@ pub const TOPICS: &[Topic] = &[
         blurb: "Choosing the imparfait for background and habits versus the passé composé for events (pendant que je dormais… le téléphone a sonné).",
         levels: A2B1,
         family: Family::ImpVsPc,
+        section: Section::Tense,
     },
     Topic {
         slug: "pronouns-cod-coi",
@@ -67,6 +87,7 @@ pub const TOPICS: &[Topic] = &[
         blurb: "Replacing direct and indirect objects with le, la, les, lui, leur and placing them before the verb (Je la connais, Tu lui téléphones).",
         levels: A2B1,
         family: Family::Pronouns,
+        section: Section::Nouns,
     },
     Topic {
         slug: "subjonctif",
@@ -74,6 +95,7 @@ pub const TOPICS: &[Topic] = &[
         blurb: "Using the subjonctif after expressions of feeling, doubt and necessity (je doute qu'il ait raison, je suis content que tu viennes).",
         levels: &["B1"],
         family: Family::Subjonctif,
+        section: Section::Mood,
     },
     Topic {
         slug: "pc-avoir",
@@ -81,6 +103,7 @@ pub const TOPICS: &[Topic] = &[
         blurb: "Forming the passé composé with avoir and the past participle (nous avons mangé).",
         levels: A1A2,
         family: Family::Curated,
+        section: Section::Tense,
     },
     Topic {
         slug: "imparfait",
@@ -88,6 +111,7 @@ pub const TOPICS: &[Topic] = &[
         blurb: "Forming the imparfait of common verbs (je parlais, nous étions, elles venaient).",
         levels: A1A2,
         family: Family::Curated,
+        section: Section::Tense,
     },
     Topic {
         slug: "pronoun-y",
@@ -95,6 +119,7 @@ pub const TOPICS: &[Topic] = &[
         blurb: "Replacing à + place with y and placing it before the verb (elle va à Paris → elle y va).",
         levels: &["B1"],
         family: Family::Curated,
+        section: Section::Nouns,
     },
     Topic {
         slug: "cest-vs-il-est",
@@ -102,6 +127,7 @@ pub const TOPICS: &[Topic] = &[
         blurb: "Choosing between c'est + noun and il/elle est + adjective (c'est une bonne idée, c'est évident).",
         levels: A1A2,
         family: Family::Curated,
+        section: Section::Sentence,
     },
     Topic {
         slug: "negation",
@@ -109,6 +135,7 @@ pub const TOPICS: &[Topic] = &[
         blurb: "Wrapping the conjugated verb in ne … pas (elle ne parle pas anglais).",
         levels: &["A1"],
         family: Family::Curated,
+        section: Section::Sentence,
     },
     Topic {
         slug: "accord-antepose",
@@ -116,6 +143,7 @@ pub const TOPICS: &[Topic] = &[
         blurb: "Making the participle agree when the direct object precedes the verb (les fleurs que j'ai achetées).",
         levels: &["B1"],
         family: Family::Curated,
+        section: Section::Tense,
     },
 ];
 
@@ -123,24 +151,37 @@ pub fn by_slug(slug: &str) -> Option<&'static Topic> {
     TOPICS.iter().find(|t| t.slug == slug)
 }
 
+/// Every curated corpus topic title → its catalog slug. The progress
+/// endpoint serves this map so the client can fold its fixed-session
+/// history (keyed by curated title) into catalog topics. `slug_for_title`
+/// reads it; keep new corpus titles here.
+pub const CURATED_TITLES: &[(&str, &str)] = &[
+    ("Passé composé with être", "pc-etre"),
+    ("Auxiliary choice", "pc-aux"),
+    ("Imparfait vs passé composé", "imparfait-vs-pc"),
+    ("Subjonctif after feelings", "subjonctif"),
+    ("Subjonctif after doubt", "subjonctif"),
+    ("Passé composé with avoir", "pc-avoir"),
+    ("Imparfait of -er verbs", "imparfait"),
+    ("Imparfait of être", "imparfait"),
+    ("Imparfait of venir", "imparfait"),
+    ("Direct object pronouns", "pronouns-cod-coi"),
+    ("Indirect object pronouns", "pronouns-cod-coi"),
+    ("Object pronouns", "pronouns-cod-coi"),
+    ("Double object pronouns", "pronouns-cod-coi"),
+    ("The pronoun y", "pronoun-y"),
+    ("C'est vs il/elle est", "cest-vs-il-est"),
+    ("Negation", "negation"),
+    ("Agreement with preceding object", "accord-antepose"),
+];
+
 /// Map a curated corpus `topic` title to its catalog slug, so curated
 /// items roll up under the same topic the coach picked.
 pub fn slug_for_title(title: &str) -> Option<&'static str> {
-    Some(match title {
-        "Passé composé with être" => "pc-etre",
-        "Auxiliary choice" => "pc-aux",
-        "Imparfait vs passé composé" => "imparfait-vs-pc",
-        "Subjonctif after feelings" | "Subjonctif after doubt" => "subjonctif",
-        "Passé composé with avoir" => "pc-avoir",
-        "Imparfait of -er verbs" | "Imparfait of être" | "Imparfait of venir" => "imparfait",
-        "Direct object pronouns" | "Indirect object pronouns" | "Object pronouns"
-        | "Double object pronouns" => "pronouns-cod-coi",
-        "The pronoun y" => "pronoun-y",
-        "C'est vs il/elle est" => "cest-vs-il-est",
-        "Negation" => "negation",
-        "Agreement with preceding object" => "accord-antepose",
-        _ => return None,
-    })
+    CURATED_TITLES
+        .iter()
+        .find(|(t, _)| *t == title)
+        .map(|(_, slug)| *slug)
 }
 
 /// Clamp a requested level into the topic's valid range (nearest valid).
@@ -205,5 +246,22 @@ mod tests {
         let t = by_slug("pc-etre").unwrap();
         assert_eq!(clamp_level(t, "B2"), "A2");
         assert_eq!(clamp_level(t, "B1"), "B1");
+    }
+
+    #[test]
+    fn grid_sections_covered() {
+        // The progress grid has a column per section; each must carry
+        // at least one topic so no column renders permanently hollow.
+        for section in [Section::Tense, Section::Mood, Section::Nouns, Section::Sentence] {
+            assert!(
+                TOPICS.iter().any(|t| t.section == section),
+                "no topic in section {:?}",
+                section
+            );
+        }
+        // Every curated title maps to a topic that exists.
+        for (_, slug) in CURATED_TITLES {
+            assert!(by_slug(slug).is_some(), "curated title maps to unknown slug {}", slug);
+        }
     }
 }

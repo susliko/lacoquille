@@ -81,3 +81,26 @@ export function dueInfo(): DueInfo {
   }
   return { count, topics: [...topics] };
 }
+
+export interface TopicSummary {
+  attempts: number;
+  correct: number;
+  /** Items whose last answer was a miss — actionable review. */
+  due: number;
+  /** Epoch ms of the most recent answer (item timestamps are ms). */
+  lastAt: number;
+}
+
+/** Per-topic aggregates over recorded items, keyed by the item's topic
+ *  (curated title). The progress grid folds these into catalog topics. */
+export function topicSummaries(): Record<string, TopicSummary> {
+  const out: Record<string, TopicSummary> = {};
+  for (const stat of Object.values(load().items)) {
+    const s = (out[stat.topic] ??= { attempts: 0, correct: 0, due: 0, lastAt: 0 });
+    s.attempts += 1;
+    if (stat.last === "correct") s.correct += 1;
+    if (stat.last === "miss") s.due += 1;
+    s.lastAt = Math.max(s.lastAt, stat.at);
+  }
+  return out;
+}
