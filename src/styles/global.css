@@ -845,28 +845,472 @@ article {
   }
 }
 
-/* ── Progress grid (homepage · Progress tab) ────────────────────
-   The designed matrix (handoff docs/02-topics.md, 06-ux-findings):
-   CEFR rows × four family columns. Each cell is a quiet container
-   holding one mini-square per topic on the four-step indigo scale
-   (--p0..--p3, never five); a vermillon inset ring marks a topic
-   as time to review. Tapping a cell opens the topic sheet below. */
-.pg-root {
+/* ── Grammar map (homepage · Progress tab) ──────────────────────
+   A faithful build of the handoff prototype grammar-grid.html:
+   six CEFR rows × four family columns, one mini-square per topic,
+   three openable scopes (cell / level / family) and a bottom
+   sheet. Colours are the Penpot tokens (paper & ink, indigo
+   progress, vermillon review); every metric — size, gap, radius,
+   weight — is the prototype's. */
+.gg-root {
+  position: relative;
   height: 100%;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-.pg-status {
+.gg-root button {
+  font-family: var(--font);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.gg-root button:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.gg-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.gg-hand { color: var(--accent-ink); }
+
+.gg-hint {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px 10px 14px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+}
+
+.gg-hint p {
+  flex: 1;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.gg-hint button {
+  min-height: var(--tap);
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--r-md);
+  background: var(--card);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-ink);
+}
+
+.gg-matrix {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gg-mrow {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.gg-corner {
+  width: var(--rowhead-w);
+  flex: none;
+}
+
+.gg-cols {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.gg-colhead {
+  min-height: 60px;
+  padding: 6px 2px;
+  border: 0;
+  border-radius: var(--r-md);
+  background: var(--chip);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: center;
+  letter-spacing: -0.01em;
+}
+
+.gg-rowhead {
+  width: var(--rowhead-w);
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-md);
+  background: var(--chip);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+
+.gg-rowhead .lvline {
+  display: flex;
+  align-items: center;
+  margin-right: -3px;
+}
+
+.gg-rowhead .lv {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.gg-rowhead .pct {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.gg-colhead.on,
+.gg-rowhead.on {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.gg-colhead:active,
+.gg-rowhead:active { transform: scale(0.97); }
+
+.gg-cell {
+  min-height: var(--cell-h);
+  padding: 9px 8px 8px 9px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: var(--shadow-1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+  text-align: left;
+  transition: transform 0.08s ease;
+}
+
+.gg-cell:active { transform: scale(0.97); }
+
+.gg-cell.on {
+  box-shadow: var(--shadow-1), 0 0 0 2px var(--ink);
+}
+
+.gg-cell .squares {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+/* One mini-square per topic. The vermillon inset ring marks the
+   exact topic as time to review (the Penpot "mini due" spec). */
+.gg-sq {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+}
+
+.gg-sq.due { box-shadow: inset 0 0 0 2px var(--review); }
+
+.gg-sq[data-tier="0"] { background: var(--p0); }
+.gg-sq[data-tier="1"] { background: var(--p1); }
+.gg-sq[data-tier="2"] { background: var(--p2); }
+.gg-sq[data-tier="3"] { background: var(--p3); }
+
+.gg-cell .foot {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--faint);
+}
+
+.gg-cell .count {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.gg-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--review);
+  flex: none;
+}
+
+.gg-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+}
+
+.gg-legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.gg-legend .gg-sw {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.gg-legend .gg-sw.duedot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--review);
+}
+
+/* Tier fills — the shared indigo steps, reused by legend swatches,
+   the sheet's tier bar and the topic chips. */
+.gg-sw-0 { background: var(--p0); }
+.gg-sw-1 { background: var(--p1); }
+.gg-sw-2 { background: var(--p2); }
+.gg-sw-3 { background: var(--p3); }
+
+/* ── Bottom sheet ──────────────────────────────────────────── */
+.gg-scrim {
+  position: fixed;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: var(--scrim);
+  z-index: 10;
+}
+
+.gg-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: var(--app-max);
+  max-height: 78vh;
+  max-height: 78dvh;
+  background: var(--card);
+  border-radius: 22px 22px 0 0;
+  box-shadow: var(--shadow-2);
+  padding: 10px 20px calc(24px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 11;
+  animation: gg-up 0.18s ease-out;
+}
+
+@keyframes gg-up {
+  from { transform: translate(-50%, 24px); opacity: 0.6; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+.gg-handle {
+  align-self: center;
+  width: 40px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--line);
+}
+
+.gg-sheet-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.gg-sheet-head .txt {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gg-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.gg-sheet-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.gg-sheet-sub {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.gg-close {
+  width: var(--tap);
+  height: var(--tap);
+  flex: none;
+  border: 0;
+  border-radius: 22px;
+  background: var(--paper);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gg-about {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--paper);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+.gg-bar {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  gap: 2px;
+  flex: none;
+}
+
+.gg-bar div { height: 8px; }
+
+.gg-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.gg-group-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 0 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.gg-group-head b {
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.gg-group-head .n { flex: 1; }
+
+.gg-group-head.big { padding-top: 18px; }
+
+.gg-group-head.big b {
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.gg-mini-practice {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--r-md);
+  background: var(--chip);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.gg-topic {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  border-bottom: 1px solid var(--line);
+}
+
+.gg-topic .name {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.gg-topic .lvtag {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted);
+  width: 22px;
+  flex: none;
+}
+
+.gg-topic .due {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--review-text);
+}
+
+.gg-chip {
+  padding: 4px 8px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+.gg-chip.gg-sw-2 { color: var(--p2-ink); }
+.gg-chip.gg-sw-3 { color: var(--p3-ink); }
+
+.gg-cta {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.gg-status {
   text-align: center;
   color: var(--muted);
-  font-size: var(--t-base);
+  font-size: 14px;
   padding: var(--s-6) var(--s-4);
 }
 
-.pg-retry {
+.gg-retry {
   font-family: var(--font);
-  font-size: var(--t-base);
+  font-size: 14px;
   font-weight: 700;
   color: var(--paper);
   background: var(--ink);
@@ -875,269 +1319,4 @@ article {
   min-height: var(--tap);
   padding: var(--s-2) var(--s-5);
   cursor: pointer;
-}
-
-.pg-hint {
-  margin: 0 auto var(--s-4);
-  max-width: 420px;
-  text-align: center;
-}
-
-.pg-hint-line {
-  margin: 0 0 var(--s-3);
-  font-size: var(--t-base);
-  color: var(--muted);
-}
-
-.pg-start {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: var(--tap);
-  padding: var(--s-2) var(--s-5);
-  background: var(--ink);
-  color: var(--card);
-  font-size: var(--t-base);
-  font-weight: 700;
-  text-decoration: none;
-  border-radius: var(--r-pill);
-}
-
-.pg-start:active { transform: scale(0.98); }
-
-.pg-grid {
-  display: grid;
-  grid-template-columns: var(--rowhead-w) repeat(4, minmax(0, 1fr));
-  gap: var(--s-1);
-  max-width: 480px;
-  margin: 0 auto;
-}
-
-.pg-head {
-  font-size: var(--t-xs);
-  font-weight: 700;
-  color: var(--muted);
-  text-align: center;
-  align-self: end;
-  padding-bottom: var(--s-1);
-  letter-spacing: 0.02em;
-}
-
-.pg-level {
-  font-size: var(--t-xs);
-  font-weight: 700;
-  color: var(--muted);
-  display: flex;
-  align-items: center;
-}
-
-.pg-cell {
-  position: relative;
-  min-height: var(--tap);
-  padding: var(--s-1);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  align-content: center;
-  justify-content: center;
-  gap: 4px;
-  font-family: var(--font);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  background: var(--card);
-  cursor: pointer;
-  box-shadow: var(--shadow-1);
-  transition: transform var(--fast) var(--ease);
-}
-
-.pg-cell:active:not(:disabled) { transform: scale(0.95); }
-
-.pg-cell:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
-}
-
-/* Hollow cell — the catalog has no topic here yet. */
-.pg-cell:disabled {
-  cursor: default;
-  box-shadow: none;
-  background: var(--card);
-  border-style: dashed;
-  color: var(--faint);
-  font-weight: 400;
-}
-
-.pg-empty { font-size: var(--t-sm); }
-
-/* One mini-square per topic, on the four-step scale (tokens.css:
-   --r-sm is the "mini squares" radius). The vermillon inset ring
-   marks the topic as time to review — the marker stays on the
-   exact topic, not the whole cell. */
-.pg-mini {
-  width: 20px;
-  height: 20px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--line);
-  background: var(--p0);
-}
-
-.pg-mini[data-tier="1"] {
-  background: var(--p1);
-  border-color: var(--p1);
-}
-
-.pg-mini[data-tier="2"] {
-  background: var(--p2);
-  border-color: var(--p2);
-}
-
-.pg-mini[data-tier="3"] {
-  background: var(--p3);
-  border-color: var(--p3);
-}
-
-.pg-mini.is-review {
-  box-shadow: inset 0 0 0 2px var(--review);
-}
-
-.pg-legend {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--s-2) var(--s-3);
-  margin-top: var(--s-3);
-  font-size: var(--t-xs);
-  color: var(--muted);
-}
-
-.pg-legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s-1);
-}
-
-.pg-swatch {
-  width: 12px;
-  height: 12px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--line);
-  background: var(--p0);
-}
-
-.pg-swatch[data-tier="1"] { background: var(--p1); }
-.pg-swatch[data-tier="2"] { background: var(--p2); border-color: var(--p2); }
-.pg-swatch[data-tier="3"] { background: var(--p3); border-color: var(--p3); }
-
-.pg-swatch-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: var(--r-pill);
-  background: var(--review);
-}
-
-/* Topic sheet below the grid. */
-.pg-panel {
-  max-width: 480px;
-  margin: var(--s-3) auto 0;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  padding: var(--s-2) var(--s-3) var(--s-3);
-  box-shadow: var(--shadow-1);
-}
-
-.pg-panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--s-1);
-}
-
-.pg-panel-title {
-  font-size: var(--t-md);
-  font-weight: 800;
-  color: var(--ink);
-}
-
-.pg-close {
-  min-width: var(--tap);
-  min-height: var(--tap);
-  background: none;
-  border: none;
-  font-size: 20px;
-  color: var(--muted);
-  cursor: pointer;
-}
-
-.pg-topic {
-  padding: var(--s-2) 0;
-}
-
-.pg-topic + .pg-topic {
-  border-top: 1px solid var(--line);
-}
-
-.pg-topic-main {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  flex-wrap: wrap;
-}
-
-.pg-topic-name {
-  font-size: var(--t-base);
-  font-weight: 700;
-  color: var(--ink);
-}
-
-.pg-review-tag {
-  font-size: var(--t-2xs);
-  font-weight: 800;
-  color: var(--review-text);
-  background: var(--no-bg);
-  border-radius: var(--r-pill);
-  padding: 2px var(--s-2);
-}
-
-.pg-topic-sub {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  margin-top: var(--s-1);
-}
-
-.pg-tier-pill {
-  font-size: var(--t-2xs);
-  font-weight: 700;
-  padding: 2px var(--s-2);
-  border-radius: var(--r-pill);
-  background: var(--chip);
-  color: var(--muted);
-}
-
-.pg-tier-pill.pg-tier-1 { background: var(--p1); color: var(--p1-ink); }
-.pg-tier-pill.pg-tier-2 { background: var(--p2); color: var(--p2-ink); }
-.pg-tier-pill.pg-tier-3 { background: var(--p3); color: var(--p3-ink); }
-
-.pg-topic-stat {
-  font-size: var(--t-2xs);
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.pg-topic-blurb {
-  margin: var(--s-1) 0 0;
-  font-size: var(--t-sm);
-  color: var(--muted);
-}
-
-.pg-drill {
-  display: flex;
-  align-items: center;
-  min-height: var(--tap);
-  margin-top: var(--s-1);
-  font-size: var(--t-base);
-  font-weight: 700;
-  color: var(--accent-ink);
-  text-decoration: none;
 }
