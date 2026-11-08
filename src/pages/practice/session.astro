@@ -1,0 +1,13 @@
+---
+import Base from "../../layouts/Base.astro";
+import ExerciseSession from "../../components/exercise/Session";
+import "../../styles/tokens.css";
+---
+
+<Base title="Exercise session — La Coquille" section="practice">
+  <ExerciseSession client:only="solid-js" />
+</Base>
+
+<style is:global>
+  @import "../../styles/session.css";
+</style>

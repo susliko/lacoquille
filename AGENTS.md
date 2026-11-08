@@ -1,5 +1,51 @@
 # AGENTS.md
 
+## Design system (Penpot)
+
+Self-hosted Penpot at `http://localhost:9001` (credentials in `~/programming/penpot/.env`).
+Project **lacoquille** → file **00 — lacoquille Design System**:
+
+- Pages: `Page 1` = foundations (cover, color, type, spacing), `Components` (spec boards + 36
+  library components), `Screens — Mobile` (15 mobile frames + 3 desktop frames).
+- Token catalog: sets `color` (25), `dimension` (16), `typography` (13) — visible in the TOKENS tab.
+- **`src/styles/tokens.css` is the code-side source of truth** — "Paper & encre de travail":
+  warm paper `#F6F4EF`, ink `#1F1D18`, bleu-de-travail indigo progress scale
+  (`p0 #E3E1DA → p1 #C9D3EC → p2 #4A5AA8 → p3 #232D5C`), vermillon `#C7531E` for
+  review **and** miss (a miss causes a review — one meaning, one colour), Manrope only,
+  DM Serif Display only inside Article of the Day.
+- Design rationale + prototypes: `french-app-handoff.zip` (docs/ design/ data/) — read
+  `docs/01-concept.md` first. Reference snapshots in `design/exports/`.
+
+### Penpot MCP notes (2.18.6)
+
+- Design tools (`execute_code`, `export_shape`) need the Penpot tab open with the MCP plugin
+  connected. The bundled plugin (2.17) needs a manual nudge on this instance:
+  1. Reload plugin iframe with token in the **hash**:
+     `http://localhost:9001/plugins/mcp/#/?theme=dark&userToken=<PAT>`
+     (PAT: `~/.config/opencode/.secrets/penpot-token`)
+  2. postMessage into that iframe: `{type: "start-server", url: "/mcp/ws", token: <PAT>}`
+- `execute_code` quirks: shapes created via `create*()` keep **page-absolute** coordinates after
+  `appendChild`; boards clip children outside their bounds (always offset by the board origin).
+  Long scripts (>~6KB) can wedge the plugin tab — split work into small calls. Writes only work
+  on the **active** page (`penpot.openPage` is async — switch in one call, write in the next).
+- `export_shape` is broken on this version (exporter bridge) — use agent-browser screenshots instead.
+
+### Penpot safety + text-centering rules (learned the hard way)
+
+- **Text bounds measured in the same call that created the text are stale** (width ≈ 0), so
+  "centered" labels end up with their LEFT edge at the container center. Correct pattern:
+  at creation store `t.setPluginData("ctr", x+","+y+","+w)`, then in a LATER call run a recenter
+  pass reading settled `bounds`. Never bulk-recenter by geometry guessing alone.
+- **Plugin edits persist instantly, are NOT on the undo stack, and there were no saved versions**
+  — a bad bulk-delete wiped the whole Screens page once. Before risky batch operations, save a
+  named version via the UI (History panel → Save version).
+- **Never delete shapes by parent heuristics**: the page root frame's `name` is null, so
+  "parent has no name" matches every top-level frame. Identify shapes by name + coordinates only.
+- If the MCP tools start returning `null` (opencode's SSE stream to `/mcp/stream` died), drive the
+  server directly: `tools/penpot-rpc.sh` pattern — POST JSON-RPC to
+  `http://localhost:9001/mcp/stream?userToken=<PAT>` (init → `notifications/initialized` →
+  `tools/call execute_code`), keeping the `mcp-session-id` header. Script kept at `/tmp/opencode/pp.sh`.
+
 ## Commands
 
 ```sh

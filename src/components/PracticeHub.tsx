@@ -2,6 +2,10 @@ import { For } from "solid-js";
 
 /* ── Practice tiles ────────────────────────────────────────────── */
 const PRACTICE = [
+  /* The designed exercise session: six-plus mixed items with the
+     ok/miss feedback system. tokens.css design system experience. */
+  { id: "session",       name: "Exercise session",  sub: "mixed items · instant feedback", color: "#4A5AA8", path: "/practice/session" },
+
   /* The single verb-conjugation entry. Mixes cloze, cue-to-form,
      spot-the-tense, and transformation chains in an endless stream. */
   { id: "conjugations", name: "Conjugations", sub: "endless mixed drills", color: "#3d5af1", path: "/practice/conjugations" },

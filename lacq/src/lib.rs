@@ -1,4 +1,5 @@
 pub mod config;
+pub mod exercises;
 pub mod routes;
 pub mod gutenberg;
 pub mod tokenizer;

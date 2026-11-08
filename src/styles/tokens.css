@@ -1,0 +1,115 @@
+/* ============================================================
+   lacoquille — design tokens v2  ("Paper & encre de travail")
+   SOURCE OF TRUTH.
+
+   Mirrors the Penpot token catalog in project "lacoquille"
+   (file "00 — Design System"). Change Penpot first, then here.
+
+   Identity: warm paper ground, warm ink, bleu de travail indigo
+   for all progress semantics, vermillon for review/miss (a miss
+   causes a review — one meaning, one colour). Manrope only.
+   DM Serif Display is allowed solely inside Article of the Day.
+
+   Derived from french-app-handoff: the tested structure
+   (4-step progress scale, type scale, 4px spacing, 44px targets)
+   is kept; the palette is our own.
+   ============================================================ */
+
+:root {
+  color-scheme: light;
+
+  /* ---- neutrals (warm paper) ---- */
+  --paper: #F6F4EF;   /* page ground                       */
+  --card:  #FFFFFF;   /* cards, sheets, exercise surface   */
+  --ink:   #1F1D18;   /* body text, primary buttons        */
+  --muted: #6E6A60;   /* secondary text, labels            */
+  --faint: #9B968A;   /* placeholders, disabled text       */
+  --chip:  #EBE8E0;   /* quiet fills: row heads, disabled  */
+  --line:  #DFDBD2;   /* borders, dividers                 */
+
+  /* ---- progress scale (bleu de travail) ----
+     Four steps, not five: five shades of one hue are not
+     reliably distinguishable at cell size (see handoff
+     docs/06-ux-findings.md). A fifth state must differ in
+     something other than lightness (border/ring). */
+  --p0: #E3E1DA;      /* Not started (warm grey tile) */
+  --p1: #C9D3EC;      /* Learning   (pale indigo)     */
+  --p2: #4A5AA8;      /* Solid      (workwear indigo) */
+  --p3: #232D5C;      /* Mastered   (deep indigo)     */
+  --p0-ink: var(--ink);
+  --p1-ink: var(--ink);
+  --p2-ink: #FFFFFF;
+  --p3-ink: #FFFFFF;
+
+  /* ---- interactive ---- */
+  --accent:        var(--p2);      /* links, selected, focus   */
+  --accent-soft:   #E9EDF8;        /* hint banners, selection  */
+  --accent-ink:    #2F3E78;        /* text on accent-soft      */
+  --focus-ring:    #2F3E78;        /* :focus-visible outline   */
+  --gap-bg:        #F2F7FD;        /* cloze gap fill (lightest indigo) */
+
+  /* ---- review + miss (vermillon — same meaning) ---- */
+  --review:      #C7531E;           /* dots, rings, Review tag  */
+  --review-text: #A84314;           /* readable on paper        */
+  --no-bg:  #F9E9DF;                /* "Not quite" panel        */
+  --no-ink: #8F3A0D;
+  --no-dot: #C7531E;                /* miss pip, wrong choice   */
+
+  /* ---- correct ---- */
+  --ok-bg:  #E4F0E4;
+  --ok-ink: #216B3D;
+  --ok-dot: #2E7D4F;                /* Next button, right choice */
+
+  /* ---- type ----
+     One family throughout. Weights used: 400 500 600 700 800. */
+  --font: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "DM Serif Display", Georgia, serif; /* Article of the Day body only */
+
+  --t-display: 30px;   /* page title                          */
+  --t-xl:      23px;   /* exercise sentence                   */
+  --t-lg:      19px;   /* choices, source sentence            */
+  --t-md:      16px;   /* level label, sheet title (mobile)   */
+  --t-base:    14px;   /* task line, topic names              */
+  --t-sm:      13px;   /* cell counts, pills, captions        */
+  --t-xs:      12px;   /* column headers, eyebrows            */
+  --t-2xs:     11px;   /* percentages, badges                 */
+
+  /* ---- radii ---- */
+  --r-sm:   7px;      /* word chips, mini squares            */
+  --r-md:   10px;     /* cells, row heads, accent keys       */
+  --r-lg:   14px;     /* cards, inputs, choice buttons       */
+  --r-xl:   16px;     /* feedback panels, sheets (top) 22px  */
+  --r-pill: 999px;
+
+  /* ---- spacing (4px base) ---- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;        /* standard page gutter            */
+  --s-5: 22px;
+  --s-6: 32px;
+
+  /* ---- elevation ---- */
+  --shadow-1: 0 1px 2px rgba(31, 29, 24, 0.08);      /* cells, tiles   */
+  --shadow-2: 0 -8px 30px rgba(31, 29, 24, 0.18);    /* bottom sheets  */
+  --scrim: rgba(31, 29, 24, 0.32);
+
+  /* ---- motion ---- */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --fast: 80ms;       /* press scale feedback            */
+  --panel: 160ms;     /* feedback panel entrance         */
+
+  /* ---- sizes ---- */
+  --tap:       44px;  /* minimum touch target         */
+  --cell-h:    80px;  /* grammar-map grid cell        */
+  --rowhead-w: 50px;  /* level column in the grid     */
+  --app-max:  430px;  /* phone-width app frame        */
+}
+
+/* Honour the system setting. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

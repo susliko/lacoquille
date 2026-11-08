@@ -1,0 +1,645 @@
+/* ───────────────────────────────────────────────────────────────
+   Exercise session — implements Penpot frames 02–10 of
+   "00 — lacoquille Design System" on the design tokens
+   ("Paper & encre de travail"). Import tokens.css first.
+   ─────────────────────────────────────────────────────────────── */
+
+/* ── App frame ─────────────────────────────────────────────────── */
+
+.ex-loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: var(--t-md);
+  font-weight: 500;
+}
+
+.ex-root {
+  min-height: 100dvh;
+  background: var(--paper);
+  display: flex;
+  justify-content: center;
+  font-family: var(--font);
+  color: var(--ink);
+}
+
+.ex-root :focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.ex-app {
+  width: 100%;
+  max-width: var(--app-max);
+  min-height: 100dvh;
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  padding: var(--s-4);
+}
+
+@media (min-width: 480px) {
+  .ex-app {
+    border-inline: 1px solid var(--line);
+  }
+}
+
+/* ── Session header: pips + close (frame 02) ───────────────────── */
+
+.ex-top {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.ex-pips {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.ex-pip {
+  height: 4px;
+  flex: 1;
+  border-radius: var(--r-pill);
+  background: var(--line);
+  transition: background var(--panel) var(--ease);
+}
+
+.ex-pip.is-current  { background: var(--p3); }
+.ex-pip.is-ok       { background: var(--p2); }
+.ex-pip.is-retried  { background: var(--p1); }
+.ex-pip.is-miss     { background: var(--review); }
+
+.ex-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: var(--t-md);
+  font-weight: 600;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.ex-close:hover {
+  background: var(--chip);
+}
+
+/* ── Topic chip ────────────────────────────────────────────────── */
+
+.ex-chip {
+  margin-top: var(--s-2);
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  background: var(--paper);
+  border-radius: var(--r-pill);
+  padding: 4px 14px 4px 4px;
+}
+
+.ex-chip-badge {
+  min-width: 30px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 5px;
+  background: var(--p1);
+  color: var(--p3);
+  font-size: var(--t-2xs);
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ex-chip-topic {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* ── Task line + sentence + gap (frames 02–04) ─────────────────── */
+
+.ex-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.ex-task {
+  margin-top: 18px;
+  font-size: var(--t-base);
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.ex-task-sub {
+  margin-top: 2px;
+}
+
+.ex-task-fix {
+  margin-top: 24px;
+}
+
+.ex-sentence {
+  margin-top: var(--s-2);
+  font-size: var(--t-xl);
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.55;
+}
+
+.ex-hint {
+  margin-top: 6px;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.ex-no-audio {
+  margin-top: var(--s-2);
+  font-size: var(--t-sm);
+}
+
+.ex-gap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 96px;
+  padding: 1px 10px;
+  background: var(--gap-bg);
+  border: 2px solid var(--accent);
+  border-radius: 3px;
+  color: var(--p3);
+  font-weight: 800;
+}
+
+.ex-gap.is-empty {
+  color: var(--faint);
+  font-weight: 600;
+}
+
+/* ── Answer field ──────────────────────────────────────────────── */
+
+.ex-field {
+  margin-top: 24px;
+  width: 100%;
+  height: 56px;
+  padding: 0 18px;
+  border-radius: var(--r-lg);
+  border: 2px solid var(--line);
+  background: var(--card);
+  font-family: inherit;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink);
+  outline: none;
+}
+
+.ex-field::placeholder {
+  color: var(--faint);
+  font-weight: 500;
+}
+
+.ex-field:focus {
+  border-color: var(--accent);
+}
+
+.ex-field:disabled {
+  opacity: 1;
+}
+
+/* ── Feedback panel (frames 03 & 04) ───────────────────────────── */
+
+.ex-feedback {
+  margin-top: 40px;
+  border-radius: var(--r-xl);
+  padding: 20px;
+  animation: ex-in var(--panel) var(--ease);
+}
+
+.ex-feedback.is-ok   { background: var(--ok-bg); }
+.ex-feedback.is-miss { background: var(--no-bg); }
+
+.ex-feedback-title {
+  font-size: var(--t-md);
+  font-weight: 800;
+}
+
+.is-ok   .ex-feedback-title { color: var(--ok-ink); }
+.is-miss .ex-feedback-title { color: var(--no-ink); }
+
+.ex-feedback-answer {
+  margin-top: 6px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--no-ink);
+}
+
+.ex-feedback-rule {
+  margin-top: 10px;
+  font-size: var(--t-base);
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.55;
+}
+
+.ex-feedback-note {
+  margin-top: 12px;
+  font-size: var(--t-xs);
+  font-weight: 600;
+}
+
+.is-ok   .ex-feedback-note { color: var(--ok-ink); }
+.is-miss .ex-feedback-note { color: var(--no-ink); }
+
+@keyframes ex-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Choice options (frame 05) ─────────────────────────────────── */
+
+.ex-choices {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ex-choice {
+  height: 60px;
+  text-align: start;
+  padding: 0 20px;
+  border-radius: var(--r-lg);
+  border: 2px solid var(--line);
+  background: var(--card);
+  font-family: inherit;
+  font-size: var(--t-lg);
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.ex-choice.is-picked {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.ex-choice.is-right {
+  border-color: var(--ok-dot);
+  background: var(--ok-bg);
+}
+
+.ex-choice.is-wrong {
+  border-color: var(--review);
+  background: var(--no-bg);
+}
+
+.ex-choice:disabled {
+  cursor: default;
+}
+
+/* ── Tiles (frame 06) ──────────────────────────────────────────── */
+
+.ex-slot {
+  margin-top: 24px;
+  min-height: 96px;
+  border-radius: var(--r-lg);
+  border: 2px dashed var(--line);
+  background: #FBFCFD; /* cool tray fill, per design */
+  padding: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  align-content: flex-start;
+}
+
+.ex-slot-hint {
+  width: 100%;
+  text-align: center;
+  align-self: center;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--faint);
+}
+
+.ex-bank {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.ex-tile {
+  height: 44px;
+  padding: 0 15px;
+  border-radius: 11px;
+  border: 2px solid var(--line);
+  background: var(--card);
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.ex-tile.is-placed {
+  background: var(--p1);
+  border-color: var(--p1);
+  color: var(--p3);
+}
+
+.ex-tile.is-used {
+  opacity: 0.35;
+  border-style: dashed;
+  cursor: default;
+}
+
+/* ── Error spot words (frame 08) ───────────────────────────────── */
+
+.ex-words {
+  margin-top: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.ex-word {
+  height: 38px;
+  padding: 0 9px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  background: var(--card);
+  font-family: inherit;
+  font-size: var(--t-xl);
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.ex-word.is-picked {
+  background: var(--p3);
+  border-color: var(--p3);
+  color: var(--card);
+}
+
+.ex-word:disabled {
+  cursor: default;
+}
+
+/* ── Transform source card (frame 07) ──────────────────────────── */
+
+.ex-source {
+  margin-top: 24px;
+  border-radius: var(--r-lg);
+  background: var(--paper);
+  padding: 20px 22px;
+}
+
+.ex-source p {
+  font-size: var(--t-lg);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ── Dictation audio card (frame 09) ───────────────────────────── */
+
+.ex-audio {
+  margin-top: 24px;
+  min-height: 96px;
+  border-radius: var(--r-lg);
+  background: var(--paper);
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-4) 20px;
+}
+
+.ex-play {
+  width: var(--tap);
+  height: var(--tap);
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--card);
+  border: none;
+  font-size: var(--t-md);
+  cursor: pointer;
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+
+.ex-wave {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 24px;
+}
+
+.ex-wave i {
+  width: 4px;
+  border-radius: 2px;
+  display: block;
+}
+
+.ex-dur {
+  margin-left: auto;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* ── Foot: accent keys + Check / Next ──────────────────────────── */
+
+.ex-foot {
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+.ex-accents {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 12px;
+}
+
+.ex-accent {
+  flex: 1;
+  height: 40px;
+  border-radius: var(--r-md);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.ex-accent:hover {
+  border-color: var(--faint);
+}
+
+.ex-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 54px;
+  border-radius: 15px;
+  border: none;
+  background: var(--ink);
+  color: var(--card);
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform var(--fast) var(--ease);
+}
+
+.ex-btn:active {
+  transform: scale(0.99);
+}
+
+.ex-btn.is-ok {
+  background: var(--ok-dot);
+}
+
+.ex-btn.is-disabled {
+  background: var(--chip);
+  color: var(--faint);
+  cursor: default;
+}
+
+/* ── Done screen (frame 10) ────────────────────────────────────── */
+
+.ex-done {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-top: 80px;
+}
+
+.ex-done-title {
+  font-size: var(--t-display);
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.ex-done-sub {
+  margin-top: 12px;
+  font-size: var(--t-md);
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.ex-stats {
+  margin-top: 48px;
+  display: flex;
+  gap: 6px;
+}
+
+.ex-stat {
+  width: 80px;
+}
+
+.ex-stat-n {
+  font-size: var(--t-display);
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.ex-stat-l {
+  margin-top: 4px;
+  font-size: var(--t-xs);
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.ex-miss-rows {
+  margin-top: 24px;
+  width: 100%;
+  max-width: 350px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.ex-miss-row {
+  border-radius: var(--r-md);
+  background: var(--no-bg);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ex-miss-topic {
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--no-ink);
+  text-align: start;
+}
+
+.ex-miss-note {
+  font-size: var(--t-xs);
+  font-weight: 500;
+  color: var(--no-ink);
+  flex: none;
+}
+
+.ex-next-card {
+  margin-top: 24px;
+  width: 100%;
+  max-width: 350px;
+  border-radius: var(--r-md);
+  background: var(--paper);
+  padding: 12px 16px;
+  text-align: start;
+}
+
+.ex-next-label {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.ex-next-value {
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.ex-done-actions {
+  margin-top: auto;
+  padding-top: 24px;
+  width: 100%;
+}
+
+.ex-done-again {
+  display: inline-block;
+  margin-top: 14px;
+  background: none;
+  border: none;
+  padding: var(--s-1) var(--s-2);
+  font-family: inherit;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.ex-done-again:hover {
+  color: var(--ink);
+}
