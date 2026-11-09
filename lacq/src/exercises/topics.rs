@@ -18,6 +18,18 @@ pub enum Family {
     Subjonctif,
     /// Imparfait vs passé composé, marker-driven (choice).
     ImpVsPc,
+    /// ne … pas / ne … jamais around the verb (transform / cloze / choice).
+    Negation,
+    /// c'est + noun vs il/elle est + adjective (choice / error-spot / transform).
+    CestVsIlEst,
+    /// à + place → y (transform / choice).
+    PronounY,
+    /// Preceding-object participle agreement (cloze / choice).
+    AccordAntepose,
+    /// Imparfait endings against habit cues (cloze / error-spot).
+    Imparfait,
+    /// Passé composé with avoir, no participle agreement (cloze / error-spot / choice).
+    PcAvoir,
     /// No family yet — curated corpus only.
     Curated,
 }
@@ -102,7 +114,7 @@ pub const TOPICS: &[Topic] = &[
         title: "Passé composé with avoir",
         blurb: "Forming the passé composé with avoir and the past participle (nous avons mangé).",
         levels: A1A2,
-        family: Family::Curated,
+        family: Family::PcAvoir,
         section: Section::Tense,
     },
     Topic {
@@ -110,7 +122,7 @@ pub const TOPICS: &[Topic] = &[
         title: "Imparfait forms",
         blurb: "Forming the imparfait of common verbs (je parlais, nous étions, elles venaient).",
         levels: A1A2,
-        family: Family::Curated,
+        family: Family::Imparfait,
         section: Section::Tense,
     },
     Topic {
@@ -118,7 +130,7 @@ pub const TOPICS: &[Topic] = &[
         title: "The pronoun y",
         blurb: "Replacing à + place with y and placing it before the verb (elle va à Paris → elle y va).",
         levels: &["B1"],
-        family: Family::Curated,
+        family: Family::PronounY,
         section: Section::Nouns,
     },
     Topic {
@@ -126,7 +138,7 @@ pub const TOPICS: &[Topic] = &[
         title: "C'est vs il/elle est",
         blurb: "Choosing between c'est + noun and il/elle est + adjective (c'est une bonne idée, c'est évident).",
         levels: A1A2,
-        family: Family::Curated,
+        family: Family::CestVsIlEst,
         section: Section::Sentence,
     },
     Topic {
@@ -134,7 +146,7 @@ pub const TOPICS: &[Topic] = &[
         title: "Negation",
         blurb: "Wrapping the conjugated verb in ne … pas (elle ne parle pas anglais).",
         levels: &["A1"],
-        family: Family::Curated,
+        family: Family::Negation,
         section: Section::Sentence,
     },
     Topic {
@@ -142,7 +154,7 @@ pub const TOPICS: &[Topic] = &[
         title: "Agreement with preceding object",
         blurb: "Making the participle agree when the direct object precedes the verb (les fleurs que j'ai achetées).",
         levels: &["B1"],
-        family: Family::Curated,
+        family: Family::AccordAntepose,
         section: Section::Tense,
     },
 ];
