@@ -240,6 +240,7 @@ export function AccentInput(props: AccentInputProps) {
             autocapitalize="off"
             autocorrect="off"
             spellcheck={false}
+            enterkeyhint="go"
             placeholder={props.placeholder ?? "?"}
             value={props.value}
             disabled={props.disabled}

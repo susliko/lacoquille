@@ -735,9 +735,13 @@ mark.drill-cue {
   .drill-chain-step { font-size: 0.7rem; padding: 0.25rem 0.55rem; }
   .drill-chain-arrow { font-size: 0.7rem; }
 
-  /* Input + submit stack vertically with full-width submit. */
-  .drill-input-row { flex-direction: column; align-items: stretch; gap: 0.5rem; }
-  .drill-submit { width: 100%; }
+  /* Input + submit stay on ONE row on mobile: the system keyboard
+     covers everything below the focused input, so a stacked button is
+     unreachable without dismissing it. A compact inline submit rides
+     along when the browser scrolls the input above the keyboard. */
+  .drill-input { min-width: 0; }
+  .drill-submit { flex: none; padding: 0.85rem 0.9rem; min-width: 0; }
+  .drill-kbd { display: none; }
   .drill-input-big { font-size: 1.6rem; padding: 1rem 0.75rem; }
 
   /* Accent buttons are slightly larger for touch targets. */
