@@ -1,4 +1,5 @@
 ---
+import { ClientRouter } from "astro:transitions";
 import "../styles/global.css";
 
 interface Props {
@@ -18,10 +19,21 @@ const cleanTitle = title.replace(/ — La Coquille$/, "").replace(/ · La Coquil
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- interactive-widget=resizes-content: on Android (Chrome 108+) the
+         layout viewport shrinks when the system keyboard opens, so
+         bottom-anchored UI stays above it. iOS handles this via visual
+         viewport scrolling; the attribute is ignored there. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, interactive-widget=resizes-content"
+    />
     <meta name="description" content={description} />
     <title>{cleanTitle} · La Coquille</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- SPA-style navigations: swaps the page instead of a full reload,
+         keeps the JS context alive, and enables link prefetch. This is
+         what makes grid ↔ practice navigation feel native. -->
+    <ClientRouter />
   </head>
   <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>

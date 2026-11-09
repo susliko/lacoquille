@@ -29,7 +29,30 @@ export interface TopicsCatalog {
 }
 
 export async function fetchTopics(): Promise<TopicsCatalog> {
+  // SPA navigations remount this island (Solid islands re-hydrate when
+  // Astro swaps documents), and a cold grid shows empty cells until the
+  // catalog lands. The catalog only changes on deploy, so a short-TTL
+  // localStorage copy makes every remount paint instantly.
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (raw) {
+      const { at, catalog } = JSON.parse(raw) as { at: number; catalog: TopicsCatalog };
+      if (Date.now() - at < CACHE_TTL_MS) return catalog;
+    }
+  } catch {
+    /* corrupt or unavailable cache — fall through to the network */
+  }
+
   const res = await fetch("/api/exercises/topics");
   if (!res.ok) throw new Error(`topics catalog: HTTP ${res.status}`);
-  return (await res.json()) as TopicsCatalog;
+  const catalog = (await res.json()) as TopicsCatalog;
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), catalog }));
+  } catch {
+    /* private mode: cache is best-effort */
+  }
+  return catalog;
 }
+
+const CACHE_KEY = "lacoquille.topics.v1";
+const CACHE_TTL_MS = 10 * 60 * 1000;

@@ -4,7 +4,10 @@ import HomepageTabs from "../components/HomepageTabs";
 ---
 
 <Base title="La Coquille">
-  <HomepageTabs client:load />
+  <!-- transition:persist: navigating away and back keeps this island's
+       DOM and state alive — the grid reappears exactly as it was left
+       (tab, open sheet, loaded catalog) with no re-render or re-fetch. -->
+  <HomepageTabs client:load transition:persist="homepage-tabs" />
 </Base>
 
 <style>

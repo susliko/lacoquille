@@ -5,7 +5,9 @@ import "../../styles/tokens.css";
 ---
 
 <Base title="Endless feed — La Coquille" section="practice">
-  <EndlessFeed client:only="solid-js" />
+  <!-- client:load with SSR: the boot shell paints with the HTML (no white
+       flash), hydration and the first feed fetch start earlier. -->
+  <EndlessFeed client:load />
 </Base>
 
 <style is:global>
