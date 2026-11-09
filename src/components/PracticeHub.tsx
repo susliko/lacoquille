@@ -5,23 +5,22 @@ import { For } from "solid-js";
    = review/miss), so the menu itself stays quiet: white cards on
    paper, ink names, one indigo call to action. See global.css. */
 const PRACTICE = [
+  /* The endless feed: the coach picks a grammar topic per run from the
+     learner's level + history, generator families fill it. The
+     flagship practice — it leads the menu. */
+  { id: "feed",          name: "Endless feed",      sub: "adaptive grammar · always ready", path: "/practice/feed" },
+
   /* The designed exercise session: six-plus mixed items with the
      ok/miss feedback system. tokens.css design system experience. */
   { id: "session",       name: "Exercise session",  sub: "mixed items · instant feedback", path: "/practice/session" },
-
-  /* The endless feed: the coach picks a grammar topic per run from the
-     learner's level + history, generator families fill it. */
-  { id: "feed",          name: "Endless feed",      sub: "adaptive grammar · always ready", path: "/practice/feed" },
 
   /* The single verb-conjugation entry. Mixes cloze, cue-to-form,
      spot-the-tense, and transformation chains in an endless stream. */
   { id: "conjugations", name: "Conjugations", sub: "endless mixed drills", path: "/practice/conjugations" },
 
-  /* The four non-conjugation practices. */
+  /* The other implemented practice. */
   { id: "article-of-day", name: "Article of Day",    sub: "daily Maupassant story",  path: "/stories/article-of-the-day" },
   { id: "typing",         name: "Typing Race",       sub: "speed conjugate drills",  path: "/practice/typing" },
-  { id: "shadowing",      name: "Shadowing",         sub: "listen & repeat",         path: "/practice/shadowing" },
-  { id: "vocabulary",     name: "Vocabulary Mining", sub: "mine texts for words",    path: "/practice/vocabulary" },
 ];
 
 export default function PracticeHub() {

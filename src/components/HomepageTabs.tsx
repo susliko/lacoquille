@@ -17,12 +17,16 @@ const REGIONS = [
   { id: "verbs",     name: "Verbes",     sub: "tenses & conjugation", path: "/reference/verbs" },
 ];
 
-/* ── Practice tiles ───────────────────────────────────────────── */
+/* ── Practice tiles ─────────────────────────────────────────────
+   Implemented practices only — the feed is the flagship surface
+   and leads the tab. Shadowing (feature-flagged off) and
+   Vocabulary Mining (coming soon) stay out until they exist. */
 const PRACTICE = [
-  { id: "article",    name: "Article of Day",    sub: "daily Maupassant story", path: "/stories/article-of-the-day" },
-  { id: "typing",     name: "Typing Race",       sub: "speed conjugate drills", path: "/practice/typing" },
-  { id: "shadowing",  name: "Shadowing",         sub: "listen & repeat",        path: "/practice/shadowing" },
-  { id: "vocabulary", name: "Vocabulary Mining", sub: "mine texts for words",   path: "/practice/vocabulary" },
+  { id: "feed",         name: "Endless feed",     sub: "adaptive grammar · always ready", path: "/practice/feed" },
+  { id: "session",      name: "Exercise session", sub: "mixed items · instant feedback",  path: "/practice/session" },
+  { id: "conjugations", name: "Conjugations",     sub: "endless mixed drills",            path: "/practice/conjugations" },
+  { id: "article",      name: "Article of Day",   sub: "daily Maupassant story",          path: "/stories/article-of-the-day" },
+  { id: "typing",       name: "Typing Race",      sub: "speed conjugate drills",          path: "/practice/typing" },
 ];
 
 /* ── Component ────────────────────────────────────────────────── */
