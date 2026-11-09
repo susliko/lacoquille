@@ -134,17 +134,26 @@ Two-tier, **stateless** system — all learner state stays client-side:
   coach/DrillPlan/built-in, never vendor terms in the API), built-in
   weakest-topic heuristic otherwise or on timeout/error.
 - Topic catalog: `lacq/src/exercises/topics.rs` (slugs + blurbs + levels +
-  family). Generator families (`families.rs`): tagged banks × slot combos
-  → endless items (pc-aux, pc-etre agreement, COD/COI pronouns, subjonctif,
-  imparfait-vs-pc). Topics without a family fall back to the curated corpus
-  (`curated_for_topic`). Items carry `topicSlug` for client aggregation.
+  family). Generator families (`families.rs` dispatcher + `families/*.rs`,
+  one file per engine cluster): tagged banks × slot combos → endless items
+  (pc-aux, pc-etre, pc-avoir, pronouns-cod-coi, pronoun-y, subjonctif,
+  imparfait, imparfait-vs-pc, negation, cest-vs-il-est, accord-antepose —
+  every catalog topic has a family; topics without one fall back to the
+  curated corpus, `curated_for_topic`). Items carry `topicSlug` for client
+  aggregation.
+- Coverage gates, run before committing content changes: `cargo test
+  coverage_gate -- --nocapture` (per-topic pool floors + matrix) and
+  `python3 tools/coverage.py` (grid lighting report: lit vs dark entries,
+  orphan slugs).
 - Client: `/practice/feed` (`EndlessFeed.tsx`) — continuous, run-of-5,
   prefetches next run at 2 items left; misses requeue in-run. Learner state
   in `lacoquille.feed.v1` (`feedStore.ts`): per-topic aggregates, recent
   rings, rolling-window level estimate. The fixed session keeps its own
   `lacoquille.exercises.v1` store.
-- Add a topic: append to `TOPICS` in topics.rs (+ family in families.rs or
-  curated templates). Slugs are the wire contract — never rename them.
+- Add a topic: append to `TOPICS` in topics.rs (+ `Family::` variant,
+  engine file in `families/`, dispatch arm + `pool_floor` entry in
+  families.rs, SLUG_MAP row in `taxonomy.ts`). Slugs are the wire
+  contract — never rename them.
 
 
 ## Adding tenses
