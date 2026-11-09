@@ -62,6 +62,7 @@ export function AnswerField(props: {
       autocapitalize="off"
       autocorrect="off"
       spellcheck={false}
+      enterkeyhint="go"
       placeholder={props.placeholder ?? "Your answer"}
       value={props.value}
       disabled={props.disabled}

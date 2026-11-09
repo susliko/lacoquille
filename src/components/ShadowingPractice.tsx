@@ -968,6 +968,7 @@ export default function ShadowingPractice() {
                   type="text"
                   class="dictation-input"
                   placeholder="Type in French..."
+                  enterkeyhint="go"
                   value={typedText()}
                   onInput={(e) => setTypedText(e.currentTarget.value)}
                   onKeyDown={(e) => {
