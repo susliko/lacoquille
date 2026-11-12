@@ -12,15 +12,24 @@
 //! flip `family:` on its topic.
 
 mod accord_antepose;
+mod adjectives;
+mod articles;
 mod cest_vs_il_est;
 mod imparfait;
 mod imppc;
+mod modals;
+mod mood_a1;
 mod negation;
 mod pc_aux;
 mod pc_avoir;
 mod pc_etre;
+mod periphrases;
+mod present;
 mod pronoun_y;
 mod pronouns;
+mod pronouns_basic;
+mod questions;
+mod sentence_a1;
 mod shared;
 mod subjonctif;
 
@@ -48,6 +57,15 @@ pub fn family_pool(topic: &Topic) -> Vec<ExerciseItem> {
         Family::AccordAntepose => accord_antepose::items(),
         Family::Imparfait => imparfait::items(),
         Family::PcAvoir => pc_avoir::items(),
+        Family::Present => present::items(topic.slug),
+        Family::Periphrases => periphrases::items(topic.slug),
+        Family::Modals => modals::items(topic.slug),
+        Family::Articles => articles::items(topic.slug),
+        Family::Adjectives => adjectives::items(topic.slug),
+        Family::PronounBasics => pronouns_basic::items(topic.slug),
+        Family::Questions => questions::items(topic.slug),
+        Family::SentencesA1 => sentence_a1::items(topic.slug),
+        Family::MoodsA1 => mood_a1::items(topic.slug),
         Family::Curated => Vec::new(),
     }
 }
@@ -70,6 +88,36 @@ fn pool_floor(slug: &str) -> usize {
         "accord-antepose" => 250,
         "imparfait" => 250,
         "pc-avoir" => 120,
+        "present-etre-avoir" => 100,
+        "present-er-verbs" => 90,
+        "present-irregulars" => 90,
+        "present-pronominal" => 60,
+        "etre-en-train-de" => 70,
+        "futur-proche" => 70,
+        "passe-recent" => 70,
+        "modal-verbs-infinitive" => 200,
+        "il-faut-infinitive" => 30,
+        "pour-infinitive" => 80,
+        "gender-of-nouns" => 30,
+        "plural-of-nouns" => 30,
+        "definite-indefinite-articles" => 30,
+        "partitive-articles" => 70,
+        "adjective-agreement" => 70,
+        "adjective-position" => 30,
+        "possessive-adjectives" => 70,
+        "demonstrative-adjectives" => 30,
+        "quantity-adverbs" => 30,
+        "subject-pronouns" => 150,
+        "stressed-pronouns" => 30,
+        "three-question-forms" => 30,
+        "question-words" => 30,
+        "il-ya-cest-voila" => 30,
+        "dans-depuis-il-ya" => 30,
+        "prepositions-place" => 30,
+        "prepositions-time" => 30,
+        "connectors-basic" => 30,
+        "imperative" => 40,
+        "polite-conditionnel" => 70,
         _ => COVERAGE_FLOOR,
     }
 }
