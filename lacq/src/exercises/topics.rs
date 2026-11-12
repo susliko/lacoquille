@@ -49,6 +49,18 @@ pub enum Family {
     SentencesA1,
     /// A1 mood cluster — imperative, polite conditionnel.
     MoodsA1,
+    /// Futur simple — verb tables with tomorrow-onward cues.
+    FuturSimple,
+    /// Verbs with prepositions — à/de + infinitive pairs.
+    VerbsPreps,
+    /// Comparison — comparative (plus/moins/aussi … que) and superlative.
+    Compare,
+    /// The pronoun en — de + thing replaced, j'en elision trap.
+    PronounEn,
+    /// A2 pronoun cluster — relatives, possessive pronouns, tout, ça/cela/ceci.
+    A2Pronouns,
+    /// A2 sentence cluster — exclamations, cause, purpose/opposition, sequencing.
+    SentencesA2,
     /// No family yet — curated corpus only.
     Curated,
 }
@@ -418,6 +430,129 @@ pub const TOPICS: &[Topic] = &[
         blurb: "The four connectors that shape a sentence: and, or, but, so — chosen by the relation between the clauses.",
         levels: &["A1"],
         family: Family::SentencesA1,
+        section: Section::Sentence,
+    },
+    // ── A2 tense & verb constructions ───────────────────────────
+    Topic {
+        slug: "futur-simple",
+        title: "Futur simple",
+        blurb: "Talking about tomorrow and later: endings -ai, -as, -a, -ons, -ez, -ont on the stem, irregulars included (je serai, j'irai, je ferai).",
+        levels: &["A2"],
+        family: Family::FuturSimple,
+        section: Section::Tense,
+    },
+    Topic {
+        slug: "verbs-prepositions",
+        title: "Verbs with prepositions",
+        blurb: "Which preposition joins the conjugated verb to its infinitive: aider à, apprendre à, réussir à, versus décider de, essayer de, oublier de.",
+        levels: &["A2"],
+        family: Family::VerbsPreps,
+        section: Section::Mood,
+    },
+    Topic {
+        slug: "comparative",
+        title: "Comparative",
+        blurb: "Comparing with plus/moins/aussi … que (le TGV est plus rapide que le vélo) — plus for more, moins for less, aussi for equal.",
+        levels: &["A2"],
+        family: Family::Compare,
+        section: Section::Nouns,
+    },
+    Topic {
+        slug: "superlative",
+        title: "Superlative",
+        blurb: "The extreme form: le/la/les plus + adjective agreeing with the noun (la plus belle), and bon → meilleur, mauvais → pire.",
+        levels: &["A2"],
+        family: Family::Compare,
+        section: Section::Nouns,
+    },
+    // ── A2 pronouns ─────────────────────────────────────────────
+    Topic {
+        slug: "pronoun-en",
+        title: "The pronoun en",
+        blurb: "Replacing de + thing with en before the verb (j'en parle, tu en manges) — and the j'en elision trap.",
+        levels: &["A2"],
+        family: Family::PronounEn,
+        section: Section::Nouns,
+    },
+    Topic {
+        slug: "uses-of-on",
+        title: "Uses of on",
+        blurb: "Beyond on = nous: on for people in general (ici on parle français) — always with the 3rd-person singular form.",
+        levels: &["A2"],
+        family: Family::PronounBasics,
+        section: Section::Nouns,
+    },
+    Topic {
+        slug: "qui-que-ou",
+        title: "Qui, que, où",
+        blurb: "Joining clauses with relative pronouns: qui for the subject, que for the object, où for place and time (la ville où j'habite).",
+        levels: &["A2"],
+        family: Family::A2Pronouns,
+        section: Section::Nouns,
+    },
+    Topic {
+        slug: "possessive-pronouns",
+        title: "Possessive pronouns",
+        blurb: "The standing-alone possessives: le mien, la mienne, les nôtres — gender and number come from the thing, not the owner.",
+        levels: &["A2"],
+        family: Family::A2Pronouns,
+        section: Section::Nouns,
+    },
+    Topic {
+        slug: "tout-toute-tous",
+        title: "Tout, toute, tous, toutes",
+        blurb: "The four faces of tout: tout le temps, toute la journée, tous les amis, toutes les fenêtres — agreeing with what follows.",
+        levels: &["A2"],
+        family: Family::A2Pronouns,
+        section: Section::Nouns,
+    },
+    Topic {
+        slug: "ca-cela-ceci",
+        title: "Ça, cela, ceci",
+        blurb: "Pointing without a noun: ceci (this, near), cela/ça (that, general) — and when everyday ça replaces both.",
+        levels: &["A2"],
+        family: Family::A2Pronouns,
+        section: Section::Nouns,
+    },
+    // ── A2 sentence ─────────────────────────────────────────────
+    Topic {
+        slug: "ne-plus-rien-personne",
+        title: "Ne… plus, rien, personne",
+        blurb: "Negation beyond ne … pas: ne … plus (not anymore), ne … rien (nothing), ne … personne (nobody) — same wrapping, stronger meanings.",
+        levels: &["A2"],
+        family: Family::Negation,
+        section: Section::Sentence,
+    },
+    Topic {
+        slug: "exclamations",
+        title: "Exclamations",
+        blurb: "Exclaiming: quel agreeing with its noun (quelle belle vue !) and que/comme as intensifiers (qu'il fait chaud !).",
+        levels: &["A2"],
+        family: Family::SentencesA2,
+        section: Section::Sentence,
+    },
+    Topic {
+        slug: "cause-consequence",
+        title: "Cause & consequence",
+        blurb: "Linking cause and result: parce que before the cause (parce qu'il pleut), donc before the result, à cause de + noun for blame.",
+        levels: &["A2"],
+        family: Family::SentencesA2,
+        section: Section::Sentence,
+    },
+    Topic {
+        slug: "purpose-opposition",
+        title: "Purpose & opposition",
+        blurb: "pour + infinitive for purpose (j'étudie pour réussir), and despite it all: malgré + noun, même si + clause.",
+        levels: &["A2"],
+        family: Family::SentencesA2,
+        section: Section::Sentence,
+    },
+    Topic {
+        slug: "sequencing-connectors",
+        title: "Sequencing connectors",
+        blurb: "Ordering a story: d'abord, ensuite, puis, enfin — first, then, finally.",
+        levels: &["A2"],
+        family: Family::SentencesA2,
         section: Section::Sentence,
     },
 ];

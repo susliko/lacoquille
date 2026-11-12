@@ -11,10 +11,14 @@
 //! a `Family::` variant in `topics`, an arm in `family_pool` — then
 //! flip `family:` on its topic.
 
+mod a2_pronouns;
+mod a2_sentence;
 mod accord_antepose;
 mod adjectives;
 mod articles;
 mod cest_vs_il_est;
+mod compare;
+mod futur_simple;
 mod imparfait;
 mod imppc;
 mod modals;
@@ -25,6 +29,7 @@ mod pc_avoir;
 mod pc_etre;
 mod periphrases;
 mod present;
+mod pronoun_en;
 mod pronoun_y;
 mod pronouns;
 mod pronouns_basic;
@@ -32,6 +37,7 @@ mod questions;
 mod sentence_a1;
 mod shared;
 mod subjonctif;
+mod verbs_preps;
 
 use std::collections::HashSet;
 
@@ -51,7 +57,7 @@ pub fn family_pool(topic: &Topic) -> Vec<ExerciseItem> {
         Family::Pronouns => pronouns::items(),
         Family::Subjonctif => subjonctif::items(),
         Family::ImpVsPc => imppc::items(),
-        Family::Negation => negation::items(),
+        Family::Negation => negation::items_slug(topic.slug),
         Family::CestVsIlEst => cest_vs_il_est::items(),
         Family::PronounY => pronoun_y::items(),
         Family::AccordAntepose => accord_antepose::items(),
@@ -66,6 +72,12 @@ pub fn family_pool(topic: &Topic) -> Vec<ExerciseItem> {
         Family::Questions => questions::items(topic.slug),
         Family::SentencesA1 => sentence_a1::items(topic.slug),
         Family::MoodsA1 => mood_a1::items(topic.slug),
+        Family::FuturSimple => futur_simple::items(),
+        Family::VerbsPreps => verbs_preps::items(),
+        Family::Compare => compare::items(topic.slug),
+        Family::PronounEn => pronoun_en::items(),
+        Family::A2Pronouns => a2_pronouns::items(topic.slug),
+        Family::SentencesA2 => a2_sentence::items(topic.slug),
         Family::Curated => Vec::new(),
     }
 }
@@ -118,6 +130,21 @@ fn pool_floor(slug: &str) -> usize {
         "connectors-basic" => 30,
         "imperative" => 40,
         "polite-conditionnel" => 70,
+        "futur-simple" => 250,
+        "verbs-prepositions" => 350,
+        "comparative" => 40,
+        "superlative" => 30,
+        "pronoun-en" => 70,
+        "uses-of-on" => 30,
+        "qui-que-ou" => 30,
+        "possessive-pronouns" => 30,
+        "tout-toute-tous" => 30,
+        "ca-cela-ceci" => 30,
+        "ne-plus-rien-personne" => 150,
+        "exclamations" => 30,
+        "cause-consequence" => 30,
+        "purpose-opposition" => 30,
+        "sequencing-connectors" => 30,
         _ => COVERAGE_FLOOR,
     }
 }
