@@ -15,12 +15,16 @@ mod a2_pronouns;
 mod a2_sentence;
 mod accord_antepose;
 mod adjectives;
+mod anteriorite;
 mod articles;
 mod b1_connectors;
 mod b1_pronouns;
 mod b1_relatives;
 mod b1_sentence;
 mod b1_tenses;
+mod b2_pronouns;
+mod b2_sentence;
+mod b2_tenses;
 mod cest_vs_il_est;
 mod compare;
 mod conditionnel;
@@ -32,6 +36,7 @@ mod modals;
 mod mood_a1;
 mod negation;
 mod nominalisation;
+mod participe_adjectif;
 mod passive;
 mod pc_aux;
 mod pc_avoir;
@@ -48,6 +53,7 @@ mod shared;
 mod si_clauses;
 mod subjonctif;
 mod subjonctif_b1;
+mod subjonctif_b2;
 mod verbs_preps;
 
 use std::collections::HashSet;
@@ -100,6 +106,12 @@ pub fn family_pool(topic: &Topic) -> Vec<ExerciseItem> {
         Family::B1Sentence => b1_sentence::items(topic.slug),
         Family::Nominalisation => nominalisation::items(topic.slug),
         Family::B1Connectors => b1_connectors::items(topic.slug),
+        Family::Anteriorite => anteriorite::items(topic.slug),
+        Family::SubjonctifB2 => subjonctif_b2::items(topic.slug),
+        Family::B2Tenses => b2_tenses::items(topic.slug),
+        Family::ParticipeAdjectif => participe_adjectif::items(topic.slug),
+        Family::B2Pronouns => b2_pronouns::items(topic.slug),
+        Family::B2Sentence => b2_sentence::items(topic.slug),
         Family::Curated => Vec::new(),
     }
 }
@@ -192,6 +204,21 @@ fn pool_floor(slug: &str) -> usize {
         "ce-qui-cest" => 15,
         "il-est-cest-adjectif-de" => 15,
         "narrative-time-markers" => 16,
+        // B2
+        "futur-anterieur" => 72,
+        "past-infinitive" => 20,
+        "sequence-of-tenses" => 18,
+        "exceptional-participle" => 25,
+        "conditionnel-passe" => 18,
+        "subjonctif-verbs-impersonals" => 18,
+        "subjonctif-conjunctions" => 16,
+        "subjonctif-passe" => 40,
+        "participe-ou-adjectif" => 22,
+        "lequel-interrogatif" => 14,
+        "si-plus-que-parfait" => 16,
+        "au-cas-ou-condition" => 16,
+        "opposition-avancee" => 16,
+        "but-cause-avancee" => 12,
         _ => COVERAGE_FLOOR,
     }
 }

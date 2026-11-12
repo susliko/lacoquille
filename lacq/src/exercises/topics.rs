@@ -83,6 +83,18 @@ pub enum Family {
     Nominalisation,
     /// B1 connector cluster — cause, purpose, concession, time markers.
     B1Connectors,
+    /// Anteriority — futur antérieur, past infinitive.
+    Anteriorite,
+    /// B2 subjonctif — verbs & impersonals, conjunctions, subjonctif passé.
+    SubjonctifB2,
+    /// B2 tenses — sequence of tenses, exceptional participle agreement.
+    B2Tenses,
+    /// Participle vs verbal adjective pairs.
+    ParticipeAdjectif,
+    /// Interrogative lequel.
+    B2Pronouns,
+    /// B2 sentence patterns — au cas où, opposition, purpose & cause.
+    B2Sentence,
     /// No family yet — curated corpus only.
     Curated,
 }
@@ -770,6 +782,121 @@ pub const TOPICS: &[Topic] = &[
         blurb: "Setting the rhythm of a story: soudain, pendant que, alors que, enfin, au moment où.",
         levels: &["B1"],
         family: Family::B1Connectors,
+        section: Section::Sentence,
+    },
+    // ── B2 tense & verb forms ───────────────────────────────────
+    Topic {
+        slug: "futur-anterieur",
+        title: "Futur antérieur",
+        blurb: "The earlier future: quand tu seras arrivé, nous serons prêts — futur of the auxiliary + past participle.",
+        levels: &["B2"],
+        family: Family::Anteriorite,
+        section: Section::Tense,
+    },
+    Topic {
+        slug: "past-infinitive",
+        title: "Past infinitive",
+        blurb: "Anteriority in one clause: après avoir fini, après être arrivé — the same auxiliary as the passé composé.",
+        levels: &["B2"],
+        family: Family::Anteriorite,
+        section: Section::Tense,
+    },
+    Topic {
+        slug: "sequence-of-tenses",
+        title: "Sequence of tenses",
+        blurb: "A past main clause pulls the subordinate back: il a dit qu'il viendrait — present keeps the futur.",
+        levels: &["B2"],
+        family: Family::B2Tenses,
+        section: Section::Tense,
+    },
+    Topic {
+        slug: "exceptional-participle",
+        title: "Exceptional participle agreement",
+        blurb: "With avoir, the participle agrees with a preceding direct object: les fleurs que j'ai cueillies.",
+        levels: &["B2"],
+        family: Family::B2Tenses,
+        section: Section::Tense,
+    },
+    Topic {
+        slug: "conditionnel-passe",
+        title: "Conditionnel passé",
+        blurb: "The unreal past result: si tu m'avais écouté, j'aurais fini — avoir/être in the conditionnel + participle.",
+        levels: &["B2"],
+        family: Family::Conditionnel,
+        section: Section::Mood,
+    },
+    Topic {
+        slug: "subjonctif-verbs-impersonals",
+        title: "Subjonctif after verbs & impersonals",
+        blurb: "Beyond il faut: craindre que, redouter que, attendre que take the subjonctif; être sûr que, admettre que keep the indicatif.",
+        levels: &["B2"],
+        family: Family::SubjonctifB2,
+        section: Section::Mood,
+    },
+    Topic {
+        slug: "subjonctif-conjunctions",
+        title: "Subjonctif after conjunctions",
+        blurb: "The conjunction series: bien que, avant que, jusqu'à ce que, sans que, pourvu que — all subjonctif.",
+        levels: &["B2"],
+        family: Family::SubjonctifB2,
+        section: Section::Mood,
+    },
+    Topic {
+        slug: "subjonctif-passe",
+        title: "Subjonctif passé",
+        blurb: "A completed action inside the subjonctif: je suis content qu'il ait fini, qu'elle soit partie.",
+        levels: &["B2"],
+        family: Family::SubjonctifB2,
+        section: Section::Mood,
+    },
+    Topic {
+        slug: "participe-ou-adjectif",
+        title: "Participle vs verbal adjective",
+        blurb: "un film amusant (it amuses) vs des enfants amusés (they are amused); fatigant/fatigué and its traps.",
+        levels: &["B2"],
+        family: Family::ParticipeAdjectif,
+        section: Section::Mood,
+    },
+    // ── B2 pronouns ─────────────────────────────────────────────
+    Topic {
+        slug: "lequel-interrogatif",
+        title: "Interrogative lequel",
+        blurb: "Asking with lequel: laquelle de ces robes — the question word agrees with the thing asked about.",
+        levels: &["B2"],
+        family: Family::B2Pronouns,
+        section: Section::Nouns,
+    },
+    // ── B2 sentence ─────────────────────────────────────────────
+    Topic {
+        slug: "si-plus-que-parfait",
+        title: "Si + plus-que-parfait",
+        blurb: "The unreal past: si j'avais su, je serais venu — plus-que-parfait after si, conditionnel passé in the result.",
+        levels: &["B2"],
+        family: Family::SiClauses,
+        section: Section::Sentence,
+    },
+    Topic {
+        slug: "au-cas-ou-condition",
+        title: "Au cas où, à condition que",
+        blurb: "Contingency vs requirement: au cas où il pleuvrait (conditionnel), à condition que tu sois prêt (subjonctif).",
+        levels: &["B2"],
+        family: Family::B2Sentence,
+        section: Section::Sentence,
+    },
+    Topic {
+        slug: "opposition-avancee",
+        title: "Advanced opposition & concession",
+        blurb: "Formal opposition: néanmoins, toutefois, en revanche — and the extreme concessions quoique, quand bien même.",
+        levels: &["B2"],
+        family: Family::B2Sentence,
+        section: Section::Sentence,
+    },
+    Topic {
+        slug: "but-cause-avancee",
+        title: "Advanced purpose & cause",
+        blurb: "Formal purpose and cause: de peur que, de sorte que, afin de, vu que, étant donné que.",
+        levels: &["B2"],
+        family: Family::B2Sentence,
         section: Section::Sentence,
     },
 ];
