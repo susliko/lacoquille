@@ -16,14 +16,23 @@ mod a2_sentence;
 mod accord_antepose;
 mod adjectives;
 mod articles;
+mod b1_connectors;
+mod b1_pronouns;
+mod b1_relatives;
+mod b1_sentence;
+mod b1_tenses;
 mod cest_vs_il_est;
 mod compare;
+mod conditionnel;
 mod futur_simple;
+mod gerondif;
 mod imparfait;
 mod imppc;
 mod modals;
 mod mood_a1;
 mod negation;
+mod nominalisation;
+mod passive;
 mod pc_aux;
 mod pc_avoir;
 mod pc_etre;
@@ -36,7 +45,9 @@ mod pronouns_basic;
 mod questions;
 mod sentence_a1;
 mod shared;
+mod si_clauses;
 mod subjonctif;
+mod subjonctif_b1;
 mod verbs_preps;
 
 use std::collections::HashSet;
@@ -78,6 +89,17 @@ pub fn family_pool(topic: &Topic) -> Vec<ExerciseItem> {
         Family::PronounEn => pronoun_en::items(),
         Family::A2Pronouns => a2_pronouns::items(topic.slug),
         Family::SentencesA2 => a2_sentence::items(topic.slug),
+        Family::B1Tenses => b1_tenses::items(topic.slug),
+        Family::Conditionnel => conditionnel::items(topic.slug),
+        Family::SubjonctifB1 => subjonctif_b1::items(topic.slug),
+        Family::Passive => passive::items(topic.slug),
+        Family::Gerondif => gerondif::items(topic.slug),
+        Family::B1Pronouns => b1_pronouns::items(topic.slug),
+        Family::B1Relatives => b1_relatives::items(topic.slug),
+        Family::SiClauses => si_clauses::items(topic.slug),
+        Family::B1Sentence => b1_sentence::items(topic.slug),
+        Family::Nominalisation => nominalisation::items(topic.slug),
+        Family::B1Connectors => b1_connectors::items(topic.slug),
         Family::Curated => Vec::new(),
     }
 }
@@ -145,6 +167,31 @@ fn pool_floor(slug: &str) -> usize {
         "cause-consequence" => 30,
         "purpose-opposition" => 30,
         "sequencing-connectors" => 30,
+        // B1
+        "plus-que-parfait" => 250,
+        "past-tenses-story" => 25,
+        "conditionnel-forms" => 250,
+        "conditionnel-uses" => 25,
+        "subjonctif-forms" => 150,
+        "subjonctif-vs-indicatif" => 25,
+        "passive-voice" => 30,
+        "gerondif" => 28,
+        "nominalization" => 40,
+        "double-pronouns" => 24,
+        "dont" => 20,
+        "compound-relatives" => 20,
+        "indefinite-pronouns" => 20,
+        "ce-qui-ce-que-ce-dont" => 18,
+        "si-present" => 150,
+        "si-imparfait" => 150,
+        "reported-speech" => 18,
+        "restriction-ne-que" => 18,
+        "cause-consequence-extended" => 15,
+        "pour-que-afin-de" => 22,
+        "concession-opposition" => 16,
+        "ce-qui-cest" => 15,
+        "il-est-cest-adjectif-de" => 15,
+        "narrative-time-markers" => 16,
         _ => COVERAGE_FLOOR,
     }
 }
