@@ -30,11 +30,12 @@ const F_VERBS: &[FVerb] = &[
 
 const CUES: &[&str] = &["Demain,", "La semaine prochaine,", "L'année prochaine,"];
 
-fn subj_head(cue: &str, subj: &str, form: &str) -> String {
+fn subj_head(cue: &str, subj: &str, form: &str) -> (String, String) {
     if subj == "je" && starts_vowel(form) {
-        format!("{} j'", cue)
+        // the elision folds into the answer chunk: « j'aurai »
+        (format!("{} ", cue), format!("j'{}", form))
     } else {
-        format!("{} {} ", cue, subj)
+        (format!("{} {} ", cue, subj), form.to_string())
     }
 }
 
@@ -44,16 +45,17 @@ pub(crate) fn items() -> Vec<ExerciseItem> {
         for &(subj, _subj_c, fi) in SUBJ_CAP {
             let form = v.forms[fi];
             for (ci, cue) in CUES.iter().enumerate() {
+                let (head, answer) = subj_head(cue, subj, form);
                 out.push(ExerciseItem::Cloze(ClozeItem {
                     id: format!("fut:{}:{}:{}:cl", v.inf, subj, ci),
                     level: LEVEL,
                     topic: "Futur simple",
                     topic_slug: Some("futur-simple".into()),
                     task: vec!["Put the verb in the futur simple.".into()],
-                    head: subj_head(cue, subj, form),
+                    head,
                     tail: format!(" {}.", v.complement),
                     infinitive: v.inf,
-                    answer: form.to_string(),
+                    answer,
                     rule: vec![
                         format!("{} {} {}.", cue, subj, form),
                         "Endings: -ai, -as, -a, -ons, -ez, -ont (on the stem, irregulars too).".into(),
