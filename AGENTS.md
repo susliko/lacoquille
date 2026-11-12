@@ -138,13 +138,19 @@ Two-tier, **stateless** system — all learner state stays client-side:
   one file per engine cluster): tagged banks × slot combos → endless items
   (A1: present, periphrases, modals, articles, adjectives, pronouns_basic,
   questions, sentence_a1, mood_a1; A2: futur_simple, verbs_preps, compare,
-  pronoun_en, a2_pronouns, a2_sentence; plus the original starved-family
-  engines pc-aux, pc-etre, pc-avoir, pronouns-cod-coi, pronoun-y,
-  subjonctif, imparfait, imparfait-vs-pc, negation, cest-vs-il-est,
-  accord-antepose — every catalog topic has a family; topics without one
-  fall back to the curated corpus, `curated_for_topic`). Items carry
-  `topicSlug` for client aggregation. Multi-topic engines dispatch on
-  `items(slug)`; negation keeps a no-arg `items()` compat shim.
+  pronoun_en, a2_pronouns, a2_sentence; B1: b1_tenses, conditionnel,
+  subjonctif_b1, passive, gerondif, b1_pronouns, b1_relatives, si_clauses,
+  b1_sentence, nominalisation, b1_connectors; B2: anteriorite, subjonctif_b2,
+  b2_tenses, participe_adjectif, b2_pronouns, b2_sentence; plus the original
+  starved-family engines pc-aux, pc-etre, pc-avoir, pronouns-cod-coi,
+  pronoun-y, subjonctif, imparfait, imparfait-vs-pc, negation,
+  cest-vs-il-est, accord-antepose — every catalog topic has a family;
+  topics without one fall back to the curated corpus, `curated_for_topic`).
+  Items carry `topicSlug` for client aggregation. Multi-topic engines
+  dispatch on `items(slug)`; negation keeps a no-arg `items()` compat shim.
+  Elision conventions: never end a cloze `answer` (or a choice sentence
+  head) with an apostrophe — fold j'/qu'/s' into the answer chunk
+  (j'aurai, S'il) or use elision-free frames.
 - Coverage gates, run before committing content changes: `cargo test
   coverage_gate -- --nocapture` (per-topic pool floors + matrix) and
   `python3 tools/coverage.py` (grid lighting report: lit vs dark entries,
