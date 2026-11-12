@@ -136,11 +136,15 @@ Two-tier, **stateless** system — all learner state stays client-side:
 - Topic catalog: `lacq/src/exercises/topics.rs` (slugs + blurbs + levels +
   family). Generator families (`families.rs` dispatcher + `families/*.rs`,
   one file per engine cluster): tagged banks × slot combos → endless items
-  (pc-aux, pc-etre, pc-avoir, pronouns-cod-coi, pronoun-y, subjonctif,
-  imparfait, imparfait-vs-pc, negation, cest-vs-il-est, accord-antepose —
-  every catalog topic has a family; topics without one fall back to the
-  curated corpus, `curated_for_topic`). Items carry `topicSlug` for client
-  aggregation.
+  (A1: present, periphrases, modals, articles, adjectives, pronouns_basic,
+  questions, sentence_a1, mood_a1; A2: futur_simple, verbs_preps, compare,
+  pronoun_en, a2_pronouns, a2_sentence; plus the original starved-family
+  engines pc-aux, pc-etre, pc-avoir, pronouns-cod-coi, pronoun-y,
+  subjonctif, imparfait, imparfait-vs-pc, negation, cest-vs-il-est,
+  accord-antepose — every catalog topic has a family; topics without one
+  fall back to the curated corpus, `curated_for_topic`). Items carry
+  `topicSlug` for client aggregation. Multi-topic engines dispatch on
+  `items(slug)`; negation keeps a no-arg `items()` compat shim.
 - Coverage gates, run before committing content changes: `cargo test
   coverage_gate -- --nocapture` (per-topic pool floors + matrix) and
   `python3 tools/coverage.py` (grid lighting report: lit vs dark entries,
