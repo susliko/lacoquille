@@ -324,6 +324,86 @@ pub(crate) fn items(slug: &str) -> Vec<ExerciseItem> {
     match slug {
         "si-present" => si_present_items(),
         "si-imparfait" => si_imparfait_items(),
+        "si-plus-que-parfait" => si_pqp_items(),
         _ => Vec::new(),
     }
+}
+
+/* ── si + plus-que-parfait (B2) ──────────────────────────────────── */
+
+/// (si-clause fixing the unreal past, correct result, wrong result,
+/// infinitive, English cue) — the B2 pattern: unreal past.
+const SIQ_ROWS: &[(&str, &str, &str, &str, &str)] = &[
+    ("Si j'avais su,", "je serais venu plus tôt", "je viendrais plus tôt", "venir", "you didn't know"),
+    ("Si tu m'avais écouté,", "on aurait évité l'accident", "on éviterait l'accident", "éviter", "you didn't listen"),
+    ("Si nous étions partis plus tôt,", "nous aurions attrapé le train", "nous attraperions le train", "attraper", "we left late"),
+    ("S'il n'avait pas plu,", "on serait sorti", "on sortirait", "sortir", "it rained all day"),
+    ("Si elle avait révisé,", "elle aurait réussi l'examen", "elle réussirait l'examen", "réussir", "she didn't revise"),
+    ("Si vous m'aviez prévenu,", "je serais venu avec vous", "je viendrais avec vous", "venir", "nobody told you"),
+    ("Si le taxi n'était pas tombé en panne,", "ils seraient arrivés à l'heure", "ils arriveraient à l'heure", "arriver", "the taxi broke down"),
+    ("Si j'avais pris le métro,", "je n'aurais pas raté le début", "je ne raterais pas le début", "rater", "you didn't take the metro"),
+];
+
+fn si_pqp_items() -> Vec<ExerciseItem> {
+    let mut out = Vec::new();
+    for &(si, good, wrong, inf, cue) in SIQ_ROWS {
+        let key = super::shared::slugify(&si.chars().take(24).collect::<String>());
+        // Choice: cond passé (unreal past) vs conditionnel présent.
+        out.push(ExerciseItem::Choice(ChoiceItem {
+            id: format!("siQ:{}:ch", key),
+            level: "B2",
+            topic: "Si + plus-que-parfait",
+            topic_slug: Some("si-plus-que-parfait".into()),
+            task: vec![format!("{} — choose the result.", cue)],
+            sentence: format!("{} ____.", si),
+            options: vec![good.to_string(), wrong.to_string()],
+            correct: 0, // shuffled in `generate`
+            rule: vec![
+                format!("{} {}.", si, good),
+                "si + plus-que-parfait → conditionnel passé: the past cannot be changed.".into(),
+            ],
+        }));
+        // Cloze: type the full result.
+        out.push(ExerciseItem::Cloze(ClozeItem {
+            id: format!("siQ:{}:cl", key),
+            level: "B2",
+            topic: "Si + plus-que-parfait",
+            topic_slug: Some("si-plus-que-parfait".into()),
+            task: vec![format!("{} — complete the result.", cue)],
+            head: format!("{} ", si),
+            tail: ".".into(),
+            infinitive: inf,
+            answer: good.to_string(),
+            rule: vec![
+                format!("{} {}.", si, good),
+                "si + plus-que-parfait, conditionnel passé — the unreal past.".into(),
+            ],
+        }));
+    }
+    // Error-spot: the wrong tense in the si-clause itself.
+    out.push(ExerciseItem::ErrorSpot(ErrorSpotItem {
+        id: "siQ:savoir:es".into(),
+        level: "B2",
+        topic: "Si + plus-que-parfait",
+        topic_slug: Some("si-plus-que-parfait".into()),
+        task: vec!["One word is wrong. Tap it.".into()],
+        words: punctuate(vec![
+            "Si".into(),
+            "on".into(),
+            "savait".into(),
+            "on".into(),
+            "serait".into(),
+            "venu".into(),
+            "plus".into(),
+            "tôt".into(),
+        ]),
+        wrong: 2,
+        fix: "avait su".into(),
+        fix_task: "Now write the correct form.",
+        rule: vec![
+            "Si on avait su, on serait venu plus tôt.".into(),
+            "The unreal past needs si + plus-que-parfait, not si + imparfait.".into(),
+        ],
+    }));
+    out
 }

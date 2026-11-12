@@ -234,6 +234,64 @@ pub(crate) fn items(slug: &str) -> Vec<ExerciseItem> {
     match slug {
         "conditionnel-forms" => cond_items(),
         "conditionnel-uses" => cond_use_items(),
+        "conditionnel-passe" => cond_passe_items(),
         _ => Vec::new(),
     }
+}
+
+/* ── conditionnel passé (B2) ─────────────────────────────────────── */
+
+/// (si-clause fixing the unreal past, correct result, wrong result,
+/// infinitive, English cue). The wrong result is the classic
+/// conditionnel-présent slip.
+const CP_ROWS: &[(&str, &str, &str, &str, &str)] = &[
+    ("Si tu m'avais écouté,", "j'aurais fini le travail", "je finirais le travail", "finir", "you didn't listen"),
+    ("Si j'avais eu le temps,", "je t'aurais aidé", "je t'aiderais", "aider", "there was no time"),
+    ("Si on avait réservé,", "on aurait eu de bonnes places", "on aurait de bonnes places", "avoir", "nobody booked"),
+    ("Si elle avait lu la lettre,", "elle aurait réagi autrement", "elle réagirait autrement", "réagir", "she never read it"),
+    ("Si nous étions partis plus tôt,", "nous aurions attrapé le train", "nous attraperions le train", "attraper", "we left too late"),
+    ("Si je t'avais invité,", "tu serais venu", "tu viendrais", "venir", "the invitation never came"),
+    ("Si le taxi était passé,", "je serais arrivé à l'heure", "j'arriverais à l'heure", "arriver", "the taxi never came"),
+    ("Si tu t'étais reposé,", "tu te serais senti mieux", "tu te sentiras mieux", "se sentir", "you didn't rest"),
+    ("Si le magasin avait été ouvert,", "on aurait acheté du pain", "on achèterait du pain", "acheter", "it was closed"),
+    ("Si vous m'aviez prévenu,", "je n'aurais pas raté le rendez-vous", "je ne raterais pas le rendez-vous", "rater", "nobody warned me"),
+];
+
+fn cond_passe_items() -> Vec<ExerciseItem> {
+    let mut out = Vec::new();
+    for &(si, good, wrong, inf, cue) in CP_ROWS {
+        let key = super::shared::slugify(&si.chars().take(22).collect::<String>());
+        // Choice: unreal past — conditionnel passé vs conditionnel présent.
+        out.push(ExerciseItem::Choice(ChoiceItem {
+            id: format!("condP:{}:ch", key),
+            level: "B2",
+            topic: "Conditionnel passé",
+            topic_slug: Some("conditionnel-passe".into()),
+            task: vec![format!("{} — choose the right tense.", cue)],
+            sentence: format!("{} ____.", si),
+            options: vec![good.to_string(), wrong.to_string()],
+            correct: 0, // shuffled in `generate`
+            rule: vec![
+                format!("{} {}.", si, good),
+                "An unreal past takes the conditionnel passé (avoir/être in the conditionnel + past participle).".into(),
+            ],
+        }));
+        // Cloze: type the full result clause.
+        out.push(ExerciseItem::Cloze(ClozeItem {
+            id: format!("condP:{}:cl", key),
+            level: "B2",
+            topic: "Conditionnel passé",
+            topic_slug: Some("conditionnel-passe".into()),
+            task: vec![format!("{} — complete the result.", cue)],
+            head: format!("{} ", si),
+            tail: ".".into(),
+            infinitive: inf,
+            answer: good.to_string(),
+            rule: vec![
+                format!("{} {}.", si, good),
+                "si + plus-que-parfait → conditionnel passé.".into(),
+            ],
+        }));
+    }
+    out
 }
