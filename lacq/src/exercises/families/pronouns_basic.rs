@@ -4,9 +4,9 @@
 //! c'est). Choice traps only exist where the stressed form differs
 //! from the weak form — moi/je, toi/tu, lui/il, eux/ils.
 
-use crate::exercises::{ChoiceItem, ExerciseItem, TransformItem};
+use crate::exercises::{ChoiceItem, ClozeItem, ErrorSpotItem, ExerciseItem, TransformItem};
 
-use super::shared::slugify;
+use super::shared::{punctuate, slugify};
 
 const LEVEL: &str = "A1";
 
@@ -218,10 +218,103 @@ fn avec_form(subj: &str, verb_elle: &str) -> &'static str {
     }
 }
 
+/* ── uses of on (A2) ────────────────────────────────────────────── */
+
+const LEVEL2: &str = "A2";
+
+/// (inf, il-form, nous-form, ils-form, complement, cue, second cue)
+const ON_VERBS: &[(&str, &str, &str, &str, &str, &str, &str)] = &[
+    ("manger", "mange", "mangeons", "mangent", "au restaurant", "ce soir", "d'habitude"),
+    ("partir", "part", "partons", "partent", "en Provence", "ce week-end", "en juin"),
+    ("sortir", "sort", "sortons", "sortent", "danser", "le samedi soir", "souvent"),
+    ("dîner", "dîne", "dînons", "dînent", "chez Léo", "ce soir", "le vendredi"),
+    ("voyager", "voyage", "voyageons", "voyagent", "en train", "cet été", "en général"),
+    ("rentrer", "rentre", "rentrons", "rentrent", "avant minuit", "ce soir", "en hiver"),
+    ("travailler", "travaille", "travaillons", "travaillent", "beaucoup", "le lundi", "en ce moment"),
+    ("prendre", "prend", "prenons", "prennent", "le café en terrasse", "le matin", "le week-end"),
+    ("parler", "parle", "parlons", "parlent", "français", "en France", "ici"),
+];
+
+fn on2_items() -> Vec<ExerciseItem> {
+    let mut out = Vec::new();
+    for &(inf, sg, nous, pl, complement, cue, cue2) in ON_VERBS {
+        // Transform: nous → on, same meaning, 3rd-person singular form.
+        out.push(ExerciseItem::Transform(TransformItem {
+            id: format!("on2:{}:tf", inf),
+            level: LEVEL2,
+            topic: "Uses of on",
+            topic_slug: Some("uses-of-on".into()),
+            task: vec![
+                "Rewrite it with « on » —".into(),
+                "same meaning, third-person form.".into(),
+            ],
+            source: format!("Nous {} {}.", nous, complement),
+            answer: format!("On {} {}.", sg, complement),
+            rule: vec![
+                "on = nous (informal), but the verb is 3rd person".into(),
+                format!("singular: on {} {}.", sg, complement),
+            ],
+        }));
+        // Cloze: on + 3rd-person singular, with a cue up front.
+        out.push(ExerciseItem::Cloze(ClozeItem {
+            id: format!("on2:{}:cl", inf),
+            level: LEVEL2,
+            topic: "Uses of on",
+            topic_slug: Some("uses-of-on".into()),
+            task: vec!["Complete with the right form.".into()],
+            head: format!("{}, on ", cap_first(cue2)),
+            tail: format!(" {}.", complement),
+            infinitive: inf,
+            answer: sg.to_string(),
+            rule: vec![
+                format!("{}, on {} {}.", cap_first(cue2), sg, complement),
+                "on always takes the 3rd-person singular form.".into(),
+            ],
+        }));
+        // Choice: singular vs plural trap.
+        out.push(ExerciseItem::Choice(ChoiceItem {
+            id: format!("on2:{}:ch", inf),
+            level: LEVEL2,
+            topic: "Uses of on",
+            topic_slug: Some("uses-of-on".into()),
+            task: vec!["Choose the right form.".into()],
+            sentence: format!("{}, on ____ {}.", cap_first(cue), complement),
+            options: vec![sg.into(), pl.into()],
+            correct: 0, // shuffled in `generate`
+            rule: vec![
+                format!("{}, on {} {}.", cap_first(cue), sg, complement),
+                format!("on takes the singular — not {}.", pl),
+            ],
+        }));
+        // Error-spot: the plural form sneaks in after on.
+        out.push(ExerciseItem::ErrorSpot(ErrorSpotItem {
+            id: format!("on2:{}:es", inf),
+            level: LEVEL2,
+            topic: "Uses of on",
+            topic_slug: Some("uses-of-on".into()),
+            task: vec!["One word is wrong. Tap it.".into()],
+            words: punctuate(vec![
+                "On".into(),
+                pl.into(),
+                complement.to_string(),
+            ]),
+            wrong: 1,
+            fix: sg.to_string(),
+            fix_task: "Now write the correct form.",
+            rule: vec![
+                format!("on {} {} — never {}.", sg, complement, pl),
+                "on = one/we/people in general: always singular.".into(),
+            ],
+        }));
+    }
+    out
+}
+
 pub(crate) fn items(slug: &str) -> Vec<ExerciseItem> {
     match slug {
         "subject-pronouns" => subject_items(),
         "stressed-pronouns" => stressed_items(),
+        "uses-of-on" => on2_items(),
         _ => Vec::new(),
     }
 }
