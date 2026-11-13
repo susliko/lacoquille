@@ -25,6 +25,13 @@ mod b1_tenses;
 mod b2_pronouns;
 mod b2_sentence;
 mod b2_tenses;
+mod c1_moods;
+mod c1_nouns;
+mod c1_sentence;
+mod c1_tenses;
+mod c2_moods;
+mod c2_style;
+mod c2_tenses;
 mod cest_vs_il_est;
 mod compare;
 mod conditionnel;
@@ -112,6 +119,13 @@ pub fn family_pool(topic: &Topic) -> Vec<ExerciseItem> {
         Family::ParticipeAdjectif => participe_adjectif::items(topic.slug),
         Family::B2Pronouns => b2_pronouns::items(topic.slug),
         Family::B2Sentence => b2_sentence::items(topic.slug),
+        Family::C1Tenses => c1_tenses::items(topic.slug),
+        Family::C1Moods => c1_moods::items(topic.slug),
+        Family::C1Nouns => c1_nouns::items(topic.slug),
+        Family::C1Sentence => c1_sentence::items(topic.slug),
+        Family::C2Tenses => c2_tenses::items(topic.slug),
+        Family::C2Moods => c2_moods::items(topic.slug),
+        Family::C2Style => c2_style::items(topic.slug),
         Family::Curated => Vec::new(),
     }
 }
@@ -219,6 +233,34 @@ fn pool_floor(slug: &str) -> usize {
         "au-cas-ou-condition" => 16,
         "opposition-avancee" => 16,
         "but-cause-avancee" => 12,
+        // C1
+        "passe-simple-recognize" => 28,
+        "passe-anterieur" => 15,
+        "pronominal-agreement" => 22,
+        "subjonctif-subtle" => 16,
+        "subjonctif-meaning" => 16,
+        "conditionnel-attenuation" => 20,
+        "infinitive-clauses" => 18,
+        "literary-hypotheticals" => 14,
+        "quelque-quel-que" => 16,
+        "auquel-duquel" => 16,
+        "ellipsis-repetition" => 18,
+        "avoir-beau" => 12,
+        "formal-connectors" => 14,
+        "formal-inversion" => 14,
+        "expletive-ne" => 10,
+        "impersonal-formal" => 14,
+        "spoken-vs-written" => 18,
+        // C2
+        "passe-simple-all-persons" => 60,
+        "fine-participle-agreement" => 18,
+        "subjonctif-imparfait" => 14,
+        "conditionnel-passe-deuxieme" => 14,
+        "adjective-position-meaning" => 18,
+        "literary-negations" => 16,
+        "stylistic-word-order" => 14,
+        "archaic-phrases" => 16,
+        "register-shifts" => 14,
         _ => COVERAGE_FLOOR,
     }
 }

@@ -95,6 +95,27 @@ pub enum Family {
     B2Pronouns,
     /// B2 sentence patterns — au cas où, opposition, purpose & cause.
     B2Sentence,
+    /// C1 tense cluster — passé simple & passé antérieur recognition,
+    /// pronominal-verb agreement.
+    C1Tenses,
+    /// C1 mood cluster — subtle subjonctif, mood vs meaning,
+    /// attenuating conditionnel, infinitive clauses, literary
+    /// hypotheticals.
+    C1Moods,
+    /// C1 noun group — quelque/quel que, auquel/duquel, ellipsis.
+    C1Nouns,
+    /// C1 sentence patterns — avoir beau, formal connectors,
+    /// inversion, expletive ne, impersonals, register.
+    C1Sentence,
+    /// C2 tense cluster — passé simple all persons, fine participle
+    /// agreement.
+    C2Tenses,
+    /// C2 mood cluster — subjonctif imparfait, conditionnel passé 2e
+    /// forme.
+    C2Moods,
+    /// C2 style cluster — adjective position, literary negations,
+    /// word order, archaisms, register shifts.
+    C2Style,
     /// No family yet — curated corpus only.
     Curated,
 }
@@ -899,6 +920,222 @@ pub const TOPICS: &[Topic] = &[
         family: Family::B2Sentence,
         section: Section::Sentence,
     },
+    // ── C1 tense & verb forms ───────────────────────────────────
+    Topic {
+        slug: "passe-simple-recognize",
+        title: "Passé simple (recognize)",
+        blurb: "The tense of written narrative: il ouvrit la porte — spot the completed literary event, never confused with the imparfait again.",
+        levels: &["C1"],
+        family: Family::C1Tenses,
+        section: Section::Tense,
+    },
+    Topic {
+        slug: "passe-anterieur",
+        title: "Passé antérieur (recognize)",
+        blurb: "Literary anteriority: quand il eut fini, on partit — passé simple of the auxiliary + participle, mostly after quand and à peine.",
+        levels: &["C1"],
+        family: Family::C1Tenses,
+        section: Section::Tense,
+    },
+    Topic {
+        slug: "pronominal-agreement",
+        title: "Agreement of pronominal verbs",
+        blurb: "Elle s'est levée but elle s'est lavé les mains — whether se is direct or indirect decides the participle.",
+        levels: &["C1"],
+        family: Family::C1Tenses,
+        section: Section::Tense,
+    },
+    // ── C1 moods ────────────────────────────────────────────────
+    Topic {
+        slug: "subjonctif-subtle",
+        title: "Subtle subjonctif cases",
+        blurb: "avant que + subjonctif but après que + indicatif; de peur que, sans que, loin que, autant que je sache.",
+        levels: &["C1"],
+        family: Family::C1Moods,
+        section: Section::Mood,
+    },
+    Topic {
+        slug: "subjonctif-meaning",
+        title: "Subjonctif vs indicatif meaning",
+        blurb: "un assistant qui ait (any will do) vs l'assistant qui a (the one who does) — the mood itself carries the meaning.",
+        levels: &["C1"],
+        family: Family::C1Moods,
+        section: Section::Mood,
+    },
+    Topic {
+        slug: "conditionnel-attenuation",
+        title: "Attenuating conditionnel",
+        blurb: "The hedging tense of journalists and polite people: il semblerait que, la décision aurait des conséquences, vous devriez…",
+        levels: &["C1"],
+        family: Family::C1Moods,
+        section: Section::Mood,
+    },
+    Topic {
+        slug: "infinitive-clauses",
+        title: "Infinitive clauses",
+        blurb: "faire réparer sa voiture, écouter les enfants chanter — perception and causative verbs with a controlled infinitive.",
+        levels: &["C1"],
+        family: Family::C1Moods,
+        section: Section::Mood,
+    },
+    Topic {
+        slug: "literary-hypotheticals",
+        title: "Literary hypotheticals",
+        blurb: "Qui l'eût cru ? — the literary conditionnel passé (eût fait = aurait fait) behind Maupassant's conditional world.",
+        levels: &["C1"],
+        family: Family::C1Moods,
+        section: Section::Mood,
+    },
+    // ── C1 noun group ───────────────────────────────────────────
+    Topic {
+        slug: "quelque-quel-que",
+        title: "Quelque, quel que",
+        blurb: "One space or one letter decides: quelque paresseux qu'il soit, quel que soit le prix, quoi qu'il dise.",
+        levels: &["C1"],
+        family: Family::C1Nouns,
+        section: Section::Nouns,
+    },
+    Topic {
+        slug: "auquel-duquel",
+        title: "Auquel, duquel & co.",
+        blurb: "Compound relatives with à and de: le projet auquel je pense, le voisin duquel je connais la fille.",
+        levels: &["C1"],
+        family: Family::C1Nouns,
+        section: Section::Nouns,
+    },
+    Topic {
+        slug: "ellipsis-repetition",
+        title: "Ellipsis & avoiding repetition",
+        blurb: "celle de son frère, je les ai déjà pris — replacing nouns with celui/celle/le/la/les so prose stops repeating itself.",
+        levels: &["C1"],
+        family: Family::C1Nouns,
+        section: Section::Nouns,
+    },
+    // ── C1 sentence ─────────────────────────────────────────────
+    Topic {
+        slug: "avoir-beau",
+        title: "Avoir beau, quand bien même",
+        blurb: "In-vain concession: il a beau pleuvoir, le pique-nique est maintenu — and the extreme quand bien même il pleuvrait.",
+        levels: &["C1"],
+        family: Family::C1Sentence,
+        section: Section::Sentence,
+    },
+    Topic {
+        slug: "formal-connectors",
+        title: "Formal connectors",
+        blurb: "The written connective tissue: en effet, par conséquent, en outre, pourtant, quant à, or (not hors!).",
+        levels: &["C1"],
+        family: Family::C1Sentence,
+        section: Section::Sentence,
+    },
+    Topic {
+        slug: "formal-inversion",
+        title: "Formal inversion",
+        blurb: "Peut-être viendra-t-il, rare sont les occasions — the stylistic inversion after fronted words, hyphen and all.",
+        levels: &["C1"],
+        family: Family::C1Sentence,
+        section: Section::Sentence,
+    },
+    Topic {
+        slug: "expletive-ne",
+        title: "Expletive ne",
+        blurb: "The ne that negates nothing: je crains qu'il ne vienne, plus qu'on ne le croit — pure literary polish.",
+        levels: &["C1"],
+        family: Family::C1Sentence,
+        section: Section::Sentence,
+    },
+    Topic {
+        slug: "impersonal-formal",
+        title: "Impersonal formal style",
+        blurb: "il convient de, il s'agit de, il importe que, il ne tient qu'à vous de — the impersonal machinery of formal French.",
+        levels: &["C1"],
+        family: Family::C1Sentence,
+        section: Section::Sentence,
+    },
+    Topic {
+        slug: "spoken-vs-written",
+        title: "Spoken vs written French",
+        blurb: "ça vs cela, on vs nous, y a vs il existe — the same thought, dressed for the chat or for the essay.",
+        levels: &["C1"],
+        family: Family::C1Sentence,
+        section: Section::Sentence,
+    },
+    // ── C2 tense & verb forms ───────────────────────────────────
+    Topic {
+        slug: "passe-simple-all-persons",
+        title: "Passé simple, all persons",
+        blurb: "The full literary conjugation: je vins, tu fis, il courut, nous fûmes, vous vîtes, ils lurent.",
+        levels: &["C2"],
+        family: Family::C2Tenses,
+        section: Section::Tense,
+    },
+    Topic {
+        slug: "fine-participle-agreement",
+        title: "Fine participle agreement",
+        blurb: "les fleurs que je lui ai données but elle s'est rendu compte — the preceding-object rule with all its edge cases.",
+        levels: &["C2"],
+        family: Family::C2Tenses,
+        section: Section::Tense,
+    },
+    // ── C2 moods ────────────────────────────────────────────────
+    Topic {
+        slug: "subjonctif-imparfait",
+        title: "Subjonctif imparfait",
+        blurb: "The literary past subjonctif: la reine souhaitait qu'il vînt, qui qu'il fût — recognise it, decode it, admire it.",
+        levels: &["C2"],
+        family: Family::C2Moods,
+        section: Section::Mood,
+    },
+    Topic {
+        slug: "conditionnel-passe-deuxieme",
+        title: "Conditionnel passé 2e forme",
+        blurb: "S'il avait su, il eût refusé — the literary second form of the past conditional behind qui l'eût cru.",
+        levels: &["C2"],
+        family: Family::C2Moods,
+        section: Section::Mood,
+    },
+    // ── C2 noun group ───────────────────────────────────────────
+    Topic {
+        slug: "adjective-position-meaning",
+        title: "Adjective position & meaning",
+        blurb: "un grand homme vs un homme grand, mon ancien professeur vs des meubles anciens — position rewrites the meaning.",
+        levels: &["C2"],
+        family: Family::C2Style,
+        section: Section::Nouns,
+    },
+    // ── C2 sentence ─────────────────────────────────────────────
+    Topic {
+        slug: "literary-negations",
+        title: "Literary negations",
+        blurb: "nul ne sait, point n'est besoin, elle ne parlait guère — the written negation family beyond ne… pas.",
+        levels: &["C2"],
+        family: Family::C2Style,
+        section: Section::Sentence,
+    },
+    Topic {
+        slug: "stylistic-word-order",
+        title: "Stylistic word order",
+        blurb: "Grande fut sa surprise, franchi le seuil, et voici que la pluie cessa — fronted attributes and participles in prose.",
+        levels: &["C2"],
+        family: Family::C2Style,
+        section: Section::Sentence,
+    },
+    Topic {
+        slug: "archaic-phrases",
+        title: "Archaic fixed phrases",
+        blurb: "il y a belle lurette, de par la loi, chose promise chose due, le cas échéant — formulas that time forgot.",
+        levels: &["C2"],
+        family: Family::C2Style,
+        section: Section::Sentence,
+    },
+    Topic {
+        slug: "register-shifts",
+        title: "Register shifts",
+        blurb: "Rewrite on a eu des soucis into nous avons rencontré des difficultés — moving a sentence across registers.",
+        levels: &["C2"],
+        family: Family::C2Style,
+        section: Section::Sentence,
+    },
 ];
 
 pub fn by_slug(slug: &str) -> Option<&'static Topic> {
@@ -958,7 +1195,10 @@ mod tests {
         for t in TOPICS {
             assert!(!t.slug.is_empty(), "{}", t.slug);
             assert!(t.levels.len() >= 1);
-            assert!(t.levels.iter().all(|l| ["A1", "A2", "B1", "B2"].contains(l)));
+            assert!(t
+                .levels
+                .iter()
+                .all(|l| ["A1", "A2", "B1", "B2", "C1", "C2"].contains(l)));
         }
     }
 
