@@ -12,7 +12,7 @@
 import type { TopicStat } from "./feedApi";
 
 const KEY = "lacoquille.feed.v1";
-const LEVELS = ["A1", "A2", "B1", "B2"] as const;
+const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 export type Level = (typeof LEVELS)[number];
 
 const RECENT_ITEMS_CAP = 40;
@@ -105,7 +105,7 @@ export function recordFeed(topicSlug: string, itemId: string, correct: boolean):
     s.windowCorrect += correct ? 1 : 0;
     if (s.windowAttempts >= WINDOW_MIN) {
       const rate = s.windowCorrect / s.windowAttempts;
-      if (rate >= WINDOW_UP && s.level !== "B2") bumpLevel(s, 1);
+      if (rate >= WINDOW_UP && s.level !== "C2") bumpLevel(s, 1);
       else if (rate <= WINDOW_DOWN && s.level !== "A1") bumpLevel(s, -1);
       else {
         s.windowAttempts = 0;
