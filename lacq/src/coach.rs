@@ -201,6 +201,19 @@ struct DecisionRequest {
     questions: serde_json::Value,
 }
 
+/// The CEFR ladder the coach knows about, with a one-line description
+/// per level for the decision model. C1/C2 cover the literary and
+/// stylistic repertoire (passé simple, subjonctif imparfait, register
+/// control).
+const LEVEL_TAXONOMY: &[(&str, &str)] = &[
+    ("A1", "Beginner: single present-tense sentences, basic vocabulary"),
+    ("A2", "Elementary: passé composé, imparfait habits, simple pronouns"),
+    ("B1", "Intermediate: subjonctif, combined pronouns, tense contrasts"),
+    ("B2", "Upper intermediate: nuanced tense and register choices"),
+    ("C1", "Advanced: literary tenses, register control, mood and style nuance"),
+    ("C2", "Mastery: the full literary repertoire, stylistic manipulation, archaisms"),
+];
+
 fn build_request(ctx: &LearnerContext) -> DecisionRequest {
     // The learner's own history, verbatim.
     let learner = serde_json::json!({
@@ -263,12 +276,10 @@ level; introduce an untouched topic when recent ones are solid.",
             "instructions": "At which CEFR level should this drill be pitched? \
 Stay at the learner's estimate unless their recent accuracy on this topic clearly \
 says otherwise.",
-            "criteria": {
-                "A1": "Beginner: single present-tense sentences, basic vocabulary",
-                "A2": "Elementary: passé composé, imparfait habits, simple pronouns",
-                "B1": "Intermediate: subjonctif, combined pronouns, tense contrasts",
-                "B2": "Upper intermediate: nuanced tense and register choices"
-            },
+            "criteria": LEVEL_TAXONOMY
+                .iter()
+                .map(|(level, desc)| (level.to_string(), serde_json::json!(desc)))
+                .collect::<serde_json::Map<String, serde_json::Value>>(),
         },
     });
 
@@ -448,5 +459,21 @@ mod tests {
             .and_then(|c| c.as_object()).unwrap();
         // Every catalog topic is an option.
         assert_eq!(next.len(), topics::TOPICS.len());
+    }
+
+    #[test]
+    fn level_question_spans_the_full_ladder() {
+        let req = build_request(&Default::default());
+        let criteria = req
+            .questions
+            .as_object()
+            .unwrap()
+            .get("level")
+            .and_then(|q| q.get("criteria"))
+            .and_then(|c| c.as_object())
+            .unwrap();
+        for (level, _) in LEVEL_TAXONOMY {
+            assert!(criteria.contains_key(*level), "level criteria missing {level}");
+        }
     }
 }
