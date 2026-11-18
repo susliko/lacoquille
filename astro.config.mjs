@@ -30,12 +30,12 @@ for (const [sub] of [
 export default defineConfig({
   integrations: [solidJs()],
   redirects: { ...knowledgeRedirects, ...verbRedirects },
-  // Prefetch on tap (mousedown/touchstart) so the ~100ms before the
-  // click lands are spent fetching the next page — pairs with
-  // ClientRouter to make navigation feel instantaneous.
+  // Prefetch every link as it scrolls into view — paired with ClientRouter,
+  // tapping a lesson card swaps in an already-downloaded page. Cards are
+  // ~12KB; Astro throttles viewport prefetching.
   prefetch: {
-    prefetchAll: false,
-    defaultStrategy: "tap",
+    prefetchAll: true,
+    defaultStrategy: "viewport",
   },
   vite: {
     server: {

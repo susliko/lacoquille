@@ -1,6 +1,6 @@
 ---
 difficulty: advanced
-title: "Subj. plus-que-parfait"
+title: "Subjonctif plus-que-parfait"
 mood: subjonctif
 timePosition: far-past
 aspect: anterior

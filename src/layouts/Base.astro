@@ -1,5 +1,5 @@
 ---
-import { ClientRouter } from "astro:transitions";
+import { ClientRouter, slide } from "astro:transitions";
 import "../styles/global.css";
 
 interface Props {
@@ -37,7 +37,7 @@ const cleanTitle = title.replace(/ — La Coquille$/, "").replace(/ · La Coquil
   </head>
   <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
-    <main id="main-content">
+    <main id="main-content" transition:animate={slide({ duration: "0.22s" })}>
       <slot />
     </main>
   </body>

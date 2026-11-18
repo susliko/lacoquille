@@ -34,7 +34,7 @@ const LITERARY = ["C1", "C2"];
       <div class="km-backrow">
         <a class="km-back" href={`/knowledge/?l=${entry.lv}`}>← {entry.lv} · {label}</a>
       </div>
-      <h2>{entry.name}</h2>
+      <h2 transition:name={entry.id}>{entry.name}</h2>
       <div class="km-metachips">
         <span class={LITERARY.includes(entry.lv) ? "lit" : ""}>{entry.lv}</span>
         <span>{label}</span>

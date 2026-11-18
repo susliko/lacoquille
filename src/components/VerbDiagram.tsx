@@ -1,56 +1,149 @@
-import { createSignal, createMemo, For, Show, onMount, onCleanup } from "solid-js";
-import type { DiagramData, DiagramNode, DiagramEdge, MoodId } from "./GrammarMap/types";
+import { createSignal, createMemo, createEffect, For, Show, onMount, onCleanup } from "solid-js";
+import type {
+  DiagramData, DiagramNode, DiagramEdge, MoodId, EdgeType, TimePosition,
+} from "./GrammarMap/types";
 import {
   TIME_COLUMNS, MOOD_LABELS, MOOD_ORDER, MOOD_FILL,
-  EDGE_COLOR, EDGE_DASH,
+  EDGE_COLOR, EDGE_DASH, EDGE_LABEL,
 } from "./GrammarMap/types";
 import { VERBS, PERSONS, VERB_OPTIONS } from "../data/conjugations/index";
 import type { TenseId, Person } from "../data/conjugations/types";
 
-// ── Desktop layout (time=X, mood=Y) ──────────────────────────
+// ── Time axis ─────────────────────────────────────────────────
+const TIME_ORDER = Object.keys(TIME_COLUMNS) as TimePosition[];
+
+const TIME_DIVIDERS: Record<TimePosition, string> = {
+  "far-past":    "before the past",
+  "past":        "past",
+  "near-past":   "recent past",
+  "present":     "present",
+  "near-future": "near future",
+  "future":      "future",
+  "far-future":  "future anterior",
+};
+
+// Which card sits on top when two tenses share a (mood × time) cell:
+// the simple/base tense first, derived or periphrastic below it.
+const CELL_ORDER: Record<string, number> = {
+  "present-indicatif": 0, "present-progressif": 1,
+  "passe-compose": 0, "passe-recent": 1,
+  "imparfait": 0, "passe-simple": 1,
+  "subjonctif-passe": 0, "subjonctif-imparfait": 1,
+  "plus-que-parfait": 0, "passe-anterieur": 1,
+  "futur-simple": 0, "futur-proche": 1,
+  "futur-anterieur": 0, "conditionnel-present": 0,
+  "conditionnel-passe": 0, "subjonctif-present": 0,
+  "imperatif-present": 0, "imperatif-passe": 1,
+};
+
+// ── Line vocabulary (human wording) ───────────────────────────
+const EDGE_NAME: Record<EdgeType, string> = {
+  "auxiliary-compound": "compound tense",
+  "aspect-pair":        "aspect pair",
+  "stem-share":         "same stem",
+  "mood-swap":          "mood shift",
+  "anteriority":        "anteriority",
+};
+
+// ── Text fitting (SVG <text> does not wrap — we do it ourselves,
+//    measured with canvas, shrinking to a floor, then ellipsing) ─
+interface FittedText { size: number; lines: string[]; }
+
+let measureCtx: CanvasRenderingContext2D | null | undefined;
+function measure(text: string, size: number, weight: number): number {
+  if (typeof document !== "undefined") {
+    if (measureCtx === undefined) {
+      measureCtx = document.createElement("canvas").getContext("2d");
+    }
+    if (measureCtx) {
+      measureCtx.font = `${weight} ${size}px Manrope, ui-sans-serif, system-ui, sans-serif`;
+      return measureCtx.measureText(text).width;
+    }
+  }
+  return text.length * size * (weight >= 600 ? 0.62 : 0.56);
+}
+
+function wrapWords(text: string, maxW: number, size: number, weight: number): string[] {
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let cur = "";
+  for (let w of words) {
+    // A single word wider than the line: hard-break it by characters.
+    while (measure(w, size, weight) > maxW && w.length > 1) {
+      let k = w.length;
+      while (k > 1 && measure(w.slice(0, k) + "-", size, weight) > maxW) k--;
+      const head = w.slice(0, k) + "-";
+      const rest = w.slice(k);
+      if (cur) { lines.push(cur); cur = ""; }
+      lines.push(head);
+      w = rest;
+    }
+    if (!w) continue;
+    if (!cur) { cur = w; continue; }
+    if (measure(cur + " " + w, size, weight) <= maxW) cur = cur + " " + w;
+    else { lines.push(cur); cur = w; }
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+function fitText(
+  text: string, maxW: number, maxLines: number,
+  maxSize: number, minSize: number, weight: number,
+): FittedText {
+  const t = text ?? "";
+  for (let s = maxSize; s >= minSize - 0.01; s -= 0.5) {
+    const lines = wrapWords(t, maxW, s, weight);
+    if (lines.length <= maxLines) return { size: s, lines };
+  }
+  const full = wrapWords(t, maxW, minSize, weight);
+  const lines = full.slice(0, maxLines);
+  if (full.length > maxLines) {
+    let last = lines[lines.length - 1] ?? "";
+    while (last && measure(last + "…", minSize, weight) > maxW) last = last.slice(0, -1);
+    lines[lines.length - 1] = last + "…";
+  }
+  return { size: minSize, lines };
+}
+
+// ── Mobile layout (mood = column, time = row divider) ─────────
+const MB_CARD_W = 88;
+const MB_COL_GAP = 4;
+const MB_COL_W = MB_CARD_W + MB_COL_GAP;            // 92
+const MB_MOOD_HEADER_H = 26;
+const MB_DIVIDER_H = 20;
+const MB_ROW_GAP = 10;
+const MB_CELL_GAP = 6;
+const MB_SVG_W = MOOD_ORDER.length * MB_COL_W;      // 368
+
+const MB_CFG = {
+  titleW: MB_CARD_W - 20, titleMax: 8.5, titleMin: 7,
+  formW: MB_CARD_W - 12, formMax: 11, formMin: 9.5, formMaxLines: 3,
+  padT: 7, padB: 8, gap: 3, minH: 46,
+};
+
+// ── Desktop layout (time = column, mood = lane row) ───────────
 const DK_CARD_W = 140;
-const DK_CARD_H = 62;
 const DK_COL_GAP = 16;
-const DK_LANE_GAP = 14;
+const DK_COL_W = DK_CARD_W + DK_COL_GAP;            // 156
 const DK_LANE_HEADER_W = 96;
 const DK_COL_HEADER_H = 28;
 const DK_PAD = 12;
+const DK_LANE_GAP = 16;
+const DK_CELL_GAP = 6;
+const DK_SVG_W = DK_LANE_HEADER_W + DK_PAD * 2 + 7 * DK_COL_W;
 
-const DK_NUM_COLS = 7;
-const DK_COL_W = DK_CARD_W + DK_COL_GAP;
-const DK_LANE_H = DK_CARD_H + DK_LANE_GAP;
-
-const DK_SVG_W = DK_LANE_HEADER_W + DK_PAD * 2 + DK_NUM_COLS * DK_COL_W;
-const DK_SVG_H = DK_COL_HEADER_H + DK_PAD * 2 + MOOD_ORDER.length * DK_LANE_H;
-
-function dkColX(col: number) { return DK_LANE_HEADER_W + DK_PAD + col * DK_COL_W; }
-function dkLaneY(row: number) { return DK_COL_HEADER_H + DK_PAD + row * DK_LANE_H; }
-
-// ── Mobile layout (mood=X, time=Y) — transposed ──────────────
-// 4 mood columns × ~78px ≈ 362px total → fits 375px phones
-const MB_CARD_W = 74;
-const MB_CARD_H = 58;
-const MB_COL_GAP = 4;
-const MB_ROW_GAP = 5;
-const MB_TIME_LABEL_W = 46;
-const MB_MOOD_HEADER_H = 26;
-
-const MB_COL_W = MB_CARD_W + MB_COL_GAP;
-const MB_ROW_H = MB_CARD_H + MB_ROW_GAP;
-
-const MB_SVG_W = MB_TIME_LABEL_W + MOOD_ORDER.length * MB_COL_W;
-const MB_SVG_H = MB_MOOD_HEADER_H + Object.keys(TIME_COLUMNS).length * MB_ROW_H;
-
-const MB_TIME_LABELS: Record<string, string> = {
-  "far-past": "ant.", "past": "past", "near-past": "rec.",
-  "present": "now", "near-future": "near", "future": "fut.", "far-future": "f.ant.",
+const DK_CFG = {
+  titleW: DK_CARD_W - 24, titleMax: 10.5, titleMin: 8.5,
+  formW: DK_CARD_W - 14, formMax: 14, formMin: 11, formMaxLines: 2,
+  padT: 9, padB: 10, gap: 4, minH: 50,
 };
 
-function mbColX(moodIdx: number) { return MB_TIME_LABEL_W + moodIdx * MB_COL_W; }
-function mbRowY(timeIdx: number) { return MB_MOOD_HEADER_H + timeIdx * MB_ROW_H; }
-
 // ── Types ─────────────────────────────────────────────────────
-interface NodePos { node: DiagramNode; x: number; y: number; cx: number; cy: number; }
+interface CardMetrics { node: DiagramNode; title: FittedText; h: number; }
+interface Box { node: DiagramNode; x: number; y: number; w: number; h: number; cx: number; cy: number; m: CardMetrics; }
+interface LaneRect { mood: MoodId; y: number; h: number; }
+interface Divider { time: TimePosition; lineY: number; textY: number; }
 
 interface Props {
   data: DiagramData;
@@ -80,84 +173,86 @@ const PERIPHRASES: Record<string, (inf: string, person: string) => string> = {
   },
 };
 
-// ── Edge path — desktop ───────────────────────────────────────
-function edgePath(from: NodePos, to: NodePos, edge: DiagramEdge): string {
-  const dx = to.cx - from.cx;
-  const dy = to.cy - from.cy;
+// ── Edge paths ────────────────────────────────────────────────
+function edgePathMb(f: Box, t: Box, edge: DiagramEdge): string {
+  const dx = t.cx - f.cx;
+  const dy = t.cy - f.cy;
+  const off = edge.type === "auxiliary-compound" ? -5
+            : edge.type === "aspect-pair"         ?  5 : 0;
+
+  if (Math.abs(dx) < 4) { // same mood column — vertical
+    const down = dy > 0;
+    const sy = down ? f.y + f.h : f.y;
+    const ey = down ? t.y : t.y + t.h;
+    return `M ${f.cx + off} ${sy} L ${f.cx + off} ${ey}`;
+  }
+  if (Math.abs(dy) < 4) { // same time row — horizontal
+    const right = dx > 0;
+    const sx = right ? f.x + f.w : f.x;
+    const ex = right ? t.x : t.x + t.w;
+    return `M ${sx} ${f.cy + off} L ${ex} ${f.cy + off}`;
+  }
+  return `M ${f.cx} ${f.cy} L ${t.cx} ${t.cy}`;
+}
+
+function edgePathDk(f: Box, t: Box, edge: DiagramEdge): string {
+  const dx = t.cx - f.cx;
+  const dy = t.cy - f.cy;
 
   // Cross-lane edges: bezier from card top/bottom
-  if (edge.type === "mood-swap" || edge.type === "stem-share") {
-    const fromY = dy > 0 ? from.y + DK_CARD_H : from.y;
-    const toY   = dy > 0 ? to.y               : to.y + DK_CARD_H;
-    return `M ${from.cx} ${fromY} C ${from.cx} ${from.cy + dy * 0.5}, ${from.cx} ${from.cy + dy * 0.5}, ${to.cx} ${toY}`;
+  if (f.node.lane !== t.node.lane) {
+    const fromY = dy > 0 ? f.y + f.h : f.y;
+    const toY   = dy > 0 ? t.y : t.y + t.h;
+    const midY = (f.cy + t.cy) / 2;
+    return `M ${f.cx} ${fromY} C ${f.cx} ${midY}, ${t.cx} ${midY}, ${t.cx} ${toY}`;
   }
 
-  // Same-lane (horizontal) edges
+  // Stacked within the same cell — short vertical connector
+  if (Math.abs(dx) < 4) {
+    const down = dy > 0;
+    const sy = down ? f.y + f.h : f.y;
+    const ey = down ? t.y : t.y + t.h;
+    return `M ${f.cx} ${sy} L ${f.cx} ${ey}`;
+  }
+
+  // Same lane, same row — horizontal, offset per type
   if (Math.abs(dy) < 4) {
     const goingRight = dx > 0;
-    // Connect card edges, not centers, so the line stays between the cards
-    const startX = goingRight ? from.x + DK_CARD_W : from.x;
-    const endX   = goingRight ? to.x               : to.x + DK_CARD_W;
-
-    // Y offset per type so overlapping same-lane lines stay visually separate
+    const startX = goingRight ? f.x + f.w : f.x;
+    const endX   = goingRight ? t.x : t.x + t.w;
     const yOff = edge.type === "auxiliary-compound" ? -8
-               : edge.type === "aspect-pair"         ?  8
-               : 0;
-    const y = from.cy + yOff;
-
-    // Count skipped columns — if > 1, arc above the row to avoid intermediate cards
-    const fromCol = TIME_COLUMNS[from.node.timePosition];
-    const toCol   = TIME_COLUMNS[to.node.timePosition];
+               : edge.type === "aspect-pair"         ?  8 : 0;
+    const y = f.cy + yOff;
+    const fromCol = TIME_COLUMNS[f.node.timePosition];
+    const toCol   = TIME_COLUMNS[t.node.timePosition];
     if (Math.abs(toCol - fromCol) > 1) {
-      const arcTop = from.y - 18;
+      const arcTop = Math.min(f.y, t.y) - 16;
       return `M ${startX} ${y} C ${startX} ${arcTop}, ${endX} ${arcTop}, ${endX} ${y}`;
     }
-
     return `M ${startX} ${y} L ${endX} ${y}`;
   }
 
   // Generic diagonal
-  const cp1y = from.cy + dy * 0.4;
-  const cp2y = to.cy - dy * 0.4;
-  return `M ${from.cx} ${from.cy} C ${from.cx} ${cp1y}, ${to.cx} ${cp2y}, ${to.cx} ${to.cy}`;
-}
-
-// ── Edge path — mobile (transposed: mood=col, time=row) ──────
-function edgePathMobile(from: NodePos, to: NodePos, edge: DiagramEdge): string {
-  const dx = to.cx - from.cx;
-  const dy = to.cy - from.cy;
-
-  if (Math.abs(dx) < 4) {
-    const goingDown = dy > 0;
-    const startY = goingDown ? from.y + MB_CARD_H : from.y;
-    const endY   = goingDown ? to.y               : to.y + MB_CARD_H;
-    const xOff = edge.type === "auxiliary-compound" ? -6
-               : edge.type === "aspect-pair"         ?  6
-               : 0;
-    const x = from.cx + xOff;
-    return `M ${x} ${startY} L ${x} ${endY}`;
-  }
-
-  if (Math.abs(dy) < 4) {
-    const fx = dx > 0 ? from.x + MB_CARD_W : from.x;
-    const tx = dx > 0 ? to.x               : to.x + MB_CARD_W;
-    return `M ${fx} ${from.cy} L ${tx} ${to.cy}`;
-  }
-
-  return `M ${from.cx} ${from.cy} L ${to.cx} ${to.cy}`;
+  const cp1y = f.cy + dy * 0.4;
+  const cp2y = t.cy - dy * 0.4;
+  return `M ${f.cx} ${f.cy} C ${f.cx} ${cp1y}, ${t.cx} ${cp2y}, ${t.cx} ${t.cy}`;
 }
 
 // ── Component ─────────────────────────────────────────────────
-export default function VerbDiagram({ data, tenseTitles }: Props) {
+export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
   const [selectedPerson, setSelectedPerson] = createSignal<string>("je");
   const [selectedVerb,   setSelectedVerb]   = createSignal<string>("parler");
   const [showLiterary,   setShowLiterary]   = createSignal(false);
   const [activeEdge,     setActiveEdge]     = createSignal<DiagramEdge | null>(null);
+  const [selectedTense,  setSelectedTense]  = createSignal<string | null>(null);
   const [isMobile,       setIsMobile]       = createSignal(
     typeof window !== "undefined" ? window.innerWidth < 768 : false
   );
-  const [highlightedTense, _setHighlightedTense] = createSignal<string | null>(null);
   const [verbDropdownOpen, setVerbDropdownOpen] = createSignal(false);
+  // bumped when webfonts finish loading — text metrics change
+  const [fontTick, setFontTick] = createSignal(0);
+
+  let captionRef: HTMLDivElement | undefined;
 
   onMount(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -167,6 +262,7 @@ export default function VerbDiagram({ data, tenseTitles }: Props) {
       if (!target.closest(".verb-dropdown")) setVerbDropdownOpen(false);
     };
     document.addEventListener("click", handleClickOutside);
+    document.fonts?.ready.then(() => setFontTick(t => t + 1));
     onCleanup(() => {
       window.removeEventListener("resize", check);
       document.removeEventListener("click", handleClickOutside);
@@ -185,193 +281,363 @@ export default function VerbDiagram({ data, tenseTitles }: Props) {
     })
   );
 
-  // Desktop: time=col, mood=row
-  const dkNodePositions = createMemo<NodePos[]>(() =>
-    visibleNodes().map(node => {
-      const col = TIME_COLUMNS[node.timePosition];
-      const row = MOOD_ORDER.indexOf(node.lane as MoodId);
-      const x = dkColX(col), y = dkLaneY(row);
-      return { node, x, y, cx: x + DK_CARD_W / 2, cy: y + DK_CARD_H / 2 };
-    })
-  );
-  const dkPosMap = createMemo(() => {
-    const m = new Map<string, NodePos>();
-    for (const p of dkNodePositions()) m.set(p.node.id, p);
-    return m;
-  });
-
-  // Mobile: mood=col, time=row
-  const mbNodePositions = createMemo<NodePos[]>(() =>
-    visibleNodes().map(node => {
-      const col = MOOD_ORDER.indexOf(node.lane as MoodId);
-      const row = TIME_COLUMNS[node.timePosition];
-      const x = mbColX(col), y = mbRowY(row);
-      return { node, x, y, cx: x + MB_CARD_W / 2, cy: y + MB_CARD_H / 2 };
-    })
-  );
-  const mbPosMap = createMemo(() => {
-    const m = new Map<string, NodePos>();
-    for (const p of mbNodePositions()) m.set(p.node.id, p);
-    return m;
-  });
-
-  function getConjugation(tenseId: string): string {
-    const verb   = VERBS[selectedVerb()];
-    let person = selectedPerson();
+  function conjugationText(tenseId: string, person: string): string {
+    const verb = VERBS[selectedVerb()];
+    let p = person;
     if (!verb) return "—";
-    if (tenseId in PERIPHRASES) return PERIPHRASES[tenseId]!(verb.infinitive, person);
+    if (tenseId in PERIPHRASES) return PERIPHRASES[tenseId]!(verb.infinitive, p);
     const forms = verb.forms[tenseId as TenseId];
     if (!forms) return "—";
-    if ((person === "elle" || person === "on") && !forms[person as Person]) {
-      person = "il";
+    if ((p === "elle" || p === "on") && !forms[p as Person]) p = "il";
+    return forms[p as keyof typeof forms] ?? "—";
+  }
+
+  // Full, human title — the page's tense names, not cramped abbreviations.
+  function titleOf(id: string): string {
+    return tenseTitles[id] ?? (data.nodes.find(n => n.id === id) as any)?.title ?? id;
+  }
+
+  // ── Layout: cards measured & fitted, cells stack (no overlap) ─
+  const layout = createMemo(() => {
+    fontTick();
+    const mb = isMobile();
+    const cfg = mb ? MB_CFG : DK_CFG;
+
+    const nodes = visibleNodes().slice().sort((a, b) => {
+      const ca = CELL_ORDER[a.id] ?? 5;
+      const cb = CELL_ORDER[b.id] ?? 5;
+      if (ca !== cb) return ca - cb;
+      return a.id < b.id ? -1 : 1;
+    });
+
+    // Measure every card. Form height uses the WORST person so rows
+    // don't reflow when the learner toggles je → nous → ils.
+    const metrics = new Map<string, CardMetrics>();
+    for (const n of nodes) {
+      const title = fitText(titleOf(n.id), cfg.titleW, 2, cfg.titleMax, cfg.titleMin, 600);
+      let formLines = 1;
+      for (const p of PERSONS) {
+        const t = conjugationText(n.id, p);
+        if (t === "—") continue;
+        formLines = Math.max(formLines,
+          fitText(t, cfg.formW, cfg.formMaxLines, cfg.formMax, cfg.formMin, 700).lines.length);
+      }
+      const h = Math.max(cfg.minH,
+        cfg.padT
+        + title.lines.length * title.size * 1.16
+        + cfg.gap
+        + formLines * cfg.formMax * 1.22
+        + cfg.padB);
+      metrics.set(n.id, { node: n, title, h });
     }
-    return forms[person as keyof typeof forms] ?? "—";
+
+    // Group by cell (mood × time)
+    const cells = new Map<string, DiagramNode[]>();
+    for (const n of nodes) {
+      const k = `${n.lane}|${n.timePosition}`;
+      const arr = cells.get(k);
+      if (arr) arr.push(n); else cells.set(k, [n]);
+    }
+    const cellH = (cell: DiagramNode[]) =>
+      cell.reduce((s, n) => s + metrics.get(n.id)!.h, 0) + (cell.length - 1) * (mb ? MB_CELL_GAP : DK_CELL_GAP);
+
+    const boxes = new Map<string, Box>();
+
+    if (mb) {
+      const dividers: Divider[] = [];
+      let y = MB_MOOD_HEADER_H;
+      for (const time of TIME_ORDER) {
+        const laneCells = MOOD_ORDER.map(mood => cells.get(`${mood}|${time}`) ?? []);
+        const rowH = Math.max(0, ...laneCells.map(cellH));
+        if (rowH === 0) continue;
+        dividers.push({ time, lineY: y + 1.5, textY: y + 12 });
+        const top = y + MB_DIVIDER_H;
+        laneCells.forEach((cell, mi) => {
+          let cy = top;
+          for (const n of cell) {
+            const m = metrics.get(n.id)!;
+            const x = mi * MB_COL_W;
+            boxes.set(n.id, { node: n, x, y: cy, w: MB_CARD_W, h: m.h, cx: x + MB_CARD_W / 2, cy: cy + m.h / 2, m });
+            cy += m.h + MB_CELL_GAP;
+          }
+        });
+        y = top + rowH + MB_ROW_GAP;
+      }
+      return { mb: true as const, boxes, svgW: MB_SVG_W, svgH: y - MB_ROW_GAP + 6, dividers, lanes: [] as LaneRect[] };
+    }
+
+    const lanes: LaneRect[] = [];
+    let y = DK_COL_HEADER_H + DK_PAD;
+    for (const mood of MOOD_ORDER) {
+      let laneH = 0;
+      for (const time of TIME_ORDER) {
+        const cell = cells.get(`${mood}|${time}`) ?? [];
+        if (!cell.length) continue;
+        laneH = Math.max(laneH, cellH(cell));
+      }
+      laneH = Math.max(laneH, 46);
+      lanes.push({ mood, y, h: laneH });
+      for (const time of TIME_ORDER) {
+        const cell = cells.get(`${mood}|${time}`) ?? [];
+        let cy = y;
+        const x = DK_LANE_HEADER_W + DK_PAD + TIME_COLUMNS[time] * DK_COL_W;
+        for (const n of cell) {
+          const m = metrics.get(n.id)!;
+          boxes.set(n.id, { node: n, x, y: cy, w: DK_CARD_W, h: m.h, cx: x + DK_CARD_W / 2, cy: cy + m.h / 2, m });
+          cy += m.h + DK_CELL_GAP;
+        }
+      }
+      y += laneH + DK_LANE_GAP;
+    }
+    return { mb: false as const, boxes, svgW: DK_SVG_W, svgH: y - DK_LANE_GAP + DK_PAD, dividers: [] as Divider[], lanes };
+  });
+
+  // ── Interactions ─────────────────────────────────────────────
+  function toggleSelect(id: string) {
+    setActiveEdge(null);
+    setSelectedTense(t => (t === id ? null : id));
+  }
+  function toggleEdge(e: DiagramEdge) {
+    setSelectedTense(null);
+    setActiveEdge(cur => (cur === e ? null : e));
   }
 
-  // Short title for diagram cards (diagram.json title wins)
-  function nodeTitle(node: DiagramNode): string {
-    return (node as any).title ?? tenseTitles[node.id] ?? node.id;
+  // Bring the explanation strip into view when it appears
+  createEffect(() => {
+    const c = caption();
+    if (c && captionRef) captionRef.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  });
+
+  type Caption =
+    | { kind: "node"; node: DiagramNode; rel: DiagramEdge[] }
+    | { kind: "edge"; edge: DiagramEdge }
+    | null;
+
+  const caption = createMemo<Caption>(() => {
+    const selId = selectedTense();
+    if (selId) {
+      const node = data.nodes.find(n => n.id === selId);
+      if (node) return { kind: "node", node, rel: visibleEdges().filter(e => e.from === selId || e.to === selId) };
+    }
+    const e = activeEdge();
+    if (e) return { kind: "edge", edge: e };
+    return null;
+  });
+
+  const nodeCaption = () => {
+    const c = caption();
+    return c && c.kind === "node" ? c : null;
+  };
+  const edgeCaption = () => {
+    const c = caption();
+    return c && c.kind === "edge" ? c : null;
+  };
+
+  function edgePhrase(e: DiagramEdge, thisId: string): string {
+    const otherId = e.from === thisId ? e.to : e.from;
+    const other = titleOf(otherId);
+    const isFrom = e.from === thisId;
+    switch (e.type) {
+      case "auxiliary-compound": return isFrom ? `Builds ${other} — ${e.label}` : `Built from ${other} — ${e.label}`;
+      case "aspect-pair":        return `Same moment as ${other} — ongoing vs completed`;
+      case "stem-share":         return `Shares its stem with ${other} — different endings`;
+      case "mood-swap":          return `Same idea in another mood: ${other} (${e.label})`;
+      case "anteriority":        return isFrom ? `Happens before ${other} (${e.label})` : `${other} happens before this (${e.label})`;
+    }
   }
 
-  function openNode(id: string) {
-    window.location.href = `/knowledge/verbs/tenses/${id}`;
-  }
+  // ── Node card ────────────────────────────────────────────────
+  const NodeCard = (p: { b: Box }) => {
+    const b = () => p.b;
+    const node = () => b().node;
+    const cfg = () => (layout().mb ? MB_CFG : DK_CFG);
+    const laneFill = () => MOOD_FILL[node().lane as MoodId];
+    const selected = () => selectedTense() === node().id;
+    const isPresent = () => node().id === "present-indicatif";
+    const lit = () => !!node().literary;
+    const form = () => fitText(
+      conjugationText(node().id, selectedPerson()),
+      cfg().formW, cfg().formMaxLines, cfg().formMax, cfg().formMin, 700,
+    );
 
-  // ── Node card (SVG) — shared renderer with size params ───────
-  const NodeCard = (props: {
-    node: DiagramNode;
-    x: number; y: number;
-    cardW: number; cardH: number;
-    fontSize: { title: number; form: number };
-  }) => {
-    const { node, x, y, cardW, cardH, fontSize } = props;
-    const isHighlighted = () => highlightedTense() === node.id;
-    const laneFill = MOOD_FILL[node.lane as MoodId];
-    const isPresent = () => node.id === "present-indicatif";
-    const isLiterary = () => node.literary;
+    const titleX = () => b().x + 12;
+    const titleY0 = () => b().y + cfg().padT + b().m.title.size * 0.85;
+    const formFit = () => form();
+    const formBaselineLast = () => b().y + b().h - cfg().padB - formFit().size * 0.3;
 
     return (
       <g
         class="diagram-node"
-        onClick={() => openNode(node.id)}
+        onClick={() => toggleSelect(node().id)}
+        onKeyDown={e => e.key === "Enter" && toggleSelect(node().id)}
         style={{ cursor: "pointer" }}
         role="button" tabIndex={0}
-        aria-label={`${nodeTitle(node)}: ${getConjugation(node.id)}`}
-        aria-pressed={isHighlighted()}
-        onKeyDown={e => e.key === "Enter" && openNode(node.id)}
+        aria-label={`${titleOf(node().id)} — ${selectedPerson()}: ${conjugationText(node().id, selectedPerson())}. Activates details below.`}
+        aria-pressed={selected()}
       >
-        {/* Opaque base — blocks edge lines from showing through */}
-        <rect x={x} y={y} width={cardW} height={cardH} rx="6" fill="var(--surface-2)" />
-        {/* Beginner's start indicator: accent ring on présent */}
+        {/* Opaque base — hides lines passing underneath */}
+        <rect x={b().x} y={b().y} width={b().w} height={b().h} rx="6" fill="var(--surface-2)" />
+        {/* Présent — beginner's start ring */}
         {isPresent() && (
-          <rect x={x - 2} y={y - 2} width={cardW + 4} height={cardH + 4} rx="8"
-            fill="none"
-            stroke="var(--accent)"
-            stroke-width="1.5"
-            opacity="0.8"
-          />
+          <rect x={b().x - 2.5} y={b().y - 2.5} width={b().w + 5} height={b().h + 5} rx="8"
+            fill="none" stroke="var(--accent)" stroke-width="1.5" opacity="0.85" />
         )}
-        {/* Color overlay */}
-        <rect x={x} y={y} width={cardW} height={cardH} rx="6"
-          fill={isHighlighted() ? laneFill : "none"}
-          fill-opacity={isHighlighted() ? 0.16 : undefined}
-          stroke={laneFill}
-          stroke-opacity={isHighlighted() ? 1 : isLiterary() ? 0.25 : 0.45}
-          stroke-width={isHighlighted() ? 1.5 : 1}
-          opacity={isLiterary() ? 0.65 : 1}
+        {/* Mood-tinted frame */}
+        <rect x={b().x} y={b().y} width={b().w} height={b().h} rx="6"
+          fill={laneFill()}
+          fill-opacity={selected() ? 0.16 : 0}
+          stroke={laneFill()}
+          stroke-opacity={selected() ? 1 : lit() ? 0.3 : 0.45}
+          stroke-width={selected() ? 1.8 : 1}
+          stroke-dasharray={lit() && !selected() ? "4 3" : undefined}
+          opacity={lit() ? 0.72 : 1}
         />
         {/* Left accent stripe */}
         <line
-          x1={x + 4} y1={y + 9} x2={x + 4} y2={y + cardH - 9}
-          stroke={laneFill}
-          stroke-width="3" stroke-linecap="round"
-          opacity={isHighlighted() ? 1 : isLiterary() ? 0.35 : 0.55}
+          x1={b().x + 4.5} y1={b().y + 9} x2={b().x + 4.5} y2={b().y + b().h - 9}
+          stroke={laneFill()} stroke-width="3" stroke-linecap="round"
+          opacity={selected() ? 1 : lit() ? 0.35 : 0.55}
         />
-        {/* Tense name */}
-        <text x={x + 11} y={y + 14 + fontSize.title * 0.35}
-          font-size={String(fontSize.title)} font-weight="600"
-          fill="var(--accent-ink)"
-          opacity={isLiterary() ? 0.7 : 1}
-          style={{ "word-break": "break-word", "max-width": `${cardW - 20}px` }}
+        {/* Tense name — measured, wrapped, ellipsised */}
+        <text
+          font-size={String(b().m.title.size)} font-weight="600"
+          fill="var(--accent-ink)" opacity={lit() ? 0.75 : 1}
         >
-          {nodeTitle(node)}
+          <For each={b().m.title.lines}>
+            {(line, i) => (
+              <tspan x={titleX()} y={titleY0() + i() * b().m.title.size * 1.16}>{line}</tspan>
+            )}
+          </For>
         </text>
-        {/* Conjugated form */}
-        <text x={x + cardW / 2 + 3} y={y + cardH * 0.68}
-          text-anchor="middle" font-size={String(fontSize.form)} font-weight="700"
-          fill="var(--text)"
-          opacity={isLiterary() ? 0.7 : 1}
+        {/* Conjugated form — bottom-anchored, centred */}
+        <text
+          x={b().cx} text-anchor="middle"
+          font-size={String(formFit().size)} font-weight="700"
+          fill="var(--text)" opacity={lit() ? 0.75 : 1}
         >
-          {getConjugation(node.id)}
+          <For each={formFit().lines}>
+            {(line, i) => (
+              <tspan
+                x={b().cx}
+                y={formBaselineLast() - (formFit().lines.length - 1 - i()) * formFit().size * 1.22}
+              >{line}</tspan>
+            )}
+          </For>
         </text>
-        {/* Literary lock icon */}
-        {isLiterary() && (
-          <g opacity={0.55} transform={`translate(${x + cardW - 16}, ${y + 6})`}>
-            <rect x="0" y="4" width="10" height="7" rx="1.5" fill="var(--text-2)" />
-            <path d="M2.5 4V2.5a2.5 2.5 0 0 1 5 0V4" stroke="var(--text-2)" stroke-width="1.5" fill="none" stroke-linecap="round" />
-          </g>
-        )}
-        {/* Beginner's start label */}
-        {isPresent() && (
-          <text x={x + cardW / 2} y={y + cardH + 10}
-            text-anchor="middle" font-size="7"
-            fill="var(--accent-ink)"
-            opacity={0.9}
-          >
-            start here
-          </text>
-        )}
       </g>
+    );
+  };
+
+  // ── Edge (line between cards) ────────────────────────────────
+  const EdgeEl = (p: { edge: DiagramEdge; marker?: string; labelMaxW: number; labelMax: number; labelMin: number }) => {
+    const layout_ = layout();
+    const f = () => layout_.boxes.get(p.edge.from);
+    const t = () => layout_.boxes.get(p.edge.to);
+    const active = () => activeEdge() === p.edge;
+    const related = () => {
+      const s = selectedTense();
+      return !!s && (p.edge.from === s || p.edge.to === s);
+    };
+    const color = () => EDGE_COLOR[p.edge.type];
+    const d = () => {
+      const a = f(), b = t();
+      if (!a || !b) return "";
+      return layout_.mb ? edgePathMb(a, b, p.edge) : edgePathDk(a, b, p.edge);
+    };
+    const label = () => fitText(p.edge.label, p.labelMaxW, 2, p.labelMax, p.labelMin, 500);
+    // Label placement: beside vertical lines, above everything else
+    const labelPos = () => {
+      const a = f(), b = t();
+      if (!a || !b) return null;
+      const vertical = Math.abs(a.cx - b.cx) < 4;
+      if (vertical) {
+        return { x: Math.max(a.cx, b.cx) + 7, y: (a.cy + b.cy) / 2 + 3, anchor: "start" as const };
+      }
+      return { x: (a.cx + b.cx) / 2, y: (a.cy + b.cy) / 2 - 6, anchor: "middle" as const };
+    };
+
+    return (
+      <Show when={f() && t()}>
+        <g
+          class="diagram-edge"
+          onClick={ev => { ev.stopPropagation(); toggleEdge(p.edge); }}
+          onKeyDown={e => e.key === "Enter" && toggleEdge(p.edge)}
+          style={{ cursor: "pointer" }}
+          role="button" tabIndex={0}
+          aria-label={`${EDGE_NAME[p.edge.type]}: ${p.edge.label}`}
+        >
+          <path d={d()} fill="none" stroke={color()}
+            stroke-width={active() ? 2.5 : 1.5}
+            stroke-dasharray={EDGE_DASH[p.edge.type]}
+            stroke-linecap="round"
+            opacity={active() ? 1 : selectedTense() ? (related() ? 0.9 : 0.08) : 0.4}
+            marker-end={p.marker && (active() || related()) ? p.marker : undefined}
+          />
+          {/* generous invisible hit area */}
+          <path d={d()} fill="none" stroke="transparent" stroke-width="16" />
+          {/* label only on the active line — noise by default */}
+          <Show when={active()}>
+            {(() => {
+              const pos = labelPos();
+              const fit = label();
+              if (!pos) return null;
+              return (
+                <text
+                  x={pos.x} y={pos.y} text-anchor={pos.anchor}
+                  font-size={String(fit.size)} font-style="italic" font-weight="500"
+                  fill={color()}
+                  paint-order="stroke" stroke="var(--card)" stroke-width="3.5"
+                  stroke-linejoin="round"
+                  style={{ "pointer-events": "none" }}
+                >
+                  <For each={fit.lines}>
+                    {(line, i) => (
+                      <tspan x={pos.x} y={pos.y + i() * fit.size * 1.2}
+                        dy={i() === 0 ? -((fit.lines.length - 1) * fit.size * 1.2) / 2 : undefined}
+                      >{line}</tspan>
+                    )}
+                  </For>
+                </text>
+              );
+            })()}
+          </Show>
+        </g>
+      </Show>
     );
   };
 
   // ── Legend ────────────────────────────────────────────────────
   const Legend = () => (
-    <details class="diagram-legend">
-      <summary>Key</summary>
+    <details class="diagram-legend" open={!isMobile()}>
+      <summary>What the lines &amp; marks mean</summary>
       <div class="legend-section">
-        <p class="legend-section-title">Difficulty</p>
+        <p class="legend-section-title">Lines</p>
         <div class="legend-grid">
-          <div class="legend-item">
-            <span class="legend-dot" style={{ background: "var(--accent)", opacity: "0.8" }} />
-            <span>Présent — start here</span>
-          </div>
-          <div class="legend-item">
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true" style={{ opacity: "0.65", display: "inline-block", "vertical-align": "middle" }}>
-              <rect x="3" y="7" width="10" height="8" rx="2" fill="var(--text-2)" />
-              <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="var(--text-2)" stroke-width="1.5" fill="none" stroke-linecap="round" />
-            </svg>
-            <span>Literary tense — rare in speech</span>
-          </div>
-        </div>
-      </div>
-      <div class="legend-section">
-        <p class="legend-section-title">Connections</p>
-        <div class="legend-grid">
-          {(Object.entries(EDGE_COLOR) as [keyof typeof EDGE_COLOR, string][]).map(([type, color]) => (
-            <div class="legend-item">
-              <svg width="32" height="10" aria-hidden="true">
-                <line x1="0" y1="5" x2="32" y2="5"
-                  stroke={color} stroke-width="2.5"
-                  stroke-dasharray={EDGE_DASH[type]}
-                  stroke-linecap="round"
-                />
+          {(Object.keys(EDGE_COLOR) as EdgeType[]).map(t => (
+            <div class="legend-item legend-item-wide">
+              <svg width="30" height="8" aria-hidden="true" style={{ "flex-shrink": "0" }}>
+                <line x1="0" y1="4" x2="30" y2="4"
+                  stroke={EDGE_COLOR[t]} stroke-width="2.5"
+                  stroke-dasharray={EDGE_DASH[t]} stroke-linecap="round" />
               </svg>
-              <span>{type.replace(/-/g, " ")}</span>
+              <span><strong>{EDGE_NAME[t]}</strong> — {EDGE_LABEL[t]}</span>
             </div>
           ))}
         </div>
       </div>
       <div class="legend-section">
-        <p class="legend-section-title">Labels</p>
+        <p class="legend-section-title">Marks</p>
         <div class="legend-grid">
           <div class="legend-item">
-            <svg width="32" height="10" aria-hidden="true">
-              <line x1="0" y1="5" x2="32" y2="5"
-                stroke={EDGE_COLOR["mood-swap"]} stroke-width="2.5"
-                stroke-dasharray={EDGE_DASH["mood-swap"]} stroke-linecap="round" />
+            <span class="legend-ring" aria-hidden="true" />
+            <span><strong>Présent</strong> — the starting point</span>
+          </div>
+          <div class="legend-item">
+            <svg width="26" height="10" aria-hidden="true" style={{ "flex-shrink": "0" }}>
+              <rect x="1" y="1" width="24" height="8" rx="3" fill="none"
+                stroke="var(--text-2)" stroke-width="1.2" stroke-dasharray="4 3" opacity="0.7" />
             </svg>
-            <span><em>durée</em> — ongoing action; same form across moods</span>
+            <span><strong>Dashed border</strong> — literary tense, rare in speech (toggle above)</span>
           </div>
         </div>
       </div>
@@ -431,240 +697,208 @@ export default function VerbDiagram({ data, tenseTitles }: Props) {
     </div>
   );
 
+  // ── Explanation strip under the diagram ───────────────────────
+  const Caption = () => (
+    <div class="diagram-caption" ref={captionRef} aria-live="polite">
+      <Show
+        when={nodeCaption()}
+        fallback={
+          <Show when={edgeCaption()} fallback={
+            <p class="cap-hint">Tap any card to inspect a tense · tap a line to see what it connects.</p>
+          }>
+            {(c) => (
+              <div>
+                <div class="cap-head">
+                  <strong class="cap-title">
+                    {titleOf(c().edge.from)} → {titleOf(c().edge.to)}
+                  </strong>
+                  <span class="cap-chip">{EDGE_NAME[c().edge.type]}</span>
+                </div>
+                <p class="cap-rule">{EDGE_LABEL[c().edge.type]}.</p>
+                <p class="cap-rule cap-note">On the diagram: <em>{c().edge.label}</em></p>
+              </div>
+            )}
+          </Show>
+        }
+      >
+        {(c) => (
+          <div>
+            <div class="cap-head">
+              <strong class="cap-title">{titleOf(c().node.id)}</strong>
+              {c().node.literary && <span class="cap-chip">literary</span>}
+            </div>
+            <Show when={tenseRules[c().node.id]}>
+              <p class="cap-rule">{tenseRules[c().node.id]}</p>
+            </Show>
+            <p class="cap-form">
+              {selectedPerson()} → <strong>{conjugationText(c().node.id, selectedPerson())}</strong>
+            </p>
+            <Show when={c().rel.length > 0}>
+              <ul class="cap-rel">
+                {c().rel.map(e => (
+                  <li>
+                    <svg class="cap-swatch" width="26" height="8" aria-hidden="true">
+                      <line x1="0" y1="4" x2="26" y2="4"
+                        stroke={EDGE_COLOR[e.type]} stroke-width="2.5"
+                        stroke-dasharray={EDGE_DASH[e.type]} stroke-linecap="round" />
+                    </svg>
+                    <span>{edgePhrase(e, c().node.id)}</span>
+                  </li>
+                ))}
+              </ul>
+            </Show>
+            <a class="cap-link" href={`/knowledge/verbs/tenses/${c().node.id}`}>
+              Open the full {titleOf(c().node.id)} page →
+            </a>
+          </div>
+        )}
+      </Show>
+    </div>
+  );
+
   // ── Render ────────────────────────────────────────────────────
   return (
     <div class="verb-diagram">
       <Controls />
 
-      {/* ── MOBILE: transposed SVG (mood=col, time=row) ── */}
-      <Show when={isMobile()}>
+      {/* ── MOBILE: mood = column, time = row divider ── */}
+      <Show when={layout().mb}>
         <div class="diagram-scroll-wrap">
-          <svg width={MB_SVG_W} height={MB_SVG_H}
-            viewBox={`0 0 ${MB_SVG_W} ${MB_SVG_H}`}
+          <svg width={layout().svgW} height={layout().svgH}
+            viewBox={`0 0 ${layout().svgW} ${layout().svgH}`}
             class="grammar-map-svg"
-            role="img" aria-label="French verb tense diagram"
+            role="img" aria-label="French verb tense map"
           >
             <defs>
               <marker id="mb-arr-aux" viewBox="0 0 8 6" refX="7" refY="3"
                 markerWidth="5" markerHeight="4" orient="auto" markerUnits="userSpaceOnUse">
                 <path d="M 0 0 L 8 3 L 0 6 Z" fill={EDGE_COLOR["auxiliary-compound"]} />
               </marker>
-              <marker id="mb-arr-ant" viewBox="0 0 8 6" refX="7" refY="3"
-                markerWidth="5" markerHeight="4" orient="auto" markerUnits="userSpaceOnUse">
-                <path d="M 0 0 L 8 3 L 0 6 Z" fill={EDGE_COLOR["anteriority"]} />
-              </marker>
             </defs>
-            {/* Mood column backgrounds */}
+
+            {/* Mood column tints */}
             <For each={MOOD_ORDER}>
               {(mood, i) => (
                 <rect
-                  x={mbColX(i())} y={MB_MOOD_HEADER_H - 4}
-                  width={MB_CARD_W} height={MB_SVG_H - MB_MOOD_HEADER_H + 4}
+                  x={i() * MB_COL_W} y={MB_MOOD_HEADER_H - 2}
+                  width={MB_CARD_W} height={layout().svgH - MB_MOOD_HEADER_H + 2}
                   fill={MOOD_FILL[mood]} fill-opacity="0.05" rx="4"
                 />
               )}
             </For>
 
-            {/* Mood column headers */}
+            {/* Mood headers — full words fit now */}
             <For each={MOOD_ORDER}>
               {(mood, i) => (
                 <text
-                  x={mbColX(i()) + MB_CARD_W / 2} y={MB_MOOD_HEADER_H - 8}
+                  x={i() * MB_COL_W + MB_CARD_W / 2} y={17}
                   text-anchor="middle" font-size="8" font-weight="700"
-                  fill="var(--muted)"
+                  letter-spacing="0.06em" fill="var(--muted)"
                 >
-                  {mood === "indicatif" ? "Ind." : mood === "conditionnel" ? "Cond." : mood === "subjonctif" ? "Subj." : "Imp."}
+                  {MOOD_LABELS[mood].toUpperCase()}
                 </text>
               )}
             </For>
 
-            {/* Time row labels */}
-            {Object.entries(MB_TIME_LABELS).map(([pos, label]) => {
-              const row = TIME_COLUMNS[pos as keyof typeof TIME_COLUMNS];
-              return (
-                <text
-                  x={MB_TIME_LABEL_W - 4}
-                  y={mbRowY(row) + MB_CARD_H / 2 + 3}
-                  text-anchor="end" font-size="7.5" fill="var(--text-2)"
-                >
-                  {label}
-                </text>
-              );
-            })}
+            {/* Time dividers */}
+            <For each={layout().dividers}>
+              {(d) => (
+                <g>
+                  <line x1="0" y1={d.lineY} x2={layout().svgW} y2={d.lineY}
+                    stroke="var(--line)" stroke-width="1" opacity="0.7" />
+                  <text x="2" y={d.textY} font-size="7.5" font-weight="600"
+                    letter-spacing="0.1em" fill="var(--faint)">
+                    {TIME_DIVIDERS[d.time].toUpperCase()}
+                  </text>
+                </g>
+              )}
+            </For>
 
             {/* Edges */}
             <For each={visibleEdges()}>
-              {edge => {
-                const from = mbPosMap().get(edge.from);
-                const to   = mbPosMap().get(edge.to);
-                if (!from || !to) return null;
-                const isActive = () => activeEdge() === edge;
-                const edgeColor = EDGE_COLOR[edge.type];
-                const d = edgePathMobile(from, to, edge);
-                return (
-                  <g class="diagram-edge"
-                    onClick={() => setActiveEdge(isActive() ? null : edge)}
-                    style={{ cursor: "pointer" }}
-                    role="button" tabIndex={0}
-                    aria-label={`${edge.type}: ${edge.label}`}
-                    onKeyDown={e => e.key === "Enter" && setActiveEdge(isActive() ? null : edge)}
-                  >
-                    <path d={d} fill="none" stroke={edgeColor}
-                      stroke-width={isActive() ? 2.5 : 1.5}
-                      stroke-dasharray={EDGE_DASH[edge.type]}
-                      stroke-linecap="round"
-                      opacity={isActive() ? 1 : 0.6}
-                      marker-end={
-                        edge.type === "auxiliary-compound" ? "url(#mb-arr-aux)"
-                        : undefined
-                      }
-                    />
-                    <path d={d} fill="none" stroke="transparent" stroke-width="12" />
-                    {/* Edge label */}
-                    <text
-                      x={(from.cx + to.cx) / 2}
-                      y={(from.cy + to.cy) / 2 - 5}
-                      text-anchor="middle"
-                      font-size="9"
-                      font-style="italic"
-                      fill={edgeColor}
-                      opacity={isActive() ? 1 : 0.85}
-                      style={{ "pointer-events": "none" }}
-                    >
-                      {edge.label}
-                    </text>
-                  </g>
-                );
-              }}
+              {(edge) => (
+                <EdgeEl edge={edge} marker="url(#mb-arr-aux)"
+                  labelMaxW={120} labelMax={8.5} labelMin={7.5} />
+              )}
             </For>
 
-            {/* Node cards */}
-            <For each={mbNodePositions()}>
-              {({ node, x, y }) => (
-                <NodeCard node={node} x={x} y={y}
-                  cardW={MB_CARD_W} cardH={MB_CARD_H}
-                  fontSize={{ title: 8, form: 11 }}
-                />
-              )}
+            {/* Cards */}
+            <For each={[...layout().boxes.values()]}>
+              {(b) => <NodeCard b={b} />}
             </For>
           </svg>
         </div>
+        <Caption />
         <Legend />
       </Show>
 
-      {/* ── DESKTOP: horizontal SVG (time=col, mood=row) ── */}
-      <Show when={!isMobile()}>
+      {/* ── DESKTOP: time = column, mood = lane ── */}
+      <Show when={!layout().mb}>
         <div class="diagram-scroll-wrap">
-          <svg width={DK_SVG_W} height={DK_SVG_H}
-            viewBox={`0 0 ${DK_SVG_W} ${DK_SVG_H}`}
+          <svg width={layout().svgW} height={layout().svgH}
+            viewBox={`0 0 ${layout().svgW} ${layout().svgH}`}
             class="grammar-map-svg"
-            role="img" aria-label="French verb tense diagram"
+            role="img" aria-label="French verb tense map"
           >
             <defs>
               <marker id="dk-arr-aux" viewBox="0 0 8 6" refX="7" refY="3"
                 markerWidth="6" markerHeight="5" orient="auto" markerUnits="userSpaceOnUse">
                 <path d="M 0 0 L 8 3 L 0 6 Z" fill={EDGE_COLOR["auxiliary-compound"]} />
               </marker>
-              <marker id="dk-arr-ant" viewBox="0 0 8 6" refX="7" refY="3"
-                markerWidth="6" markerHeight="5" orient="auto" markerUnits="userSpaceOnUse">
-                <path d="M 0 0 L 8 3 L 0 6 Z" fill={EDGE_COLOR["anteriority"]} />
-              </marker>
             </defs>
+
             {/* Lane backgrounds */}
-            <For each={MOOD_ORDER}>
-              {(mood, i) => (
+            <For each={layout().lanes}>
+              {(lane) => (
                 <rect
-                  x={DK_LANE_HEADER_W} y={dkLaneY(i()) - DK_LANE_GAP / 2}
-                  width={DK_SVG_W - DK_LANE_HEADER_W} height={DK_LANE_H}
-                  fill={MOOD_FILL[mood]} fill-opacity="0.05" rx="4"
+                  x={DK_LANE_HEADER_W} y={lane.y - 7}
+                  width={layout().svgW - DK_LANE_HEADER_W} height={lane.h + 14}
+                  fill={MOOD_FILL[lane.mood]} fill-opacity="0.05" rx="4"
                 />
               )}
             </For>
 
             {/* Column headers */}
-            {(Object.entries({
-              "far-past": "anterior", "past": "past", "near-past": "recent past",
-              "present": "present", "near-future": "near future",
-              "future": "future", "far-future": "future anterior",
-            }) as [string, string][]).map(([pos, label]) => {
-              const col = TIME_COLUMNS[pos as keyof typeof TIME_COLUMNS];
-              return (
-                <text x={dkColX(col) + DK_CARD_W / 2} y={DK_COL_HEADER_H - 7}
-                  text-anchor="middle" font-size="9" fill="var(--text-2)">
-                  {label}
+            <For each={TIME_ORDER}>
+              {(time) => (
+                <text
+                  x={DK_LANE_HEADER_W + DK_PAD + TIME_COLUMNS[time] * DK_COL_W + DK_CARD_W / 2}
+                  y={DK_COL_HEADER_H - 8}
+                  text-anchor="middle" font-size="9" font-weight="600"
+                  letter-spacing="0.08em" fill="var(--text-2)">
+                  {TIME_DIVIDERS[time].toUpperCase()}
                 </text>
-              );
-            })}
+              )}
+            </For>
 
             {/* Lane labels */}
-            <For each={MOOD_ORDER}>
-              {(mood, i) => (
-                <text x={DK_LANE_HEADER_W - 8} y={dkLaneY(i()) + DK_CARD_H / 2 + 4}
+            <For each={layout().lanes}>
+              {(lane) => (
+                <text
+                  x={DK_LANE_HEADER_W - 8} y={lane.y + lane.h / 2 + 4}
                   text-anchor="end" font-size="10" font-weight="600"
                   fill="var(--muted)"
                 >
-                  {MOOD_LABELS[mood]}
+                  {MOOD_LABELS[lane.mood]}
                 </text>
               )}
             </For>
 
             {/* Edges */}
             <For each={visibleEdges()}>
-              {edge => {
-                const from = dkPosMap().get(edge.from);
-                const to   = dkPosMap().get(edge.to);
-                if (!from || !to) return null;
-                const isActive = () => activeEdge() === edge;
-                const edgeColor = EDGE_COLOR[edge.type];
-                const d = edgePath(from, to, edge);
-                return (
-                  <g class="diagram-edge"
-                    onClick={() => setActiveEdge(isActive() ? null : edge)}
-                    style={{ cursor: "pointer" }}
-                    role="button" tabIndex={0}
-                    aria-label={`${edge.type}: ${edge.label}`}
-                    onKeyDown={e => e.key === "Enter" && setActiveEdge(isActive() ? null : edge)}
-                  >
-                    <path d={d} fill="none" stroke={edgeColor}
-                      stroke-width={isActive() ? 3 : 2}
-                      stroke-dasharray={EDGE_DASH[edge.type]}
-                      stroke-linecap="round"
-                      opacity={isActive() ? 1 : 0.55}
-                      marker-end={
-                        edge.type === "auxiliary-compound" ? "url(#dk-arr-aux)"
-                        : undefined
-                      }
-                    />
-                    <path d={d} fill="none" stroke="transparent" stroke-width="16" />
-                    {/* Edge label */}
-                    <text
-                      x={(from.cx + to.cx) / 2}
-                      y={(from.cy + to.cy) / 2 - 6}
-                      text-anchor="middle"
-                      font-size="11"
-                      font-style="italic"
-                      fill={edgeColor}
-                      opacity={isActive() ? 1 : 0.85}
-                      style={{ "pointer-events": "none" }}
-                    >
-                      {edge.label}
-                    </text>
-                  </g>
-                );
-              }}
+              {(edge) => (
+                <EdgeEl edge={edge} marker="url(#dk-arr-aux)"
+                  labelMaxW={200} labelMax={10.5} labelMin={9} />
+              )}
             </For>
 
-            {/* Node cards */}
-            <For each={dkNodePositions()}>
-              {({ node, x, y }) => (
-                <NodeCard node={node} x={x} y={y}
-                  cardW={DK_CARD_W} cardH={DK_CARD_H}
-                  fontSize={{ title: 10, form: 14 }}
-                />
-              )}
+            {/* Cards */}
+            <For each={[...layout().boxes.values()]}>
+              {(b) => <NodeCard b={b} />}
             </For>
           </svg>
         </div>
+        <Caption />
         <Legend />
       </Show>
     </div>

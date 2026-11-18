@@ -554,9 +554,100 @@ article {
   opacity: 1;
 }
 
+/* ── Diagram explanation strip ─────────────────────────────── */
+.diagram-caption {
+  margin-top: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  font-size: var(--t-sm);
+}
+.cap-hint {
+  margin: 0;
+  color: var(--faint);
+  font-size: var(--t-xs);
+  text-align: center;
+}
+.cap-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+.cap-title {
+  color: var(--accent-ink);
+  font-size: var(--t-base);
+}
+.cap-chip {
+  font-size: var(--t-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  background: var(--chip);
+  border-radius: var(--r-sm);
+  padding: 2px 6px;
+}
+.cap-rule {
+  margin: 0.35rem 0 0;
+  color: var(--text-2);
+}
+.cap-note {
+  color: var(--muted);
+}
+.cap-form {
+  margin: 0.45rem 0 0;
+  color: var(--ink);
+}
+.cap-form strong {
+  color: var(--accent-ink);
+  font-size: var(--t-base);
+}
+.cap-rel {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.cap-rel li {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--muted);
+  font-size: var(--t-xs);
+}
+.cap-swatch {
+  flex: 0 0 auto;
+}
+.cap-link {
+  display: inline-block;
+  margin-top: 0.55rem;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--accent-ink);
+  text-decoration: none;
+}
+.cap-link:hover,
+.cap-link:focus-visible {
+  text-decoration: underline;
+}
+
 /* ── Diagram legend ──────────────────────────────────────────── */
 .diagram-legend {
   margin-top: var(--s-3);
+}
+.diagram-legend summary {
+  cursor: pointer;
+  width: fit-content;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--accent-ink);
+}
+.diagram-legend[open] summary {
+  margin-bottom: var(--s-2);
 }
 .legend-section {
   margin-bottom: var(--s-3);
@@ -584,6 +675,25 @@ article {
   gap: var(--s-1);
   font-size: var(--t-xs);
   color: var(--muted);
+}
+.legend-item strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.legend-item-wide {
+  flex: 1 1 100%;
+  align-items: flex-start;
+}
+.legend-item-wide svg {
+  margin-top: 3px;
+}
+.legend-ring {
+  width: 11px;
+  height: 11px;
+  border-radius: 4px;
+  border: 1.5px solid var(--accent);
+  display: inline-block;
+  flex: 0 0 auto;
 }
 .legend-dot {
   width: 10px;

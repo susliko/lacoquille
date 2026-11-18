@@ -85,9 +85,9 @@ export const EDGE_DASH: Record<EdgeType, string> = {
 };
 
 export const EDGE_LABEL: Record<EdgeType, string> = {
-  "auxiliary-compound": "Auxiliary-compound — built from another tense via avoir/être + PP",
-  "aspect-pair":        "Aspect pair — same time, different view: ongoing vs completed",
-  "stem-share":         "Stem share — same infinitive stem, different endings",
-  "mood-swap":          "Mood swap — same time position, different mood",
-  "anteriority":        "Anteriority — action completed before another",
+  "auxiliary-compound": "built from another tense with avoir / être + past participle",
+  "aspect-pair":        "the same moment, two views — ongoing (imparfait) vs completed (passé composé)",
+  "stem-share":         "futur and conditionnel share one stem — only the endings differ",
+  "mood-swap":          "the same idea moved to another mood (indicative ↔ subjunctive)",
+  "anteriority":        "one action already finished before the other begins",
 };

@@ -32,7 +32,7 @@ const byLevel = (lv: string) => entries.filter((e) => e.lv === lv);
   <div class="km-wrap">
     <header class="km-head">
       <h1>Grammar</h1>
-      <a class="km-verbs-link" href="/knowledge/verbs/">Verb tables →</a>
+      <a class="km-verbs-link" href="/knowledge/verbs/" transition:name="km-verbs">Verb tables →</a>
     </header>
 
     <div class="km-sticky">
@@ -62,7 +62,7 @@ const byLevel = (lv: string) => entries.filter((e) => e.lv === lv);
               <div class="km-part-h"><span>{label}</span></div>
               <div class="km-lessons">
                 {rows.map((e) => (
-                  <a class="km-lesson" href={`/knowledge/t/${e.id}/`}>
+                  <a class="km-lesson" href={`/knowledge/t/${e.id}/`} transition:name={e.id}>
                     <span class={`tt ${drillable(e) ? "" : "soon"}`}>{e.name}</span>
                   </a>
                 ))}
@@ -82,15 +82,9 @@ const byLevel = (lv: string) => entries.filter((e) => e.lv === lv);
   )} />
   <script>
     const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
-    const ENTRIES: { id: string; name: string; blurb: string; drill: boolean }[] =
-      JSON.parse(document.getElementById("kmData")!.textContent || "[]");
 
     const $ = <T extends HTMLElement = HTMLElement>(sel: string) =>
       document.querySelector(sel) as T | null;
-    const row = $("#kmSearchrow")!;
-    const input = $<HTMLInputElement>("#kmQ")!;
-    const tabs = $("#kmTabs")!;
-    const results = $("#kmResults")!;
 
     /* accent-insensitive substring search + highlighting (from the prototype) */
     const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
@@ -135,10 +129,17 @@ const byLevel = (lv: string) => entries.filter((e) => e.lv === lv);
     }
 
     /* level state: from ?l= if valid, else A1 */
-    const params = new URLSearchParams(location.search);
-    let level = LEVELS.includes(params.get("l") || "") ? params.get("l")! : "A1";
+    let level = "A1";
+
+    /* refs into the CURRENT page's DOM — the ClientRouter swaps the body on
+       navigation, so these must be rebound after every swap (see init) */
+    let ENTRIES: { id: string; name: string; blurb: string; drill: boolean }[] = [];
+    let input: HTMLInputElement | null = null;
+    let tabs: HTMLElement | null = null;
+    let results: HTMLElement | null = null;
 
     function setLevel(l: string, push = true) {
+      if (!tabs) return;
       level = l;
       if (push) history.replaceState(null, "", l === "A1" ? "/knowledge/" : `/knowledge/?l=${l}`);
       tabs.querySelectorAll(".km-tab").forEach((t) =>
@@ -148,31 +149,55 @@ const byLevel = (lv: string) => entries.filter((e) => e.lv === lv);
     }
 
     function search(q: string) {
+      const i = input, t = tabs, r = results, w = $("#kmSearchrow");
+      if (!i || !t || !r || !w) return;
       const searching = q.trim().length > 0;
-      tabs.hidden = searching;
+      t.hidden = searching;
       document.querySelectorAll<HTMLElement>(".km-level").forEach((s) => (s.hidden = searching || s.dataset.level !== level));
-      results.hidden = !searching;
-      row.classList.toggle("hasq", searching);
+      r.hidden = !searching;
+      w.classList.toggle("hasq", searching);
       if (!searching) return;
       const qn = norm(q);
       const hits = ENTRIES.filter(
         (e) => norm(e.name).includes(qn) || norm(e.blurb).includes(qn));
-      results.innerHTML = hits.length
+      r.innerHTML = hits.length
         ? `<div class="km-lessons">${hits
             .map((e) => `<a class="km-lesson" href="/knowledge/t/${e.id}/"><span class="tt ${e.drill ? "" : "soon"}">${hl(e.name, q)}</span></a>`)
             .join("")}</div>`
         : `<div class="km-empty"><b>No lesson matches “${esc(q)}”</b>Search covers all lessons, A1–C2.</div>`;
     }
 
-    tabs.addEventListener("click", (ev) => {
-      const t = (ev.target as HTMLElement).closest<HTMLElement>("[data-level]");
-      if (t) { setLevel(t.dataset.level!); input.value = ""; search(""); }
-    });
-    input.addEventListener("input", () => search(input.value));
-    $("#kmClear")!.addEventListener("click", () => {
-      input.value = ""; search(""); input.focus();
-    });
+    const bound = new WeakSet<Element>();
+    function init() {
+      const row = $("#kmSearchrow");
+      if (!row || bound.has(row)) return; /* not this page, or already bound */
+      bound.add(row);
+      ENTRIES = JSON.parse(document.getElementById("kmData")!.textContent || "[]");
+      input = $<HTMLInputElement>("#kmQ")!;
+      tabs = $("#kmTabs")!;
+      results = $("#kmResults")!;
+
+      const params = new URLSearchParams(location.search);
+      level = LEVELS.includes(params.get("l") || "") ? params.get("l")! : "A1";
+
+      tabs.addEventListener("click", (ev) => {
+        const t = (ev.target as HTMLElement).closest<HTMLElement>("[data-level]");
+        if (t) { setLevel(t.dataset.level!); input!.value = ""; search(""); }
+      });
+      input.addEventListener("input", () => search(input!.value));
+      $("#kmClear")!.addEventListener("click", () => {
+        input!.value = ""; search(""); input!.focus();
+      });
+
+      /* restore state from the URL (back-nav into a search or level) */
+      setLevel(level, false);
+      const q0 = params.get("q");
+      if (q0) { input.value = q0; search(q0); }
+    }
+
+    /* one document-level listener, installed once — document survives swaps */
     document.addEventListener("keydown", (ev) => {
+      if (!input || !document.contains(input)) return;
       const inField = document.activeElement === input;
       if (ev.key === "/" && !inField) {
         ev.preventDefault();
@@ -185,9 +210,8 @@ const byLevel = (lv: string) => entries.filter((e) => e.lv === lv);
       }
     });
 
-    /* init */
-    setLevel(level, false);
-    const q0 = params.get("q");
-    if (q0) { input.value = q0; search(q0); }
+    /* runs now and again after every ClientRouter swap back onto this page */
+    init();
+    document.addEventListener("astro:page-load", init);
   </script>
 </Base>
