@@ -13,18 +13,25 @@ exploration kept for reference.
   the Noun group expanded into its three subgroups, like the map's bottom sheet).
 - Substring search across all levels, accent/case-insensitive, with highlighting.
 - Topic sheets: numbered rules with examples, exception cards, see-also chips,
-  Practice CTA (structural topics get a "not drillable yet" note instead).
+  Practice CTA (a not-drillable-yet note remains as fallback for any entry
+  the catalog hasn't reached — none since the 121/121 C1/C2 wiring).
 - No progress indicators, counts, codes or banners — reference only.
 
 ## Data pipeline
 
 | File | Source | Role |
 |------|--------|------|
-| `topics.json` | `lacq/src/exercises/topics.rs` | drillable catalog (94 topics, slug + blurb) |
-| `taxonomy.json` | `src/components/progress/taxonomy.ts` | **the 1:1 contract**: 121 entries, six levels, one level each |
+| `extract.py` → `topics.json` | `lacq/src/exercises/topics.rs` | catalog (slugs + blurbs) |
+| `extract.py` → `taxonomy.json` | `src/components/progress/taxonomy.ts` | **the 1:1 contract**: 121 entries, six levels, one level each |
 | `rules-src/rules_{a,b,c}.py` | hand-authored | rule sheets keyed by taxonomy name (A1–A2 / B1–B2 / C1–C2) |
-| `rules-src/build.py` | — | validates + resolves, writes `rules.json`, injects into `1-manuel.html` |
+| `rules-src/build.py` | — | validates + resolves, writes `rules.json`, injects `RULES` + `ENTRIES` into `1-manuel.html` |
 | `rules.json` | build | 121 topics → 203 rules, keyed by taxonomy entry id |
+
+Re-extract after the catalog or taxonomy moves (new topics, SLUG_MAP rows):
+
+```sh
+cd design/prototypes/knowledge/rules-src && python3 extract.py
+```
 
 Rebuild after editing rules:
 

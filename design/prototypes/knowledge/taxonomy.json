@@ -1050,7 +1050,10 @@
   "cat": "T",
   "sub": "",
   "name": "Passé simple (recognize)",
-  "slugs": []
+  "slugs": [
+   "passe-simple-recognize"
+  ],
+  "blurb": "The tense of written narrative: il ouvrit la porte — spot the completed literary event, never confused with the imparfait again."
  },
  {
   "id": "t96",
@@ -1058,7 +1061,10 @@
   "cat": "T",
   "sub": "",
   "name": "Passé antérieur (recognize)",
-  "slugs": []
+  "slugs": [
+   "passe-anterieur"
+  ],
+  "blurb": "Literary anteriority: quand il eut fini, on partit — passé simple of the auxiliary + participle, mostly after quand and à peine."
  },
  {
   "id": "t97",
@@ -1066,7 +1072,10 @@
   "cat": "T",
   "sub": "",
   "name": "Agreement of pronominal verbs",
-  "slugs": []
+  "slugs": [
+   "pronominal-agreement"
+  ],
+  "blurb": "Elle s'est levée but elle s'est lavé les mains — whether se is direct or indirect decides the participle."
  },
  {
   "id": "t98",
@@ -1074,7 +1083,10 @@
   "cat": "M",
   "sub": "",
   "name": "Subtle subjonctif cases",
-  "slugs": []
+  "slugs": [
+   "subjonctif-subtle"
+  ],
+  "blurb": "avant que + subjonctif but après que + indicatif; de peur que, sans que, loin que, autant que je sache."
  },
  {
   "id": "t99",
@@ -1082,7 +1094,10 @@
   "cat": "M",
   "sub": "",
   "name": "Subjonctif vs indicatif meaning",
-  "slugs": []
+  "slugs": [
+   "subjonctif-meaning"
+  ],
+  "blurb": "un assistant qui ait (any will do) vs l'assistant qui a (the one who does) — the mood itself carries the meaning."
  },
  {
   "id": "t100",
@@ -1090,7 +1105,10 @@
   "cat": "M",
   "sub": "",
   "name": "Attenuating conditionnel",
-  "slugs": []
+  "slugs": [
+   "conditionnel-attenuation"
+  ],
+  "blurb": "The hedging tense of journalists and polite people: il semblerait que, la décision aurait des conséquences, vous devriez…"
  },
  {
   "id": "t101",
@@ -1098,7 +1116,10 @@
   "cat": "M",
   "sub": "",
   "name": "Infinitive clauses",
-  "slugs": []
+  "slugs": [
+   "infinitive-clauses"
+  ],
+  "blurb": "faire réparer sa voiture, écouter les enfants chanter — perception and causative verbs with a controlled infinitive."
  },
  {
   "id": "t102",
@@ -1106,7 +1127,10 @@
   "cat": "M",
   "sub": "",
   "name": "Literary hypotheticals",
-  "slugs": []
+  "slugs": [
+   "literary-hypotheticals"
+  ],
+  "blurb": "Qui l'eût cru ? — the literary conditionnel passé (eût fait = aurait fait) behind Maupassant's conditional world."
  },
  {
   "id": "t103",
@@ -1114,7 +1138,10 @@
   "cat": "N",
   "sub": "a",
   "name": "Quelque, quel que",
-  "slugs": []
+  "slugs": [
+   "quelque-quel-que"
+  ],
+  "blurb": "One space or one letter decides: quelque paresseux qu'il soit, quel que soit le prix, quoi qu'il dise."
  },
  {
   "id": "t104",
@@ -1122,7 +1149,10 @@
   "cat": "N",
   "sub": "p",
   "name": "Auquel, duquel & co.",
-  "slugs": []
+  "slugs": [
+   "auquel-duquel"
+  ],
+  "blurb": "Compound relatives with à and de: le projet auquel je pense, le voisin duquel je connais la fille."
  },
  {
   "id": "t105",
@@ -1130,7 +1160,10 @@
   "cat": "N",
   "sub": "p",
   "name": "Ellipsis & avoiding repetition",
-  "slugs": []
+  "slugs": [
+   "ellipsis-repetition"
+  ],
+  "blurb": "celle de son frère, je les ai déjà pris — replacing nouns with celui/celle/le/la/les so prose stops repeating itself."
  },
  {
   "id": "t106",
@@ -1138,7 +1171,10 @@
   "cat": "S",
   "sub": "",
   "name": "Avoir beau, quand bien même",
-  "slugs": []
+  "slugs": [
+   "avoir-beau"
+  ],
+  "blurb": "In-vain concession: il a beau pleuvoir, le pique-nique est maintenu — and the extreme quand bien même il pleuvrait."
  },
  {
   "id": "t107",
@@ -1146,7 +1182,10 @@
   "cat": "S",
   "sub": "",
   "name": "Formal connectors",
-  "slugs": []
+  "slugs": [
+   "formal-connectors"
+  ],
+  "blurb": "The written connective tissue: en effet, par conséquent, en outre, pourtant, quant à, or (not hors!)."
  },
  {
   "id": "t108",
@@ -1154,7 +1193,10 @@
   "cat": "S",
   "sub": "",
   "name": "Formal inversion",
-  "slugs": []
+  "slugs": [
+   "formal-inversion"
+  ],
+  "blurb": "Peut-être viendra-t-il, rare sont les occasions — the stylistic inversion after fronted words, hyphen and all."
  },
  {
   "id": "t109",
@@ -1162,7 +1204,10 @@
   "cat": "S",
   "sub": "",
   "name": "Expletive ne",
-  "slugs": []
+  "slugs": [
+   "expletive-ne"
+  ],
+  "blurb": "The ne that negates nothing: je crains qu'il ne vienne, plus qu'on ne le croit — pure literary polish."
  },
  {
   "id": "t110",
@@ -1170,7 +1215,10 @@
   "cat": "S",
   "sub": "",
   "name": "Impersonal formal style",
-  "slugs": []
+  "slugs": [
+   "impersonal-formal"
+  ],
+  "blurb": "il convient de, il s'agit de, il importe que, il ne tient qu'à vous de — the impersonal machinery of formal French."
  },
  {
   "id": "t111",
@@ -1178,7 +1226,10 @@
   "cat": "S",
   "sub": "",
   "name": "Spoken vs written French",
-  "slugs": []
+  "slugs": [
+   "spoken-vs-written"
+  ],
+  "blurb": "ça vs cela, on vs nous, y a vs il existe — the same thought, dressed for the chat or for the essay."
  },
  {
   "id": "t112",
@@ -1186,7 +1237,10 @@
   "cat": "T",
   "sub": "",
   "name": "Passé simple, all persons",
-  "slugs": []
+  "slugs": [
+   "passe-simple-all-persons"
+  ],
+  "blurb": "The full literary conjugation: je vins, tu fis, il courut, nous fûmes, vous vîtes, ils lurent."
  },
  {
   "id": "t113",
@@ -1194,7 +1248,10 @@
   "cat": "T",
   "sub": "",
   "name": "Fine participle agreement",
-  "slugs": []
+  "slugs": [
+   "fine-participle-agreement"
+  ],
+  "blurb": "les fleurs que je lui ai données but elle s'est rendu compte — the preceding-object rule with all its edge cases."
  },
  {
   "id": "t114",
@@ -1202,7 +1259,10 @@
   "cat": "M",
   "sub": "",
   "name": "Subjonctif imparfait",
-  "slugs": []
+  "slugs": [
+   "subjonctif-imparfait"
+  ],
+  "blurb": "The literary past subjonctif: la reine souhaitait qu'il vînt, qui qu'il fût — recognise it, decode it, admire it."
  },
  {
   "id": "t115",
@@ -1210,7 +1270,10 @@
   "cat": "M",
   "sub": "",
   "name": "Conditionnel passé 2e forme",
-  "slugs": []
+  "slugs": [
+   "conditionnel-passe-deuxieme"
+  ],
+  "blurb": "S'il avait su, il eût refusé — the literary second form of the past conditional behind qui l'eût cru."
  },
  {
   "id": "t116",
@@ -1218,7 +1281,10 @@
   "cat": "N",
   "sub": "a",
   "name": "Adjective position & meaning",
-  "slugs": []
+  "slugs": [
+   "adjective-position-meaning"
+  ],
+  "blurb": "un grand homme vs un homme grand, mon ancien professeur vs des meubles anciens — position rewrites the meaning."
  },
  {
   "id": "t117",
@@ -1226,7 +1292,10 @@
   "cat": "S",
   "sub": "",
   "name": "Literary negations",
-  "slugs": []
+  "slugs": [
+   "literary-negations"
+  ],
+  "blurb": "nul ne sait, point n'est besoin, elle ne parlait guère — the written negation family beyond ne… pas."
  },
  {
   "id": "t118",
@@ -1234,7 +1303,10 @@
   "cat": "S",
   "sub": "",
   "name": "Stylistic word order",
-  "slugs": []
+  "slugs": [
+   "stylistic-word-order"
+  ],
+  "blurb": "Grande fut sa surprise, franchi le seuil, et voici que la pluie cessa — fronted attributes and participles in prose."
  },
  {
   "id": "t119",
@@ -1242,7 +1314,10 @@
   "cat": "S",
   "sub": "",
   "name": "Archaic fixed phrases",
-  "slugs": []
+  "slugs": [
+   "archaic-phrases"
+  ],
+  "blurb": "il y a belle lurette, de par la loi, chose promise chose due, le cas échéant — formulas that time forgot."
  },
  {
   "id": "t120",
@@ -1250,6 +1325,9 @@
   "cat": "S",
   "sub": "",
   "name": "Register shifts",
-  "slugs": []
+  "slugs": [
+   "register-shifts"
+  ],
+  "blurb": "Rewrite on a eu des soucis into nous avons rencontré des difficultés — moving a sentence across registers."
  }
 ]

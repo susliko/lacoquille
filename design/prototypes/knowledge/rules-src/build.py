@@ -70,14 +70,19 @@ print("longest rule paragraph:", longest)
 # inject into the prototype
 html = open(KDIR / "1-manuel.html", encoding="utf-8").read()
 rules_js = json.dumps(by_id, ensure_ascii=False).replace("</", "<\\/")
+tax_js = json.dumps(json.load(open(KDIR / "taxonomy.json", encoding="utf-8")),
+                   ensure_ascii=False).replace("</", "<\\/")
 lines = html.split("\n")
-out, done = [], 0
+out, done_rules, done_tax = [], 0, 0
 for ln in lines:
     if ln.startswith("const RULES"):
-        out.append("const RULES   = " + rules_js + ";"); done += 1
+        out.append("const RULES   = " + rules_js + ";"); done_rules += 1
+    elif ln.startswith("const ENTRIES"):
+        out.append("const ENTRIES = " + tax_js + ";"); done_tax += 1
     else:
         out.append(ln)
 html = "\n".join(out)
+assert done_rules == 1 and done_tax == 1, f"injection lines: RULES={done_rules} ENTRIES={done_tax}"
 old_r = "const r = drillable(e) ? RULES[e.slugs[0]] : undefined;"
 new_r = "const r = RULES[e.id];"
 if old_r in html:
@@ -95,4 +100,4 @@ if old_see in html:
     html = html.replace(old_see, new_see)
 assert new_see in html
 open(KDIR / "1-manuel.html", "w", encoding="utf-8").write(html)
-print(f"injected into 1-manuel.html ({len(html)} bytes, RULES line replaced: {done})")
+print(f"injected into 1-manuel.html ({len(html)} bytes, RULES + ENTRIES replaced)")
