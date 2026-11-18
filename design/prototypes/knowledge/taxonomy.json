@@ -1,0 +1,1255 @@
+[
+ {
+  "id": "t0",
+  "lv": "A1",
+  "cat": "T",
+  "sub": "",
+  "name": "Present: être & avoir",
+  "slugs": [
+   "present-etre-avoir"
+  ],
+  "blurb": "The two essential present-tense verbs: je suis, tu es… and j'ai, tu as… with simple complements."
+ },
+ {
+  "id": "t1",
+  "lv": "A1",
+  "cat": "T",
+  "sub": "",
+  "name": "Present: -er verbs",
+  "slugs": [
+   "present-er-verbs"
+  ],
+  "blurb": "The regular -er pattern that covers most French verbs: je parle, tu parles, il parle, nous parlons, vous parlez, ils parlent."
+ },
+ {
+  "id": "t2",
+  "lv": "A1",
+  "cat": "T",
+  "sub": "",
+  "name": "Present: common irregular verbs",
+  "slugs": [
+   "present-irregulars"
+  ],
+  "blurb": "The everyday irregulars a learner meets first: aller, faire, venir, prendre, dire, savoir, voir, sortir, comprendre, lire."
+ },
+ {
+  "id": "t3",
+  "lv": "A1",
+  "cat": "T",
+  "sub": "",
+  "name": "Present: pronominal verbs",
+  "slugs": [
+   "present-pronominal"
+  ],
+  "blurb": "Reflexive verbs with the agreeing pronoun: je me lève, tu te lèves, il s'appelle — including the m'/t'/s' elision."
+ },
+ {
+  "id": "t4",
+  "lv": "A1",
+  "cat": "T",
+  "sub": "",
+  "name": "Être en train de",
+  "slugs": [
+   "etre-en-train-de"
+  ],
+  "blurb": "Saying what is happening right now: elle est en train de manger — être en train de + infinitive."
+ },
+ {
+  "id": "t5",
+  "lv": "A1",
+  "cat": "T",
+  "sub": "",
+  "name": "Futur proche",
+  "slugs": [
+   "futur-proche"
+  ],
+  "blurb": "The near future with aller + infinitive: je vais partir demain, nous allons manger."
+ },
+ {
+  "id": "t6",
+  "lv": "A1",
+  "cat": "T",
+  "sub": "",
+  "name": "Passé récent",
+  "slugs": [
+   "passe-recent"
+  ],
+  "blurb": "The recent past with venir de + infinitive: je viens de finir, elle vient de partir."
+ },
+ {
+  "id": "t7",
+  "lv": "A1",
+  "cat": "T",
+  "sub": "",
+  "name": "Passé composé: first steps",
+  "slugs": [
+   "pc-aux"
+  ],
+  "blurb": "Choosing between être and avoir in the passé composé (elle est tombée, not elle a tombée)."
+ },
+ {
+  "id": "t8",
+  "lv": "A1",
+  "cat": "M",
+  "sub": "",
+  "name": "Imperative",
+  "slugs": [
+   "imperative"
+  ],
+  "blurb": "Giving commands: parle !, mangez !, allons-y — tu/nous/vous forms without the subject, and ne … pas around them."
+ },
+ {
+  "id": "t9",
+  "lv": "A1",
+  "cat": "M",
+  "sub": "",
+  "name": "Polite conditionnel",
+  "slugs": [
+   "polite-conditionnel"
+  ],
+  "blurb": "Making requests soft with je voudrais — the polite way to want (je voudrais un café, s'il vous plaît)."
+ },
+ {
+  "id": "t10",
+  "lv": "A1",
+  "cat": "M",
+  "sub": "",
+  "name": "Pouvoir, vouloir, devoir + infinitive",
+  "slugs": [
+   "modal-verbs-infinitive"
+  ],
+  "blurb": "The three essential modals: je peux, je veux, je dois + a second verb that stays in the infinitive."
+ },
+ {
+  "id": "t11",
+  "lv": "A1",
+  "cat": "M",
+  "sub": "",
+  "name": "Il faut + infinitive",
+  "slugs": [
+   "il-faut-infinitive"
+  ],
+  "blurb": "Expressing necessity impersonally: il faut partir, il faut finir — one form, no person."
+ },
+ {
+  "id": "t12",
+  "lv": "A1",
+  "cat": "M",
+  "sub": "",
+  "name": "Pour + infinitive",
+  "slugs": [
+   "pour-infinitive"
+  ],
+  "blurb": "Saying what something is for: je lis pour apprendre — pour + infinitive (never par)."
+ },
+ {
+  "id": "t13",
+  "lv": "A1",
+  "cat": "N",
+  "sub": "n",
+  "name": "Gender of nouns",
+  "slugs": [
+   "gender-of-nouns"
+  ],
+  "blurb": "Every French noun is masculine or feminine, and the article shows it: un problème, une idée."
+ },
+ {
+  "id": "t14",
+  "lv": "A1",
+  "cat": "N",
+  "sub": "n",
+  "name": "Plural of nouns",
+  "slugs": [
+   "plural-of-nouns"
+  ],
+  "blurb": "Making nouns plural: most take -s, but -eau takes -x, -al takes -aux, and -s/-x/-z don't change."
+ },
+ {
+  "id": "t15",
+  "lv": "A1",
+  "cat": "N",
+  "sub": "n",
+  "name": "Definite & indefinite articles",
+  "slugs": [
+   "definite-indefinite-articles"
+  ],
+  "blurb": "un/une/des versus le/la/les (l' before a vowel) — choosing the article that fits the noun and the meaning."
+ },
+ {
+  "id": "t16",
+  "lv": "A1",
+  "cat": "N",
+  "sub": "n",
+  "name": "Partitive articles",
+  "slugs": [
+   "partitive-articles"
+  ],
+  "blurb": "Saying some with food and quantities: du pain, de la confiture, de l'eau — and the negative that turns them into de."
+ },
+ {
+  "id": "t17",
+  "lv": "A1",
+  "cat": "N",
+  "sub": "a",
+  "name": "Adjective agreement",
+  "slugs": [
+   "adjective-agreement"
+  ],
+  "blurb": "Adjectives match their noun's gender and number: un garçon grand, une fille grande, des filles grandes."
+ },
+ {
+  "id": "t18",
+  "lv": "A1",
+  "cat": "N",
+  "sub": "a",
+  "name": "Adjective position",
+  "slugs": [
+   "adjective-position"
+  ],
+  "blurb": "Most adjectives follow the noun (une voiture rouge), but the BAGS crowd — beauty, age, goodness, size — goes before (une grande maison)."
+ },
+ {
+  "id": "t19",
+  "lv": "A1",
+  "cat": "N",
+  "sub": "a",
+  "name": "Possessive adjectives",
+  "slugs": [
+   "possessive-adjectives"
+  ],
+  "blurb": "mon/ma/mes, ton/ta/tes, son/sa/ses… — agreeing with the thing owned, not the owner (son frère, even for Marie)."
+ },
+ {
+  "id": "t20",
+  "lv": "A1",
+  "cat": "N",
+  "sub": "a",
+  "name": "Demonstrative adjectives",
+  "slugs": [
+   "demonstrative-adjectives"
+  ],
+  "blurb": "Pointing at things: ce chien, cet arbre, cette table, ces livres — with the cet-before-a-vowel rule."
+ },
+ {
+  "id": "t21",
+  "lv": "A1",
+  "cat": "N",
+  "sub": "a",
+  "name": "Quantity & intensity adverbs",
+  "slugs": [
+   "quantity-adverbs"
+  ],
+  "blurb": "très + adjective (très content) versus beaucoup de + noun (beaucoup d'amis) — the pairing learners mix up."
+ },
+ {
+  "id": "t22",
+  "lv": "A1",
+  "cat": "N",
+  "sub": "p",
+  "name": "Subject pronouns & on",
+  "slugs": [
+   "subject-pronouns"
+  ],
+  "blurb": "Replacing subjects with je, tu, il, elle, nous, vous, ils, elles — and the informal on that takes a 3rd-person form."
+ },
+ {
+  "id": "t23",
+  "lv": "A1",
+  "cat": "N",
+  "sub": "p",
+  "name": "Stressed pronouns",
+  "slugs": [
+   "stressed-pronouns"
+  ],
+  "blurb": "The strong forms after prepositions and after c'est: avec moi, pour toi, c'est lui, c'est eux."
+ },
+ {
+  "id": "t24",
+  "lv": "A1",
+  "cat": "S",
+  "sub": "",
+  "name": "Ne… pas, ne… jamais",
+  "slugs": [
+   "negation"
+  ],
+  "blurb": "Wrapping the conjugated verb in ne … pas (elle ne parle pas anglais)."
+ },
+ {
+  "id": "t25",
+  "lv": "A1",
+  "cat": "S",
+  "sub": "",
+  "name": "Three question forms",
+  "slugs": [
+   "three-question-forms"
+  ],
+  "blurb": "Asking three ways: intonation (tu vas bien ?), est-ce que (est-ce que tu vas bien ?), and inversion (vas-tu bien ?)."
+ },
+ {
+  "id": "t26",
+  "lv": "A1",
+  "cat": "S",
+  "sub": "",
+  "name": "Question words",
+  "slugs": [
+   "question-words"
+  ],
+  "blurb": "qui, que, où, quand, comment, pourquoi, combien — the words that open questions, in inversion and est-ce que forms."
+ },
+ {
+  "id": "t27",
+  "lv": "A1",
+  "cat": "S",
+  "sub": "",
+  "name": "Il y a, c'est, voilà",
+  "slugs": [
+   "il-ya-cest-voila"
+  ],
+  "blurb": "Presenting and pointing: il y a deux chiens (there are), c'est mon ami, voilà le train — and the il y a / il a trap."
+ },
+ {
+  "id": "t28",
+  "lv": "A1",
+  "cat": "S",
+  "sub": "",
+  "name": "C'est vs il/elle est",
+  "slugs": [
+   "cest-vs-il-est"
+  ],
+  "blurb": "Choosing between c'est + noun and il/elle est + adjective (c'est une bonne idée, c'est évident)."
+ },
+ {
+  "id": "t29",
+  "lv": "A1",
+  "cat": "S",
+  "sub": "",
+  "name": "Dans, depuis, il y a",
+  "slugs": [
+   "dans-depuis-il-ya"
+  ],
+  "blurb": "Three time expressions learners swap wrongly: dans (in, future), depuis (since/for, ongoing), il y a (ago, past)."
+ },
+ {
+  "id": "t30",
+  "lv": "A1",
+  "cat": "S",
+  "sub": "",
+  "name": "Prepositions of place",
+  "slugs": [
+   "prepositions-place"
+  ],
+  "blurb": "Where things and people are: à Paris, en France, au Japon, chez Marie, dans le sac, sur la table."
+ },
+ {
+  "id": "t31",
+  "lv": "A1",
+  "cat": "S",
+  "sub": "",
+  "name": "Prepositions of time",
+  "slugs": [
+   "prepositions-time"
+  ],
+  "blurb": "When things happen: avant le dîner, après le cours, pendant les vacances, sous la pluie."
+ },
+ {
+  "id": "t32",
+  "lv": "A1",
+  "cat": "S",
+  "sub": "",
+  "name": "Et, ou, mais, alors",
+  "slugs": [
+   "connectors-basic"
+  ],
+  "blurb": "The four connectors that shape a sentence: and, or, but, so — chosen by the relation between the clauses."
+ },
+ {
+  "id": "t33",
+  "lv": "A2",
+  "cat": "T",
+  "sub": "",
+  "name": "Passé composé with avoir",
+  "slugs": [
+   "pc-avoir"
+  ],
+  "blurb": "Forming the passé composé with avoir and the past participle (nous avons mangé)."
+ },
+ {
+  "id": "t34",
+  "lv": "A2",
+  "cat": "T",
+  "sub": "",
+  "name": "Passé composé with être",
+  "slugs": [
+   "pc-etre"
+  ],
+  "blurb": "Forming the passé composé with être and making the participle agree with the subject (elle est allée, ils sont partis)."
+ },
+ {
+  "id": "t35",
+  "lv": "A2",
+  "cat": "T",
+  "sub": "",
+  "name": "Imparfait",
+  "slugs": [
+   "imparfait"
+  ],
+  "blurb": "Forming the imparfait of common verbs (je parlais, nous étions, elles venaient)."
+ },
+ {
+  "id": "t36",
+  "lv": "A2",
+  "cat": "T",
+  "sub": "",
+  "name": "Passé composé vs imparfait",
+  "slugs": [
+   "imparfait-vs-pc"
+  ],
+  "blurb": "Choosing the imparfait for background and habits versus the passé composé for events (pendant que je dormais… le téléphone a sonné)."
+ },
+ {
+  "id": "t37",
+  "lv": "A2",
+  "cat": "T",
+  "sub": "",
+  "name": "Futur simple",
+  "slugs": [
+   "futur-simple"
+  ],
+  "blurb": "Talking about tomorrow and later: endings -ai, -as, -a, -ons, -ez, -ont on the stem, irregulars included (je serai, j'irai, je ferai)."
+ },
+ {
+  "id": "t38",
+  "lv": "A2",
+  "cat": "M",
+  "sub": "",
+  "name": "Verbs with prepositions",
+  "slugs": [
+   "verbs-prepositions"
+  ],
+  "blurb": "Which preposition joins the conjugated verb to its infinitive: aider à, apprendre à, réussir à, versus décider de, essayer de, oublier de."
+ },
+ {
+  "id": "t39",
+  "lv": "A2",
+  "cat": "N",
+  "sub": "a",
+  "name": "Comparative",
+  "slugs": [
+   "comparative"
+  ],
+  "blurb": "Comparing with plus/moins/aussi … que (le TGV est plus rapide que le vélo) — plus for more, moins for less, aussi for equal."
+ },
+ {
+  "id": "t40",
+  "lv": "A2",
+  "cat": "N",
+  "sub": "a",
+  "name": "Superlative",
+  "slugs": [
+   "superlative"
+  ],
+  "blurb": "The extreme form: le/la/les plus + adjective agreeing with the noun (la plus belle), and bon → meilleur, mauvais → pire."
+ },
+ {
+  "id": "t41",
+  "lv": "A2",
+  "cat": "N",
+  "sub": "p",
+  "name": "Direct object pronouns",
+  "slugs": [
+   "pronouns-cod-coi"
+  ],
+  "blurb": "Replacing direct and indirect objects with le, la, les, lui, leur and placing them before the verb (Je la connais, Tu lui téléphones)."
+ },
+ {
+  "id": "t42",
+  "lv": "A2",
+  "cat": "N",
+  "sub": "p",
+  "name": "Indirect object pronouns",
+  "slugs": [
+   "pronouns-cod-coi"
+  ],
+  "blurb": "Replacing direct and indirect objects with le, la, les, lui, leur and placing them before the verb (Je la connais, Tu lui téléphones)."
+ },
+ {
+  "id": "t43",
+  "lv": "A2",
+  "cat": "N",
+  "sub": "p",
+  "name": "En",
+  "slugs": [
+   "pronoun-en"
+  ],
+  "blurb": "Replacing de + thing with en before the verb (j'en parle, tu en manges) — and the j'en elision trap."
+ },
+ {
+  "id": "t44",
+  "lv": "A2",
+  "cat": "N",
+  "sub": "p",
+  "name": "Y",
+  "slugs": [
+   "pronoun-y"
+  ],
+  "blurb": "Replacing à + place with y and placing it before the verb (elle va à Paris → elle y va)."
+ },
+ {
+  "id": "t45",
+  "lv": "A2",
+  "cat": "N",
+  "sub": "p",
+  "name": "Uses of on",
+  "slugs": [
+   "uses-of-on"
+  ],
+  "blurb": "Beyond on = nous: on for people in general (ici on parle français) — always with the 3rd-person singular form."
+ },
+ {
+  "id": "t46",
+  "lv": "A2",
+  "cat": "N",
+  "sub": "p",
+  "name": "Qui, que, où",
+  "slugs": [
+   "qui-que-ou"
+  ],
+  "blurb": "Joining clauses with relative pronouns: qui for the subject, que for the object, où for place and time (la ville où j'habite)."
+ },
+ {
+  "id": "t47",
+  "lv": "A2",
+  "cat": "N",
+  "sub": "p",
+  "name": "Possessive pronouns",
+  "slugs": [
+   "possessive-pronouns"
+  ],
+  "blurb": "The standing-alone possessives: le mien, la mienne, les nôtres — gender and number come from the thing, not the owner."
+ },
+ {
+  "id": "t48",
+  "lv": "A2",
+  "cat": "N",
+  "sub": "p",
+  "name": "Tout, toute, tous",
+  "slugs": [
+   "tout-toute-tous"
+  ],
+  "blurb": "The four faces of tout: tout le temps, toute la journée, tous les amis, toutes les fenêtres — agreeing with what follows."
+ },
+ {
+  "id": "t49",
+  "lv": "A2",
+  "cat": "N",
+  "sub": "p",
+  "name": "Ça, cela, ceci",
+  "slugs": [
+   "ca-cela-ceci"
+  ],
+  "blurb": "Pointing without a noun: ceci (this, near), cela/ça (that, general) — and when everyday ça replaces both."
+ },
+ {
+  "id": "t50",
+  "lv": "A2",
+  "cat": "S",
+  "sub": "",
+  "name": "Ne… plus, rien, personne",
+  "slugs": [
+   "ne-plus-rien-personne"
+  ],
+  "blurb": "Negation beyond ne … pas: ne … plus (not anymore), ne … rien (nothing), ne … personne (nobody) — same wrapping, stronger meanings."
+ },
+ {
+  "id": "t51",
+  "lv": "A2",
+  "cat": "S",
+  "sub": "",
+  "name": "Exclamations",
+  "slugs": [
+   "exclamations"
+  ],
+  "blurb": "Exclaiming: quel agreeing with its noun (quelle belle vue !) and que/comme as intensifiers (qu'il fait chaud !)."
+ },
+ {
+  "id": "t52",
+  "lv": "A2",
+  "cat": "S",
+  "sub": "",
+  "name": "Cause & consequence",
+  "slugs": [
+   "cause-consequence"
+  ],
+  "blurb": "Linking cause and result: parce que before the cause (parce qu'il pleut), donc before the result, à cause de + noun for blame."
+ },
+ {
+  "id": "t53",
+  "lv": "A2",
+  "cat": "S",
+  "sub": "",
+  "name": "Purpose & opposition",
+  "slugs": [
+   "purpose-opposition"
+  ],
+  "blurb": "pour + infinitive for purpose (j'étudie pour réussir), and despite it all: malgré + noun, même si + clause."
+ },
+ {
+  "id": "t54",
+  "lv": "A2",
+  "cat": "S",
+  "sub": "",
+  "name": "Sequencing connectors",
+  "slugs": [
+   "sequencing-connectors"
+  ],
+  "blurb": "Ordering a story: d'abord, ensuite, puis, enfin — first, then, finally."
+ },
+ {
+  "id": "t55",
+  "lv": "B1",
+  "cat": "T",
+  "sub": "",
+  "name": "Plus-que-parfait",
+  "slugs": [
+   "plus-que-parfait"
+  ],
+  "blurb": "The earlier of two past events: imparfait of the auxiliary + past participle — quand je suis arrivé, il avait déjà mangé."
+ },
+ {
+  "id": "t56",
+  "lv": "B1",
+  "cat": "T",
+  "sub": "",
+  "name": "Past tenses in a story",
+  "slugs": [
+   "past-tenses-story"
+  ],
+  "blurb": "Choosing between imparfait (background), passé composé (events) and plus-que-parfait (anteriority) inside a short narrative."
+ },
+ {
+  "id": "t57",
+  "lv": "B1",
+  "cat": "T",
+  "sub": "",
+  "name": "Agreement with preceding object",
+  "slugs": [
+   "accord-antepose"
+  ],
+  "blurb": "Making the participle agree when the direct object precedes the verb (les fleurs que j'ai achetées)."
+ },
+ {
+  "id": "t58",
+  "lv": "B1",
+  "cat": "M",
+  "sub": "",
+  "name": "Conditionnel présent: forms",
+  "slugs": [
+   "conditionnel-forms"
+  ],
+  "blurb": "Futur stem + imparfait endings: il a promis qu'il viendrait — the future seen from the past."
+ },
+ {
+  "id": "t59",
+  "lv": "B1",
+  "cat": "M",
+  "sub": "",
+  "name": "Conditionnel présent: uses",
+  "slugs": [
+   "conditionnel-uses"
+  ],
+  "blurb": "Softening with the conditionnel: pourriez-vous (requests), je voudrais (wishes), tu devrais (advice)."
+ },
+ {
+  "id": "t60",
+  "lv": "B1",
+  "cat": "M",
+  "sub": "",
+  "name": "Subjonctif présent: forms",
+  "slugs": [
+   "subjonctif-forms"
+  ],
+  "blurb": "The irregular subjonctif stems: que je sois, que j'aie, que j'aille, que je fasse, que je puisse."
+ },
+ {
+  "id": "t61",
+  "lv": "B1",
+  "cat": "M",
+  "sub": "",
+  "name": "Subjonctif after feelings & il faut",
+  "slugs": [
+   "subjonctif"
+  ],
+  "blurb": "Using the subjonctif after expressions of feeling, doubt and necessity (je doute qu'il ait raison, je suis content que tu viennes)."
+ },
+ {
+  "id": "t62",
+  "lv": "B1",
+  "cat": "M",
+  "sub": "",
+  "name": "Subjonctif vs indicatif",
+  "slugs": [
+   "subjonctif-vs-indicatif"
+  ],
+  "blurb": "Je veux qu'il vienne but je pense qu'il vient — wish and possibility take the subjonctif, belief and certainty keep the indicatif."
+ },
+ {
+  "id": "t63",
+  "lv": "B1",
+  "cat": "M",
+  "sub": "",
+  "name": "Passive voice",
+  "slugs": [
+   "passive-voice"
+  ],
+  "blurb": "être + past participle agreeing with the subject: la lettre a été envoyée — and the « on » shortcut to an agentless passive."
+ },
+ {
+  "id": "t64",
+  "lv": "B1",
+  "cat": "M",
+  "sub": "",
+  "name": "Gérondif",
+  "slugs": [
+   "gerondif"
+  ],
+  "blurb": "en + participe présent for simultaneity and means: il maigrit en mangeant moins — with its spelling traps (mangeant, commençant, appelant)."
+ },
+ {
+  "id": "t65",
+  "lv": "B1",
+  "cat": "N",
+  "sub": "n",
+  "name": "Nominalization",
+  "slugs": [
+   "nominalization"
+  ],
+  "blurb": "Turning verbs into nouns: décider → la décision, réussir → la réussite — with the gender you must learn alongside."
+ },
+ {
+  "id": "t66",
+  "lv": "B1",
+  "cat": "N",
+  "sub": "p",
+  "name": "Double object pronouns",
+  "slugs": [
+   "double-pronouns"
+  ],
+  "blurb": "Two pronouns before the verb in a fixed order: je le lui donne — le/la/les first, lui/leur second."
+ },
+ {
+  "id": "t67",
+  "lv": "B1",
+  "cat": "N",
+  "sub": "p",
+  "name": "Dont",
+  "slugs": [
+   "dont"
+  ],
+  "blurb": "The relative for verb + de: le film dont je parle, le projet dont on est fier — and the possessive dont l'histoire."
+ },
+ {
+  "id": "t68",
+  "lv": "B1",
+  "cat": "N",
+  "sub": "p",
+  "name": "Compound relatives",
+  "slugs": [
+   "compound-relatives"
+  ],
+  "blurb": "Preposition + lequel agreeing with its antecedent: la ville dans laquelle j'habite, les amis avec lesquels je sors."
+ },
+ {
+  "id": "t69",
+  "lv": "B1",
+  "cat": "N",
+  "sub": "p",
+  "name": "Indefinite pronouns",
+  "slugs": [
+   "indefinite-pronouns"
+  ],
+  "blurb": "quelqu'un, quelque chose, chacun, tous — including quelqu'un de gentil, where the adjective stays masculine."
+ },
+ {
+  "id": "t70",
+  "lv": "B1",
+  "cat": "N",
+  "sub": "p",
+  "name": "Ce qui, ce que, ce dont",
+  "slugs": [
+   "ce-qui-ce-que-ce-dont"
+  ],
+  "blurb": "Relative pronouns without an antecedent noun: ce qui m'étonne, ce que je veux, ce dont j'ai besoin."
+ },
+ {
+  "id": "t71",
+  "lv": "B1",
+  "cat": "S",
+  "sub": "",
+  "name": "Si + présent",
+  "slugs": [
+   "si-present"
+  ],
+  "blurb": "Real possibility: si tu viens, on ira — présent after si, futur in the result, never si + futur."
+ },
+ {
+  "id": "t72",
+  "lv": "B1",
+  "cat": "S",
+  "sub": "",
+  "name": "Si + imparfait",
+  "slugs": [
+   "si-imparfait"
+  ],
+  "blurb": "The unreal present: si j'avais le temps, je viendrais — imparfait after si, conditionnel in the result."
+ },
+ {
+  "id": "t73",
+  "lv": "B1",
+  "cat": "S",
+  "sub": "",
+  "name": "Reported speech (present)",
+  "slugs": [
+   "reported-speech"
+  ],
+  "blurb": "Reporting with present tenses: il dit que…, il demande si… — statements with que, yes/no questions with si."
+ },
+ {
+  "id": "t74",
+  "lv": "B1",
+  "cat": "S",
+  "sub": "",
+  "name": "Ne… que, aucun, ni… ni",
+  "slugs": [
+   "restriction-ne-que"
+  ],
+  "blurb": "Restrictive negation: je ne mange que des légumes (only), aucun doute (not a single), ni café ni thé (neither)."
+ },
+ {
+  "id": "t75",
+  "lv": "B1",
+  "cat": "S",
+  "sub": "",
+  "name": "Cause & consequence (extended)",
+  "slugs": [
+   "cause-consequence-extended"
+  ],
+  "blurb": "Beyond parce que: grâce à vs à cause de, c'est pourquoi, si bien que, à force de."
+ },
+ {
+  "id": "t76",
+  "lv": "B1",
+  "cat": "S",
+  "sub": "",
+  "name": "Pour que, afin de",
+  "slugs": [
+   "pour-que-afin-de"
+  ],
+  "blurb": "Purpose with a subject change: je répète pour que tu comprennes — same subject keeps pour + infinitive."
+ },
+ {
+  "id": "t77",
+  "lv": "B1",
+  "cat": "S",
+  "sub": "",
+  "name": "Concession & opposition",
+  "slugs": [
+   "concession-opposition"
+  ],
+  "blurb": "Despite it all: bien que + subjonctif (bien qu'il soit malade), malgré + noun, même si + indicatif."
+ },
+ {
+  "id": "t78",
+  "lv": "B1",
+  "cat": "S",
+  "sub": "",
+  "name": "Ce qui…, c'est",
+  "slugs": [
+   "ce-qui-cest"
+  ],
+  "blurb": "Emphasis with a cleft: ce qui m'étonne, c'est son courage — the written comma before c'est."
+ },
+ {
+  "id": "t79",
+  "lv": "B1",
+  "cat": "S",
+  "sub": "",
+  "name": "Il est / c'est + adjective + de",
+  "slugs": [
+   "il-est-cest-adjectif-de"
+  ],
+  "blurb": "Impersonal judgement: il est facile d'apprendre le français — with the d' elision and the spoken c'est."
+ },
+ {
+  "id": "t80",
+  "lv": "B1",
+  "cat": "S",
+  "sub": "",
+  "name": "Narrative time markers",
+  "slugs": [
+   "narrative-time-markers"
+  ],
+  "blurb": "Setting the rhythm of a story: soudain, pendant que, alors que, enfin, au moment où."
+ },
+ {
+  "id": "t81",
+  "lv": "B2",
+  "cat": "T",
+  "sub": "",
+  "name": "Futur antérieur",
+  "slugs": [
+   "futur-anterieur"
+  ],
+  "blurb": "The earlier future: quand tu seras arrivé, nous serons prêts — futur of the auxiliary + past participle."
+ },
+ {
+  "id": "t82",
+  "lv": "B2",
+  "cat": "T",
+  "sub": "",
+  "name": "Past infinitive",
+  "slugs": [
+   "past-infinitive"
+  ],
+  "blurb": "Anteriority in one clause: après avoir fini, après être arrivé — the same auxiliary as the passé composé."
+ },
+ {
+  "id": "t83",
+  "lv": "B2",
+  "cat": "T",
+  "sub": "",
+  "name": "Sequence of tenses",
+  "slugs": [
+   "sequence-of-tenses"
+  ],
+  "blurb": "A past main clause pulls the subordinate back: il a dit qu'il viendrait — present keeps the futur."
+ },
+ {
+  "id": "t84",
+  "lv": "B2",
+  "cat": "T",
+  "sub": "",
+  "name": "Exceptional participle agreement",
+  "slugs": [
+   "exceptional-participle"
+  ],
+  "blurb": "With avoir, the participle agrees with a preceding direct object: les fleurs que j'ai cueillies."
+ },
+ {
+  "id": "t85",
+  "lv": "B2",
+  "cat": "M",
+  "sub": "",
+  "name": "Conditionnel passé",
+  "slugs": [
+   "conditionnel-passe"
+  ],
+  "blurb": "The unreal past result: si tu m'avais écouté, j'aurais fini — avoir/être in the conditionnel + participle."
+ },
+ {
+  "id": "t86",
+  "lv": "B2",
+  "cat": "M",
+  "sub": "",
+  "name": "Subjonctif after verbs & impersonals",
+  "slugs": [
+   "subjonctif-verbs-impersonals"
+  ],
+  "blurb": "Beyond il faut: craindre que, redouter que, attendre que take the subjonctif; être sûr que, admettre que keep the indicatif."
+ },
+ {
+  "id": "t87",
+  "lv": "B2",
+  "cat": "M",
+  "sub": "",
+  "name": "Subjonctif after conjunctions",
+  "slugs": [
+   "subjonctif-conjunctions"
+  ],
+  "blurb": "The conjunction series: bien que, avant que, jusqu'à ce que, sans que, pourvu que — all subjonctif."
+ },
+ {
+  "id": "t88",
+  "lv": "B2",
+  "cat": "M",
+  "sub": "",
+  "name": "Subjonctif passé",
+  "slugs": [
+   "subjonctif-passe"
+  ],
+  "blurb": "A completed action inside the subjonctif: je suis content qu'il ait fini, qu'elle soit partie."
+ },
+ {
+  "id": "t89",
+  "lv": "B2",
+  "cat": "M",
+  "sub": "",
+  "name": "Participle vs verbal adjective",
+  "slugs": [
+   "participe-ou-adjectif"
+  ],
+  "blurb": "un film amusant (it amuses) vs des enfants amusés (they are amused); fatigant/fatigué and its traps."
+ },
+ {
+  "id": "t90",
+  "lv": "B2",
+  "cat": "N",
+  "sub": "p",
+  "name": "Interrogative lequel",
+  "slugs": [
+   "lequel-interrogatif"
+  ],
+  "blurb": "Asking with lequel: laquelle de ces robes — the question word agrees with the thing asked about."
+ },
+ {
+  "id": "t91",
+  "lv": "B2",
+  "cat": "S",
+  "sub": "",
+  "name": "Si + plus-que-parfait",
+  "slugs": [
+   "si-plus-que-parfait"
+  ],
+  "blurb": "The unreal past: si j'avais su, je serais venu — plus-que-parfait after si, conditionnel passé in the result."
+ },
+ {
+  "id": "t92",
+  "lv": "B2",
+  "cat": "S",
+  "sub": "",
+  "name": "Au cas où, à condition que",
+  "slugs": [
+   "au-cas-ou-condition"
+  ],
+  "blurb": "Contingency vs requirement: au cas où il pleuvrait (conditionnel), à condition que tu sois prêt (subjonctif)."
+ },
+ {
+  "id": "t93",
+  "lv": "B2",
+  "cat": "S",
+  "sub": "",
+  "name": "Advanced opposition & concession",
+  "slugs": [
+   "opposition-avancee"
+  ],
+  "blurb": "Formal opposition: néanmoins, toutefois, en revanche — and the extreme concessions quoique, quand bien même."
+ },
+ {
+  "id": "t94",
+  "lv": "B2",
+  "cat": "S",
+  "sub": "",
+  "name": "Advanced purpose & cause",
+  "slugs": [
+   "but-cause-avancee"
+  ],
+  "blurb": "Formal purpose and cause: de peur que, de sorte que, afin de, vu que, étant donné que."
+ },
+ {
+  "id": "t95",
+  "lv": "C1",
+  "cat": "T",
+  "sub": "",
+  "name": "Passé simple (recognize)",
+  "slugs": []
+ },
+ {
+  "id": "t96",
+  "lv": "C1",
+  "cat": "T",
+  "sub": "",
+  "name": "Passé antérieur (recognize)",
+  "slugs": []
+ },
+ {
+  "id": "t97",
+  "lv": "C1",
+  "cat": "T",
+  "sub": "",
+  "name": "Agreement of pronominal verbs",
+  "slugs": []
+ },
+ {
+  "id": "t98",
+  "lv": "C1",
+  "cat": "M",
+  "sub": "",
+  "name": "Subtle subjonctif cases",
+  "slugs": []
+ },
+ {
+  "id": "t99",
+  "lv": "C1",
+  "cat": "M",
+  "sub": "",
+  "name": "Subjonctif vs indicatif meaning",
+  "slugs": []
+ },
+ {
+  "id": "t100",
+  "lv": "C1",
+  "cat": "M",
+  "sub": "",
+  "name": "Attenuating conditionnel",
+  "slugs": []
+ },
+ {
+  "id": "t101",
+  "lv": "C1",
+  "cat": "M",
+  "sub": "",
+  "name": "Infinitive clauses",
+  "slugs": []
+ },
+ {
+  "id": "t102",
+  "lv": "C1",
+  "cat": "M",
+  "sub": "",
+  "name": "Literary hypotheticals",
+  "slugs": []
+ },
+ {
+  "id": "t103",
+  "lv": "C1",
+  "cat": "N",
+  "sub": "a",
+  "name": "Quelque, quel que",
+  "slugs": []
+ },
+ {
+  "id": "t104",
+  "lv": "C1",
+  "cat": "N",
+  "sub": "p",
+  "name": "Auquel, duquel & co.",
+  "slugs": []
+ },
+ {
+  "id": "t105",
+  "lv": "C1",
+  "cat": "N",
+  "sub": "p",
+  "name": "Ellipsis & avoiding repetition",
+  "slugs": []
+ },
+ {
+  "id": "t106",
+  "lv": "C1",
+  "cat": "S",
+  "sub": "",
+  "name": "Avoir beau, quand bien même",
+  "slugs": []
+ },
+ {
+  "id": "t107",
+  "lv": "C1",
+  "cat": "S",
+  "sub": "",
+  "name": "Formal connectors",
+  "slugs": []
+ },
+ {
+  "id": "t108",
+  "lv": "C1",
+  "cat": "S",
+  "sub": "",
+  "name": "Formal inversion",
+  "slugs": []
+ },
+ {
+  "id": "t109",
+  "lv": "C1",
+  "cat": "S",
+  "sub": "",
+  "name": "Expletive ne",
+  "slugs": []
+ },
+ {
+  "id": "t110",
+  "lv": "C1",
+  "cat": "S",
+  "sub": "",
+  "name": "Impersonal formal style",
+  "slugs": []
+ },
+ {
+  "id": "t111",
+  "lv": "C1",
+  "cat": "S",
+  "sub": "",
+  "name": "Spoken vs written French",
+  "slugs": []
+ },
+ {
+  "id": "t112",
+  "lv": "C2",
+  "cat": "T",
+  "sub": "",
+  "name": "Passé simple, all persons",
+  "slugs": []
+ },
+ {
+  "id": "t113",
+  "lv": "C2",
+  "cat": "T",
+  "sub": "",
+  "name": "Fine participle agreement",
+  "slugs": []
+ },
+ {
+  "id": "t114",
+  "lv": "C2",
+  "cat": "M",
+  "sub": "",
+  "name": "Subjonctif imparfait",
+  "slugs": []
+ },
+ {
+  "id": "t115",
+  "lv": "C2",
+  "cat": "M",
+  "sub": "",
+  "name": "Conditionnel passé 2e forme",
+  "slugs": []
+ },
+ {
+  "id": "t116",
+  "lv": "C2",
+  "cat": "N",
+  "sub": "a",
+  "name": "Adjective position & meaning",
+  "slugs": []
+ },
+ {
+  "id": "t117",
+  "lv": "C2",
+  "cat": "S",
+  "sub": "",
+  "name": "Literary negations",
+  "slugs": []
+ },
+ {
+  "id": "t118",
+  "lv": "C2",
+  "cat": "S",
+  "sub": "",
+  "name": "Stylistic word order",
+  "slugs": []
+ },
+ {
+  "id": "t119",
+  "lv": "C2",
+  "cat": "S",
+  "sub": "",
+  "name": "Archaic fixed phrases",
+  "slugs": []
+ },
+ {
+  "id": "t120",
+  "lv": "C2",
+  "cat": "S",
+  "sub": "",
+  "name": "Register shifts",
+  "slugs": []
+ }
+]

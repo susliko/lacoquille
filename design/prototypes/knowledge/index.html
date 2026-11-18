@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Knowledge base — 4 design directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F6F4EF; --card:#FFFFFF; --ink:#1F1D18; --muted:#6E6A60;
+  --faint:#9B968A; --chip:#EBE8E0; --line:#DFDBD2;
+  --p1:#C9D3EC; --p2:#4A5AA8; --p3:#232D5C;
+  --accent:var(--p2); --accent-soft:#E9EDF8; --accent-ink:#2F3E78;
+  --review:#C7531E; --review-text:#A84314;
+  --font:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --t-display:30px; --t-md:16px; --t-base:14px; --t-sm:13px; --t-xs:12px; --t-2xs:11px;
+  --r-lg:14px; --r-md:10px; --r-pill:999px;
+  --s-4:16px; --s-3:12px;
+  --shadow-1:0 1px 2px rgba(31,29,24,.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#ECEAE3;color:var(--ink);font-family:var(--font);line-height:1.6;padding:28px 16px 60px}
+main{max-width:430px;margin:0 auto}
+.eyebrow{font-size:var(--t-xs);font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:var(--t-display);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin-top:2px}
+.sub{color:var(--muted);font-size:var(--t-sm);margin-top:6px}
+.note{background:var(--accent-soft);border-radius:var(--r-md);padding:12px 14px;font-size:var(--t-xs);
+      color:var(--accent-ink);line-height:1.55;margin-top:16px}
+.dir{display:block;background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
+     padding:18px;margin-top:14px;box-shadow:var(--shadow-1);transition:border-color .15s}
+.dir:hover{border-color:var(--accent)}
+.dir .top{display:flex;align-items:baseline;gap:10px}
+.dir .no{font-size:var(--t-2xs);font-weight:800;color:var(--faint)}
+.dir h2{font-size:var(--t-md);font-weight:800;flex:1}
+.dir .arrow{color:var(--accent);font-weight:800}
+.dir .idea{font-size:var(--t-base);color:var(--ink);margin-top:8px;line-height:1.5}
+.dir .best{font-size:var(--t-xs);color:var(--muted);margin-top:8px;line-height:1.5}
+.dir .best b{color:var(--accent-ink);font-weight:800}
+.dir .chosen{font-size:var(--t-2xs);font-weight:800;color:var(--accent-ink);background:var(--accent-soft);border-radius:var(--r-pill);padding:3px 9px}
+.foot{font-size:var(--t-2xs);color:var(--faint);margin-top:22px;line-height:1.6;text-align:center}
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Design exploration</p>
+  <h1>Knowledge, four ways</h1>
+  <p class="sub">94 grammar topics · every topic gets a small rule sheet · four ways to navigate them</p>
+
+  <p class="note">Each prototype is a working toy: real topic list, real levels, fake mastery dots.
+  Six topics carry full rule sheets — try <b>Imparfait vs passé composé</b>, <b>The pronoun en</b>,
+  <b>Si + imparfait</b>, <b>Subjonctif after feelings</b>, <b>Futur proche</b> or <b>Negation</b>.</p>
+
+  <a class="dir" href="1-manuel.html">
+    <div class="top"><span class="no">01</span><h2>Le Manuel — the coursebook</h2><span class="chosen">chosen ✓</span><span class="arrow">→</span></div>
+    <p class="idea">Levels are chapters, sections are parts, topics are numbered lessons. A table of contents you leaf through.</p>
+    <p class="best"><b>Best when</b> knowledge should feel like a curriculum — ordered, finite, cover-to-cover. Lesson numbers give learners a shared vocabulary (“I’m on 2.07”).</p>
+  </a>
+
+  <a class="dir" href="2-dictionnaire.html">
+    <div class="top"><span class="no">02</span><h2>Le Dictionnaire — search first</h2><span class="arrow">→</span></div>
+    <p class="idea">No chapters — a reference you consult. Alphabetical with a letter rail, live filter, and dictionary-style entries.</p>
+    <p class="best"><b>Best when</b> learners arrive with a question (“how does <i>en</i> work?”), not a study plan. Zero browsing ceremony, one keystroke to anything.</p>
+  </a>
+
+  <a class="dir" href="3-parcours.html">
+    <div class="top"><span class="no">03</span><h2>Le Parcours — the path</h2><span class="arrow">→</span></div>
+    <p class="idea">One trail through all 94 steps. Mastery rings on a rail, level milestones, a “you are here” pulse, and a Continue button that always knows what’s next.</p>
+    <p class="best"><b>Best when</b> knowledge should feel like progress. Ties directly into the practice coach — the path is what the coach walks you down.</p>
+  </a>
+
+  <a class="dir" href="4-table.html">
+    <div class="top"><span class="no">04</span><h2>La Table — the whole table</h2><span class="arrow">→</span></div>
+    <p class="idea">Everything visible at once: four drawers (Tense · Mood · Nouns · Sentence), each with a level-distribution bar, collapsible into dense rows.</p>
+    <p class="best"><b>Best when</b> the catalog itself is the interface — you want to see scope (“where do I stand in all of this?”) and jump anywhere in two taps.</p>
+  </a>
+
+  <p class="foot">Tokens: Paper &amp; encre de travail · Manrope · indigo progress scale · vermillon review<br/>
+  Prototypes only — nothing wired to the app yet</p>
+</main>
+</body>
+</html>

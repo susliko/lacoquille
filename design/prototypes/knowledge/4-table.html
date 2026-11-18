@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Knowledge · 4 La Table</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ── tokens (from src/styles/tokens.css) ─────────────────── */
+:root{
+  color-scheme:light;
+  --paper:#F6F4EF; --card:#FFFFFF; --ink:#1F1D18; --muted:#6E6A60;
+  --faint:#9B968A; --chip:#EBE8E0; --line:#DFDBD2;
+  --p0:#E3E1DA; --p1:#C9D3EC; --p2:#4A5AA8; --p3:#232D5C;
+  --accent:var(--p2); --accent-soft:#E9EDF8; --accent-ink:#2F3E78;
+  --review:#C7531E; --review-text:#A84314; --no-bg:#F9E9DF; --no-ink:#8F3A0D;
+  --font:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --t-display:30px; --t-xl:23px; --t-lg:19px; --t-md:16px; --t-base:14px;
+  --t-sm:13px; --t-xs:12px; --t-2xs:11px;
+  --r-sm:7px; --r-md:10px; --r-lg:14px; --r-pill:999px;
+  --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px; --s-5:22px; --s-6:32px;
+  --shadow-1:0 1px 2px rgba(31,29,24,.08);
+  --ease:cubic-bezier(.2,0,0,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:#ECEAE3;color:var(--ink);font-family:var(--font);font-size:var(--t-md);line-height:1.6;font-weight:400}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+#app{max-width:430px;margin:0 auto;min-height:100dvh;background:var(--paper);
+     border-inline:1px solid var(--line);position:relative;padding-bottom:76px}
+@media(max-width:430px){#app{border-inline:0}}
+
+.proto-pill{position:fixed;bottom:14px;right:14px;z-index:50;background:var(--ink);color:#fff;
+  font-size:var(--t-xs);font-weight:700;padding:9px 14px;border-radius:var(--r-pill);
+  box-shadow:0 4px 14px rgba(31,29,24,.3)}
+.proto-pill:hover{background:#000}
+
+.screen{animation:in .22s var(--ease)}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ── header + quick jump ─────────────────────────────────── */
+.head{padding:26px var(--s-4) 0}
+.eyebrow{font-size:var(--t-xs);font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.head h1{font-size:var(--t-display);font-weight:800;letter-spacing:-.02em;margin-top:2px;line-height:1.1}
+.head .sub{color:var(--muted);font-size:var(--t-sm);margin-top:4px}
+
+.jumplist{position:sticky;top:0;z-index:20;background:var(--paper);display:grid;
+          grid-template-columns:repeat(4,1fr);gap:6px;padding:14px var(--s-4) 10px;
+          border-bottom:1px solid var(--line)}
+.jump{display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 2px;
+      border:1px solid var(--line);border-radius:var(--r-md);background:var(--card);box-shadow:var(--shadow-1)}
+.jump:active{background:var(--accent-soft);border-color:var(--accent)}
+.jump b{font-size:var(--t-sm);font-weight:800;line-height:1.1}
+.jump small{font-size:var(--t-2xs);color:var(--faint);font-weight:700}
+
+/* ── section blocks ──────────────────────────────────────── */
+.blocks{padding:var(--s-3) var(--s-4) var(--s-6)}
+.block{margin-bottom:var(--s-4)}
+.block-h{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;width:100%;
+         text-align:left;background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
+         padding:14px var(--s-4);box-shadow:var(--shadow-1)}
+.block-h:active{background:var(--accent-soft)}
+.block-h .nm{font-size:var(--t-md);font-weight:800;line-height:1.2}
+.block-h .nm small{font-weight:700;color:var(--faint);font-size:var(--t-xs);margin-left:6px}
+.block-h .chev{font-size:var(--t-sm);color:var(--muted);transition:transform .18s var(--ease);grid-row:span 2}
+.block.open .chev{transform:rotate(90deg)}
+.dist{grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-top:6px}
+.distbar{flex:1;display:flex;height:6px;border-radius:var(--r-pill);overflow:hidden;background:var(--chip)}
+.distbar i{height:100%}
+.d-A1{background:var(--p1)} .d-A2{background:var(--p2)} .d-B1{background:var(--p3)} .d-B2{background:var(--ink)}
+.distcounts{display:flex;gap:8px;font-size:var(--t-2xs);color:var(--muted);font-weight:700;white-space:nowrap}
+.distcounts i{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:3px;vertical-align:0}
+.rows{display:grid;grid-template-rows:0fr;transition:grid-template-rows .25s var(--ease)}
+.block.open .rows{grid-template-rows:1fr}
+.rows>div{overflow:hidden}
+.rows-inner{margin-top:6px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
+            overflow:hidden;box-shadow:var(--shadow-1)}
+.lvlgroup>.lvlh{font-size:var(--t-2xs);font-weight:800;letter-spacing:.12em;color:var(--muted);
+                padding:10px 14px 4px;display:flex;align-items:center;gap:8px}
+.lvlh::after{content:"";flex:1;height:1px;background:var(--line)}
+.row{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;width:100%;
+     text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);min-height:48px}
+.row:last-child{border-bottom:0}
+.row:active{background:var(--accent-soft)}
+.row .tt{font-size:var(--t-base);font-weight:600;line-height:1.3}
+.row .bl{grid-column:1/-1;font-size:var(--t-2xs);color:var(--faint);line-height:1.45;
+         display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.row .right{display:flex;align-items:center;gap:8px}
+.lvtag{font-size:var(--t-2xs);font-weight:800;color:var(--muted);background:var(--chip);
+       padding:1px 6px;border-radius:var(--r-sm)}
+.dot{width:10px;height:10px;border-radius:50%}
+.dot.s0{background:var(--p0)}.dot.s1{background:var(--p1)}.dot.s2{background:var(--p2)}.dot.s3{background:var(--p3)}
+.dot.rev{outline:2px solid var(--review);outline-offset:2px}
+
+/* ── compact sheet (topic page) ──────────────────────────── */
+.sheet-head{padding:18px var(--s-4) 0}
+.backrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.back{font-size:var(--t-sm);font-weight:700;color:var(--accent-ink)}
+.crumbs{font-size:var(--t-xs);font-weight:800;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.sheet-head h2{font-size:var(--t-xl);font-weight:800;letter-spacing:-.01em;line-height:1.2}
+.sheet-head .desc{color:var(--muted);font-size:var(--t-sm);line-height:1.5;margin-top:4px}
+.sheet-body{padding:var(--s-3) var(--s-4)}
+.kb{background:var(--card);border:1px solid var(--line);border-radius:var(--r-md);margin-bottom:var(--s-2)}
+.kb-h{display:flex;gap:10px;padding:10px 12px;align-items:baseline;border-bottom:1px dashed var(--line)}
+.kb-h .n{font-size:var(--t-sm);font-weight:800;color:var(--accent);flex:none}
+.kb-h h3{font-size:var(--t-base);font-weight:800;line-height:1.35}
+.kb-b{padding:9px 12px 11px}
+.kb-b p{font-size:var(--t-sm);line-height:1.5}
+.ex{margin-top:7px;padding:7px 10px;background:#F2F7FD;border-radius:var(--r-sm);border-left:3px solid var(--p2)}
+.ex .fr{font-size:var(--t-sm);font-weight:700}
+.ex .fr em{font-style:normal;color:var(--accent-ink);background:var(--accent-soft);border-radius:4px;padding:0 3px}
+.ex .en{font-size:var(--t-2xs);color:var(--muted);margin-top:1px}
+.exc{background:var(--no-bg);border-radius:var(--r-md);padding:10px 12px;margin-bottom:var(--s-2)}
+.exc .lbl{font-size:var(--t-2xs);font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--review-text)}
+.exc p{font-size:var(--t-sm);color:var(--no-ink);margin-top:2px}
+.seealso{margin:var(--s-3) 0}
+.seealso .lbl{font-size:var(--t-2xs);font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.seealso .chips{display:flex;flex-wrap:wrap;gap:6px}
+.seealso a{font-size:var(--t-xs);font-weight:700;color:var(--accent-ink);background:var(--accent-soft);
+           padding:6px 10px;border-radius:var(--r-pill)}
+.cta{display:block;text-align:center;background:var(--ink);color:#fff;font-weight:800;
+     font-size:var(--t-base);padding:13px;border-radius:var(--r-md);margin-top:var(--s-4)}
+.cta:active{transform:scale(.99)}
+.kb.stub{border-style:dashed}
+.kb.stub p{color:var(--faint)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<a class="proto-pill" href="index.html">All 4 directions ↺</a>
+
+<script>
+const TOPICS = [{"slug": "pc-etre", "title": "Passé composé with être", "blurb": "Forming the passé composé with être and making the participle agree with the subject (elle est allée, ils sont partis).", "levels": ["A2", "B1"], "section": "Tense"}, {"slug": "pc-aux", "title": "Auxiliary choice", "blurb": "Choosing between être and avoir in the passé composé (elle est tombée, not elle a tombée).", "levels": ["A2"], "section": "Tense"}, {"slug": "imparfait-vs-pc", "title": "Imparfait vs passé composé", "blurb": "Choosing the imparfait for background and habits versus the passé composé for events (pendant que je dormais… le téléphone a sonné).", "levels": ["A2", "B1"], "section": "Tense"}, {"slug": "pronouns-cod-coi", "title": "Object pronouns", "blurb": "Replacing direct and indirect objects with le, la, les, lui, leur and placing them before the verb (Je la connais, Tu lui téléphones).", "levels": ["A2", "B1"], "section": "Nouns"}, {"slug": "subjonctif", "title": "Subjonctif after feelings and doubt", "blurb": "Using the subjonctif after expressions of feeling, doubt and necessity (je doute qu'il ait raison, je suis content que tu viennes).", "levels": ["B1"], "section": "Mood"}, {"slug": "pc-avoir", "title": "Passé composé with avoir", "blurb": "Forming the passé composé with avoir and the past participle (nous avons mangé).", "levels": ["A1", "A2"], "section": "Tense"}, {"slug": "imparfait", "title": "Imparfait forms", "blurb": "Forming the imparfait of common verbs (je parlais, nous étions, elles venaient).", "levels": ["A1", "A2"], "section": "Tense"}, {"slug": "pronoun-y", "title": "The pronoun y", "blurb": "Replacing à + place with y and placing it before the verb (elle va à Paris → elle y va).", "levels": ["B1"], "section": "Nouns"}, {"slug": "cest-vs-il-est", "title": "C'est vs il/elle est", "blurb": "Choosing between c'est + noun and il/elle est + adjective (c'est une bonne idée, c'est évident).", "levels": ["A1", "A2"], "section": "Sentence"}, {"slug": "negation", "title": "Negation", "blurb": "Wrapping the conjugated verb in ne … pas (elle ne parle pas anglais).", "levels": ["A1"], "section": "Sentence"}, {"slug": "accord-antepose", "title": "Agreement with preceding object", "blurb": "Making the participle agree when the direct object precedes the verb (les fleurs que j'ai achetées).", "levels": ["B1"], "section": "Tense"}, {"slug": "present-etre-avoir", "title": "Present: être & avoir", "blurb": "The two essential present-tense verbs: je suis, tu es… and j'ai, tu as… with simple complements.", "levels": ["A1"], "section": "Tense"}, {"slug": "present-er-verbs", "title": "Present: -er verbs", "blurb": "The regular -er pattern that covers most French verbs: je parle, tu parles, il parle, nous parlons, vous parlez, ils parlent.", "levels": ["A1"], "section": "Tense"}, {"slug": "present-irregulars", "title": "Present: common irregular verbs", "blurb": "The everyday irregulars a learner meets first: aller, faire, venir, prendre, dire, savoir, voir, sortir, comprendre, lire.", "levels": ["A1"], "section": "Tense"}, {"slug": "present-pronominal", "title": "Present: pronominal verbs", "blurb": "Reflexive verbs with the agreeing pronoun: je me lève, tu te lèves, il s'appelle — including the m'/t'/s' elision.", "levels": ["A1"], "section": "Tense"}, {"slug": "etre-en-train-de", "title": "Être en train de", "blurb": "Saying what is happening right now: elle est en train de manger — être en train de + infinitive.", "levels": ["A1"], "section": "Tense"}, {"slug": "futur-proche", "title": "Futur proche", "blurb": "The near future with aller + infinitive: je vais partir demain, nous allons manger.", "levels": ["A1"], "section": "Tense"}, {"slug": "passe-recent", "title": "Passé récent", "blurb": "The recent past with venir de + infinitive: je viens de finir, elle vient de partir.", "levels": ["A1"], "section": "Tense"}, {"slug": "imperative", "title": "Imperative", "blurb": "Giving commands: parle !, mangez !, allons-y — tu/nous/vous forms without the subject, and ne … pas around them.", "levels": ["A1"], "section": "Mood"}, {"slug": "polite-conditionnel", "title": "Polite conditionnel", "blurb": "Making requests soft with je voudrais — the polite way to want (je voudrais un café, s'il vous plaît).", "levels": ["A1"], "section": "Mood"}, {"slug": "modal-verbs-infinitive", "title": "Pouvoir, vouloir, devoir + infinitive", "blurb": "The three essential modals: je peux, je veux, je dois + a second verb that stays in the infinitive.", "levels": ["A1"], "section": "Mood"}, {"slug": "il-faut-infinitive", "title": "Il faut + infinitive", "blurb": "Expressing necessity impersonally: il faut partir, il faut finir — one form, no person.", "levels": ["A1"], "section": "Mood"}, {"slug": "pour-infinitive", "title": "Pour + infinitive", "blurb": "Saying what something is for: je lis pour apprendre — pour + infinitive (never par).", "levels": ["A1"], "section": "Mood"}, {"slug": "gender-of-nouns", "title": "Gender of nouns", "blurb": "Every French noun is masculine or feminine, and the article shows it: un problème, une idée.", "levels": ["A1"], "section": "Nouns"}, {"slug": "plural-of-nouns", "title": "Plural of nouns", "blurb": "Making nouns plural: most take -s, but -eau takes -x, -al takes -aux, and -s/-x/-z don't change.", "levels": ["A1"], "section": "Nouns"}, {"slug": "definite-indefinite-articles", "title": "Definite & indefinite articles", "blurb": "un/une/des versus le/la/les (l' before a vowel) — choosing the article that fits the noun and the meaning.", "levels": ["A1"], "section": "Nouns"}, {"slug": "partitive-articles", "title": "Partitive articles", "blurb": "Saying some with food and quantities: du pain, de la confiture, de l'eau — and the negative that turns them into de.", "levels": ["A1"], "section": "Nouns"}, {"slug": "adjective-agreement", "title": "Adjective agreement", "blurb": "Adjectives match their noun's gender and number: un garçon grand, une fille grande, des filles grandes.", "levels": ["A1"], "section": "Nouns"}, {"slug": "adjective-position", "title": "Adjective position", "blurb": "Most adjectives follow the noun (une voiture rouge), but the BAGS crowd — beauty, age, goodness, size — goes before (une grande maison).", "levels": ["A1"], "section": "Nouns"}, {"slug": "possessive-adjectives", "title": "Possessive adjectives", "blurb": "mon/ma/mes, ton/ta/tes, son/sa/ses… — agreeing with the thing owned, not the owner (son frère, even for Marie).", "levels": ["A1"], "section": "Nouns"}, {"slug": "demonstrative-adjectives", "title": "Demonstrative adjectives", "blurb": "Pointing at things: ce chien, cet arbre, cette table, ces livres — with the cet-before-a-vowel rule.", "levels": ["A1"], "section": "Nouns"}, {"slug": "quantity-adverbs", "title": "Quantity & intensity adverbs", "blurb": "très + adjective (très content) versus beaucoup de + noun (beaucoup d'amis) — the pairing learners mix up.", "levels": ["A1"], "section": "Nouns"}, {"slug": "subject-pronouns", "title": "Subject pronouns & on", "blurb": "Replacing subjects with je, tu, il, elle, nous, vous, ils, elles — and the informal on that takes a 3rd-person form.", "levels": ["A1"], "section": "Nouns"}, {"slug": "stressed-pronouns", "title": "Stressed pronouns", "blurb": "The strong forms after prepositions and after c'est: avec moi, pour toi, c'est lui, c'est eux.", "levels": ["A1"], "section": "Nouns"}, {"slug": "three-question-forms", "title": "Three question forms", "blurb": "Asking three ways: intonation (tu vas bien ?), est-ce que (est-ce que tu vas bien ?), and inversion (vas-tu bien ?).", "levels": ["A1"], "section": "Sentence"}, {"slug": "question-words", "title": "Question words", "blurb": "qui, que, où, quand, comment, pourquoi, combien — the words that open questions, in inversion and est-ce que forms.", "levels": ["A1"], "section": "Sentence"}, {"slug": "il-ya-cest-voila", "title": "Il y a, c'est, voilà", "blurb": "Presenting and pointing: il y a deux chiens (there are), c'est mon ami, voilà le train — and the il y a / il a trap.", "levels": ["A1"], "section": "Sentence"}, {"slug": "dans-depuis-il-ya", "title": "Dans, depuis, il y a", "blurb": "Three time expressions learners swap wrongly: dans (in, future), depuis (since/for, ongoing), il y a (ago, past).", "levels": ["A1"], "section": "Sentence"}, {"slug": "prepositions-place", "title": "Prepositions of place", "blurb": "Where things and people are: à Paris, en France, au Japon, chez Marie, dans le sac, sur la table.", "levels": ["A1"], "section": "Sentence"}, {"slug": "prepositions-time", "title": "Prepositions of time", "blurb": "When things happen: avant le dîner, après le cours, pendant les vacances, sous la pluie.", "levels": ["A1"], "section": "Sentence"}, {"slug": "connectors-basic", "title": "Et, ou, mais, alors", "blurb": "The four connectors that shape a sentence: and, or, but, so — chosen by the relation between the clauses.", "levels": ["A1"], "section": "Sentence"}, {"slug": "futur-simple", "title": "Futur simple", "blurb": "Talking about tomorrow and later: endings -ai, -as, -a, -ons, -ez, -ont on the stem, irregulars included (je serai, j'irai, je ferai).", "levels": ["A2"], "section": "Tense"}, {"slug": "verbs-prepositions", "title": "Verbs with prepositions", "blurb": "Which preposition joins the conjugated verb to its infinitive: aider à, apprendre à, réussir à, versus décider de, essayer de, oublier de.", "levels": ["A2"], "section": "Mood"}, {"slug": "comparative", "title": "Comparative", "blurb": "Comparing with plus/moins/aussi … que (le TGV est plus rapide que le vélo) — plus for more, moins for less, aussi for equal.", "levels": ["A2"], "section": "Nouns"}, {"slug": "superlative", "title": "Superlative", "blurb": "The extreme form: le/la/les plus + adjective agreeing with the noun (la plus belle), and bon → meilleur, mauvais → pire.", "levels": ["A2"], "section": "Nouns"}, {"slug": "pronoun-en", "title": "The pronoun en", "blurb": "Replacing de + thing with en before the verb (j'en parle, tu en manges) — and the j'en elision trap.", "levels": ["A2"], "section": "Nouns"}, {"slug": "uses-of-on", "title": "Uses of on", "blurb": "Beyond on = nous: on for people in general (ici on parle français) — always with the 3rd-person singular form.", "levels": ["A2"], "section": "Nouns"}, {"slug": "qui-que-ou", "title": "Qui, que, où", "blurb": "Joining clauses with relative pronouns: qui for the subject, que for the object, où for place and time (la ville où j'habite).", "levels": ["A2"], "section": "Nouns"}, {"slug": "possessive-pronouns", "title": "Possessive pronouns", "blurb": "The standing-alone possessives: le mien, la mienne, les nôtres — gender and number come from the thing, not the owner.", "levels": ["A2"], "section": "Nouns"}, {"slug": "tout-toute-tous", "title": "Tout, toute, tous, toutes", "blurb": "The four faces of tout: tout le temps, toute la journée, tous les amis, toutes les fenêtres — agreeing with what follows.", "levels": ["A2"], "section": "Nouns"}, {"slug": "ca-cela-ceci", "title": "Ça, cela, ceci", "blurb": "Pointing without a noun: ceci (this, near), cela/ça (that, general) — and when everyday ça replaces both.", "levels": ["A2"], "section": "Nouns"}, {"slug": "ne-plus-rien-personne", "title": "Ne… plus, rien, personne", "blurb": "Negation beyond ne … pas: ne … plus (not anymore), ne … rien (nothing), ne … personne (nobody) — same wrapping, stronger meanings.", "levels": ["A2"], "section": "Sentence"}, {"slug": "exclamations", "title": "Exclamations", "blurb": "Exclaiming: quel agreeing with its noun (quelle belle vue !) and que/comme as intensifiers (qu'il fait chaud !).", "levels": ["A2"], "section": "Sentence"}, {"slug": "cause-consequence", "title": "Cause & consequence", "blurb": "Linking cause and result: parce que before the cause (parce qu'il pleut), donc before the result, à cause de + noun for blame.", "levels": ["A2"], "section": "Sentence"}, {"slug": "purpose-opposition", "title": "Purpose & opposition", "blurb": "pour + infinitive for purpose (j'étudie pour réussir), and despite it all: malgré + noun, même si + clause.", "levels": ["A2"], "section": "Sentence"}, {"slug": "sequencing-connectors", "title": "Sequencing connectors", "blurb": "Ordering a story: d'abord, ensuite, puis, enfin — first, then, finally.", "levels": ["A2"], "section": "Sentence"}, {"slug": "plus-que-parfait", "title": "Plus-que-parfait", "blurb": "The earlier of two past events: imparfait of the auxiliary + past participle — quand je suis arrivé, il avait déjà mangé.", "levels": ["B1"], "section": "Tense"}, {"slug": "past-tenses-story", "title": "Past tenses in a story", "blurb": "Choosing between imparfait (background), passé composé (events) and plus-que-parfait (anteriority) inside a short narrative.", "levels": ["B1"], "section": "Tense"}, {"slug": "conditionnel-forms", "title": "Conditionnel présent: forms", "blurb": "Futur stem + imparfait endings: il a promis qu'il viendrait — the future seen from the past.", "levels": ["B1"], "section": "Mood"}, {"slug": "conditionnel-uses", "title": "Conditionnel présent: uses", "blurb": "Softening with the conditionnel: pourriez-vous (requests), je voudrais (wishes), tu devrais (advice).", "levels": ["B1"], "section": "Mood"}, {"slug": "subjonctif-forms", "title": "Subjonctif présent: forms", "blurb": "The irregular subjonctif stems: que je sois, que j'aie, que j'aille, que je fasse, que je puisse.", "levels": ["B1"], "section": "Mood"}, {"slug": "subjonctif-vs-indicatif", "title": "Subjonctif vs indicatif", "blurb": "Je veux qu'il vienne but je pense qu'il vient — wish and possibility take the subjonctif, belief and certainty keep the indicatif.", "levels": ["B1"], "section": "Mood"}, {"slug": "passive-voice", "title": "Passive voice", "blurb": "être + past participle agreeing with the subject: la lettre a été envoyée — and the « on » shortcut to an agentless passive.", "levels": ["B1"], "section": "Mood"}, {"slug": "gerondif", "title": "Gérondif", "blurb": "en + participe présent for simultaneity and means: il maigrit en mangeant moins — with its spelling traps (mangeant, commençant, appelant).", "levels": ["B1"], "section": "Mood"}, {"slug": "nominalization", "title": "Nominalization", "blurb": "Turning verbs into nouns: décider → la décision, réussir → la réussite — with the gender you must learn alongside.", "levels": ["B1"], "section": "Nouns"}, {"slug": "double-pronouns", "title": "Double object pronouns", "blurb": "Two pronouns before the verb in a fixed order: je le lui donne — le/la/les first, lui/leur second.", "levels": ["B1"], "section": "Nouns"}, {"slug": "dont", "title": "Dont", "blurb": "The relative for verb + de: le film dont je parle, le projet dont on est fier — and the possessive dont l'histoire.", "levels": ["B1"], "section": "Nouns"}, {"slug": "compound-relatives", "title": "Compound relatives", "blurb": "Preposition + lequel agreeing with its antecedent: la ville dans laquelle j'habite, les amis avec lesquels je sors.", "levels": ["B1"], "section": "Nouns"}, {"slug": "indefinite-pronouns", "title": "Indefinite pronouns", "blurb": "quelqu'un, quelque chose, chacun, tous — including quelqu'un de gentil, where the adjective stays masculine.", "levels": ["B1"], "section": "Nouns"}, {"slug": "ce-qui-ce-que-ce-dont", "title": "Ce qui, ce que, ce dont", "blurb": "Relative pronouns without an antecedent noun: ce qui m'étonne, ce que je veux, ce dont j'ai besoin.", "levels": ["B1"], "section": "Nouns"}, {"slug": "si-present", "title": "Si + présent", "blurb": "Real possibility: si tu viens, on ira — présent after si, futur in the result, never si + futur.", "levels": ["B1"], "section": "Sentence"}, {"slug": "si-imparfait", "title": "Si + imparfait", "blurb": "The unreal present: si j'avais le temps, je viendrais — imparfait after si, conditionnel in the result.", "levels": ["B1"], "section": "Sentence"}, {"slug": "reported-speech", "title": "Reported speech (present)", "blurb": "Reporting with present tenses: il dit que…, il demande si… — statements with que, yes/no questions with si.", "levels": ["B1"], "section": "Sentence"}, {"slug": "restriction-ne-que", "title": "Ne… que, aucun, ni… ni", "blurb": "Restrictive negation: je ne mange que des légumes (only), aucun doute (not a single), ni café ni thé (neither).", "levels": ["B1"], "section": "Sentence"}, {"slug": "cause-consequence-extended", "title": "Cause & consequence (extended)", "blurb": "Beyond parce que: grâce à vs à cause de, c'est pourquoi, si bien que, à force de.", "levels": ["B1"], "section": "Sentence"}, {"slug": "pour-que-afin-de", "title": "Pour que, afin de", "blurb": "Purpose with a subject change: je répète pour que tu comprennes — same subject keeps pour + infinitive.", "levels": ["B1"], "section": "Sentence"}, {"slug": "concession-opposition", "title": "Concession & opposition", "blurb": "Despite it all: bien que + subjonctif (bien qu'il soit malade), malgré + noun, même si + indicatif.", "levels": ["B1"], "section": "Sentence"}, {"slug": "ce-qui-cest", "title": "Ce qui…, c'est", "blurb": "Emphasis with a cleft: ce qui m'étonne, c'est son courage — the written comma before c'est.", "levels": ["B1"], "section": "Sentence"}, {"slug": "il-est-cest-adjectif-de", "title": "Il est / c'est + adjective + de", "blurb": "Impersonal judgement: il est facile d'apprendre le français — with the d' elision and the spoken c'est.", "levels": ["B1"], "section": "Sentence"}, {"slug": "narrative-time-markers", "title": "Narrative time markers", "blurb": "Setting the rhythm of a story: soudain, pendant que, alors que, enfin, au moment où.", "levels": ["B1"], "section": "Sentence"}, {"slug": "futur-anterieur", "title": "Futur antérieur", "blurb": "The earlier future: quand tu seras arrivé, nous serons prêts — futur of the auxiliary + past participle.", "levels": ["B2"], "section": "Tense"}, {"slug": "past-infinitive", "title": "Past infinitive", "blurb": "Anteriority in one clause: après avoir fini, après être arrivé — the same auxiliary as the passé composé.", "levels": ["B2"], "section": "Tense"}, {"slug": "sequence-of-tenses", "title": "Sequence of tenses", "blurb": "A past main clause pulls the subordinate back: il a dit qu'il viendrait — present keeps the futur.", "levels": ["B2"], "section": "Tense"}, {"slug": "exceptional-participle", "title": "Exceptional participle agreement", "blurb": "With avoir, the participle agrees with a preceding direct object: les fleurs que j'ai cueillies.", "levels": ["B2"], "section": "Tense"}, {"slug": "conditionnel-passe", "title": "Conditionnel passé", "blurb": "The unreal past result: si tu m'avais écouté, j'aurais fini — avoir/être in the conditionnel + participle.", "levels": ["B2"], "section": "Mood"}, {"slug": "subjonctif-verbs-impersonals", "title": "Subjonctif after verbs & impersonals", "blurb": "Beyond il faut: craindre que, redouter que, attendre que take the subjonctif; être sûr que, admettre que keep the indicatif.", "levels": ["B2"], "section": "Mood"}, {"slug": "subjonctif-conjunctions", "title": "Subjonctif after conjunctions", "blurb": "The conjunction series: bien que, avant que, jusqu'à ce que, sans que, pourvu que — all subjonctif.", "levels": ["B2"], "section": "Mood"}, {"slug": "subjonctif-passe", "title": "Subjonctif passé", "blurb": "A completed action inside the subjonctif: je suis content qu'il ait fini, qu'elle soit partie.", "levels": ["B2"], "section": "Mood"}, {"slug": "participe-ou-adjectif", "title": "Participle vs verbal adjective", "blurb": "un film amusant (it amuses) vs des enfants amusés (they are amused); fatigant/fatigué and its traps.", "levels": ["B2"], "section": "Mood"}, {"slug": "lequel-interrogatif", "title": "Interrogative lequel", "blurb": "Asking with lequel: laquelle de ces robes — the question word agrees with the thing asked about.", "levels": ["B2"], "section": "Nouns"}, {"slug": "si-plus-que-parfait", "title": "Si + plus-que-parfait", "blurb": "The unreal past: si j'avais su, je serais venu — plus-que-parfait after si, conditionnel passé in the result.", "levels": ["B2"], "section": "Sentence"}, {"slug": "au-cas-ou-condition", "title": "Au cas où, à condition que", "blurb": "Contingency vs requirement: au cas où il pleuvrait (conditionnel), à condition que tu sois prêt (subjonctif).", "levels": ["B2"], "section": "Sentence"}, {"slug": "opposition-avancee", "title": "Advanced opposition & concession", "blurb": "Formal opposition: néanmoins, toutefois, en revanche — and the extreme concessions quoique, quand bien même.", "levels": ["B2"], "section": "Sentence"}, {"slug": "but-cause-avancee", "title": "Advanced purpose & cause", "blurb": "Formal purpose and cause: de peur que, de sorte que, afin de, vu que, étant donné que.", "levels": ["B2"], "section": "Sentence"}];
+const RULES  = {"imparfait-vs-pc": {"rules": [{"h": "Background vs event", "p": "The imparfait paints the scene — weather, hour, ongoing states. The passé composé reports what happened and moved things forward.", "ex": {"fr": "Il <em>pleuvait</em> quand le téléphone <em>a sonné</em>.", "en": "It was raining when the phone rang."}}, {"h": "Habit vs single occurrence", "p": "Repeated or habitual actions take the imparfait; a countable, completed occurrence takes the passé composé.", "ex": {"fr": "Le samedi, nous <em>allions</em> au marché — mais hier nous <em>sommes allés</em> au supermarché.", "en": "On Saturdays we would go to the market — but yesterday we went to the supermarket."}}, {"h": "Interruptions split the sentence", "p": "An imparfait action interrupted by a passé composé event is the classic narrative pattern — pendant que… is your clue.", "ex": {"fr": "Je <em>dormais</em> quand elle <em>est entrée</em>.", "en": "I was sleeping when she came in."}}], "exc": "Some verbs change meaning between the two: « J’ai connu Marie en 2010 » (I met her) vs « Je connaissais Marie » (I already knew her). Same shift for savoir, pouvoir, vouloir.", "see": ["imparfait", "pc-avoir", "pc-etre"]}, "futur-proche": {"rules": [{"h": "Aller + infinitive", "p": "Conjugate aller in the present and leave the main verb as an infinitive — that is the whole machinery.", "ex": {"fr": "Je <em>vais</em> partir à midi.", "en": "I’m leaving at noon."}}, {"h": "Plans and near certainty", "p": "Futur proche is the default for plans, intentions and anything that feels immediate or already decided.", "ex": {"fr": "On <em>va</em> regarder un film ce soir.", "en": "We’re going to watch a film tonight."}}, {"h": "Negation wraps the conjugated verb", "p": "Ne … pas goes around aller, not around the infinitive.", "ex": {"fr": "Je <em>ne vais pas</em> venir.", "en": "I’m not going to come."}}], "exc": "In conversation the futur proche often replaces the futur simple even for the far future: « Je vais avoir 30 ans l’année prochaine ».", "see": ["futur-simple", "passe-recent", "imparfait"]}, "pronoun-en": {"rules": [{"h": "En replaces de + thing", "p": "When a verb takes de + something inanimate, en stands in for the whole phrase and sits before the verb.", "ex": {"fr": "Tu veux du café ? — J’<em>en</em> veux bien.", "en": "Do you want coffee? — I’d like some."}}, {"h": "En carries quantities", "p": "Numbers and quantity words stay in place; only the noun is replaced by en.", "ex": {"fr": "Combien d’enfants avez-vous ? — J’<em>en</em> ai deux.", "en": "How many children do you have? — I have two."}}, {"h": "En replaces de + place of origin", "p": "With verbs like venir, en stands for the place you come from.", "ex": {"fr": "Tu viens de Paris ? — Oui, j’<em>en</em> viens.", "en": "Coming from Paris? — Yes, I am."}}], "exc": "People are never replaced by en: « Je parle de Marie » → « Je parle d’elle », never *« J’en parle ».", "see": ["pronouns-cod-coi", "pronoun-y"]}, "subjonctif": {"rules": [{"h": "Feelings, wants and doubt trigger it", "p": "After an expression of emotion, will, necessity or doubt + que, the verb moves into the subjonctif.", "ex": {"fr": "Je suis content que tu <em>viennes</em>.", "en": "I’m glad you’re coming."}}, {"h": "Learn the trigger list", "p": "il faut que · bien que · avant que · pour que · je doute que… — the subjonctif follows. The triggers are the rule.", "ex": {"fr": "Il faut que tu <em>sois</em> là à 8h.", "en": "You have to be there at 8."}}, {"h": "Negated opinion flips it", "p": "Affirmative croire / penser take the indicative; negated — or douter — open the door to doubt.", "ex": {"fr": "Je pense qu’il <em>a</em> raison · Je ne pense pas qu’il <em>ait</em> raison.", "en": "I think he’s right · I don’t think he is."}}], "exc": "Espérer keeps the indicative despite looking like a wish: « J’espère qu’il vient », never « qu’il vienne ».", "see": ["subjonctif-forms", "subjonctif-vs-indicatif"]}, "si-imparfait": {"rules": [{"h": "Si + imparfait → conditionnel présent", "p": "An unreal or unlikely present/future hypothesis: si-clause in the imparfait, outcome in the conditionnel.", "ex": {"fr": "Si j’<em>avais</em> le temps, je <em>voyagerais</em>.", "en": "If I had time, I would travel."}}, {"h": "Never conditionnel inside the si-clause", "p": "The conditionnel lives in the result clause only — « si j’aurais » is the classic learner error.", "ex": {"fr": "Si on <em>perdait</em> ce match, on <em>serait</em> éliminés.", "en": "If we lost this match, we’d be out."}}, {"h": "Meaning: contrary to now", "p": "The imparfait signals that the hypothesis runs against present reality.", "ex": {"fr": "Si je <em>savais</em> sa réponse, je <em>serais</em> tranquille.", "en": "If I knew his answer, I’d be at ease."}}], "exc": "When si means « whether », it introduces an indirect question with normal tenses: « Je me demande s’il viendra » — future, no conditionnel.", "see": ["si-present", "si-plus-que-parfait", "conditionnel-uses"]}, "negation": {"rules": [{"h": "Ne … pas wraps the conjugated verb", "p": "Ne (n’) goes before the verb, pas after it — around auxiliaries too.", "ex": {"fr": "Je <em>ne</em> sais <em>pas</em> · Elle <em>n’</em>a <em>pas</em> compris.", "en": "I don’t know · She didn’t understand."}}, {"h": "Infinitives take ne pas up front", "p": "With an infinitive the two words join together before it.", "ex": {"fr": "C’est difficile de <em>ne pas</em> rire.", "en": "It’s hard not to laugh."}}, {"h": "Spoken French drops ne", "p": "In conversation pas alone is the norm; writing keeps both.", "ex": {"fr": "Je sais <em>pas</em>, moi.", "en": "Dunno, me."}}], "exc": "pas swaps seats with rien, personne, jamais: « Je n’ai rien dit » — rien follows the auxiliary where pas would sit.", "see": ["ne-plus-rien-personne", "restriction-ne-que"]}};
+
+const SECTIONS = [
+  ["Tense","Tenses","when things happen & verb forms"],
+  ["Mood","Moods","attitude: wish, doubt, command"],
+  ["Nouns","Nouns & pronouns","the things themselves"],
+  ["Sentence","Sentences","how clauses fit together"],
+];
+const LEVELS = ["A1","A2","B1","B2"];
+const LEVELCOLOR = {A1:"var(--p1)",A2:"var(--p2)",B1:"var(--p3)",B2:"var(--ink)"};
+
+function state(slug){
+  let h = 0; for (const c of slug) h = (h*33 + c.charCodeAt(0)) >>> 0;
+  return { step: h % 5 === 0 ? 0 : 1 + (h % 3), review: h % 7 === 0 };
+}
+const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+let open = {Tense:true, Mood:false, Nouns:false, Sentence:false};
+
+function renderIndex(){
+  const blocks = SECTIONS.map(([sec,nm,tag])=>{
+    const ts = TOPICS.filter(t=>t.section===sec);
+    const byLevel = LEVELS.map(l=>[l, ts.filter(t=>t.levels[0]===l)]).filter(([,x])=>x.length);
+    const total = ts.length;
+    return `<section class="block ${open[sec]?"open":""}" id="sec-${sec}" data-sec="${sec}">
+      <button class="block-h" data-toggle="${sec}">
+        <span class="nm">${nm}<small>${tag}</small></span>
+        <span class="chev">›</span>
+        <span class="dist">
+          <span class="distbar">${byLevel.map(([l,x])=>`<i class="d-${l}" style="width:${x.length/total*100}%"></i>`).join("")}</span>
+          <span class="distcounts">${byLevel.map(([l,x])=>`<span><i style="background:${LEVELCOLOR[l]}"></i>${l}·${x.length}</span>`).join("")}</span>
+        </span>
+      </button>
+      <div class="rows"><div><div class="rows-inner">
+        ${byLevel.map(([l,group])=>`
+          <div class="lvlgroup">
+            <div class="lvlh">${l}</div>
+            ${group.map(t=>{
+              const st = state(t.slug);
+              return `<button class="row" data-slug="${t.slug}">
+                <span class="tt">${esc(t.title)}${t.levels.length>1?` <span style="color:var(--faint);font-weight:600;font-size:var(--t-xs)">· also ${t.levels[1]}</span>`:""}</span>
+                <span class="right">${t.levels.length>1?`<span class="lvtag">${t.levels.join("·")}</span>`:""}
+                  <span class="dot s${st.step} ${st.review?"rev":""}"></span></span>
+                <span class="bl">${esc(t.blurb)}</span>
+              </button>`;
+            }).join("")}
+          </div>`).join("")}
+      </div></div></div>
+    </section>`;
+  }).join("");
+
+  document.getElementById("app").innerHTML = `
+  <div class="screen">
+    <header class="head">
+      <p class="eyebrow">Knowledge</p>
+      <h1>The whole table</h1>
+      <p class="sub">94 rules · 4 drawers · every level marked</p>
+    </header>
+    <nav class="jumplist">
+      ${SECTIONS.map(([sec,nm])=>`<button class="jump" data-jump="${sec}"><b>${nm.split(" ")[0].replace("Tenses","Tense").replace("Moods","Mood")}</b><small>${TOPICS.filter(t=>t.section===sec).length}</small></button>`).join("")}
+    </nav>
+    <div class="blocks">${blocks}</div>
+  </div>`;
+  window.scrollTo(0,0);
+}
+
+/* ── compact sheet ───────────────────────────────────────── */
+function renderTopic(slug){
+  const t = TOPICS.find(x=>x.slug===slug);
+  const r = RULES[slug];
+  const secNm = (SECTIONS.find(s=>s[0]===t.section)||["",t.section])[1];
+  document.getElementById("app").innerHTML = `
+  <div class="screen">
+    <header class="sheet-head">
+      <div class="backrow">
+        <button class="back" data-back>← ${secNm}</button>
+        <span class="crumbs">${t.levels.join(" · ")}</span>
+      </div>
+      <h2>${esc(t.title)}</h2>
+      <p class="desc">${esc(t.blurb)}</p>
+    </header>
+    <div class="sheet-body">
+      ${r ? r.rules.map((x,n)=>`<div class="kb">
+          <div class="kb-h"><span class="n">${n+1}</span><h3>${x.h}</h3></div>
+          <div class="kb-b"><p>${x.p}</p>
+            ${x.ex?`<div class="ex"><div class="fr">${x.ex.fr}</div><div class="en">${x.ex.en}</div></div>`:""}
+          </div>
+        </div>`).join("")
+        : [1,2,3].map(n=>`<div class="kb stub"><div class="kb-h"><span class="n">${n}</span><h3>Rule ${n}</h3></div>
+           <div class="kb-b"><p>Full rule sheet ships with the real build.</p></div></div>`).join("")}
+      ${r && r.exc ? `<div class="exc"><p class="lbl">Exception</p><p>${r.exc}</p></div>` : ""}
+      ${r && r.see ? `<div class="seealso"><p class="lbl">Same drawer</p><div class="chips">
+        ${r.see.map(s=>`<a data-slug="${s}">${esc((TOPICS.find(t=>t.slug===s)||{title:s}).title)}</a>`).join("")}
+      </div></div>` : ""}
+      <button class="cta">Practice this rule →</button>
+    </div>
+  </div>`;
+  window.scrollTo(0,0);
+}
+
+/* ── events ──────────────────────────────────────────────── */
+document.getElementById("app").addEventListener("click", e => {
+  const tg = e.target.closest("[data-toggle]");
+  if (tg){ open[tg.dataset.toggle] = !open[tg.dataset.toggle]; renderIndex(); return; }
+  const jp = e.target.closest("[data-jump]");
+  if (jp){
+    open[jp.dataset.jump] = true; renderIndex();
+    const el = document.getElementById("sec-"+jp.dataset.jump);
+    window.scrollTo({top: el.getBoundingClientRect().top + window.scrollY - 110, behavior:"smooth"});
+    return;
+  }
+  const el = e.target.closest("[data-slug]");
+  if (el){ renderTopic(el.dataset.slug); return; }
+  if (e.target.closest("[data-back]")) renderIndex();
+});
+renderIndex();
+</script>
+</body>
+</html>
