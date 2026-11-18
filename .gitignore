@@ -41,3 +41,6 @@ lacq/data/
 lacq/target/
 
 .envrc
+
+# python
+__pycache__/
