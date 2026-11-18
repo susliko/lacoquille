@@ -121,6 +121,22 @@
       "title": "Futur proche"
     },
     {
+      "id": "passe-recent",
+      "lane": "indicatif",
+      "timePosition": "near-past",
+      "aspect": "none",
+      "literary": false,
+      "title": "Passé récent"
+    },
+    {
+      "id": "present-progressif",
+      "lane": "indicatif",
+      "timePosition": "present",
+      "aspect": "ongoing",
+      "literary": false,
+      "title": "Présent progressif"
+    },
+    {
       "id": "imperatif-present",
       "lane": "imperatif",
       "timePosition": "present",
@@ -187,6 +203,18 @@
       "from": "present-indicatif",
       "to": "futur-proche",
       "label": "aller (présent) + infinitif"
+    },
+    {
+      "type": "auxiliary-compound",
+      "from": "present-indicatif",
+      "to": "passe-recent",
+      "label": "venir (présent) + de + infinitif"
+    },
+    {
+      "type": "auxiliary-compound",
+      "from": "present-indicatif",
+      "to": "present-progressif",
+      "label": "être (présent) + en train de + infinitif"
     },
     {
       "type": "aspect-pair",

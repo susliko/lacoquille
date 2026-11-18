@@ -1,0 +1,88 @@
+---
+import Base from "../../../layouts/Base.astro";
+import "../../../styles/knowledge.css";
+import taxonomy from "../../../data/knowledge/taxonomy.json";
+import rules from "../../../data/knowledge/rules.json";
+import tenseMap from "../../../data/knowledge/tense-map.json";
+
+export async function getStaticPaths() {
+  return (taxonomy as any[]).map((e) => ({ params: { id: e.id }, props: { entry: e } }));
+}
+
+const PARTS: Record<string, string> = {
+  T: "Tense", M: "Mood",
+  Nn: "Nouns & articles", Na: "Adjectives & adverbs", Np: "Pronouns",
+  S: "Sentence",
+};
+
+type Rule = { h: string; p: string; ex?: { fr: string; en: string } };
+type RuleSheet = { rules: Rule[]; exc?: string; see?: string[] };
+
+const { entry } = Astro.props;
+const groupOf = (e: any) => (e.cat === "N" ? "N" + e.sub : e.cat);
+const label = PARTS[groupOf(entry)] ?? "Grammar";
+const sheet = (rules as Record<string, RuleSheet>)[entry.id];
+const byId = (id: string) => (taxonomy as any[]).find((t) => t.id === id);
+const drillable = entry.slugs && entry.slugs.length > 0;
+const tenseSlug = (tenseMap as Record<string, string>)[entry.id];
+const LITERARY = ["C1", "C2"];
+---
+
+<Base title={entry.name} description={entry.blurb}>
+  <div class="km-wrap">
+    <header class="km-sheet-head">
+      <div class="km-backrow">
+        <a class="km-back" href={`/knowledge/?l=${entry.lv}`}>← {entry.lv} · {label}</a>
+      </div>
+      <h2>{entry.name}</h2>
+      <div class="km-metachips">
+        <span class={LITERARY.includes(entry.lv) ? "lit" : ""}>{entry.lv}</span>
+        <span>{label}</span>
+      </div>
+    </header>
+
+    <div class="km-sheet-body">
+      {sheet?.rules.map((r, i) => (
+        <article class="km-rule">
+          <span class="rn">{i + 1}</span>
+          <h3>{r.h}</h3>
+          <p>{r.p}</p>
+          {r.ex && (
+            <div class="km-ex">
+              <div class="fr" set:html={r.ex.fr} />
+              <div class="en">{r.ex.en}</div>
+            </div>
+          )}
+        </article>
+      ))}
+
+      {sheet?.exc && (
+        <div class="km-exc">
+          <p class="lbl">Exception</p>
+          <p>{sheet.exc}</p>
+        </div>
+      )}
+
+      {sheet?.see && (
+        <div class="km-seealso">
+          <p class="lbl">See also</p>
+          <div class="chips">
+            {sheet.see.map((id) => {
+              const t = byId(id);
+              return t ? <a href={`/knowledge/t/${t.id}/`}>{t.name}</a> : null;
+            })}
+          </div>
+        </div>
+      )}
+
+      {drillable ? (
+        <a class="km-cta" href="/practice/feed">Practice this lesson →</a>
+      ) : (
+        <span class="km-notyet">Not drillable yet — joins the practice feed later</span>
+      )}
+      {tenseSlug && (
+        <a class="km-secondary" href={`/knowledge/verbs/tenses/${tenseSlug}/`}>Conjugation table →</a>
+      )}
+    </div>
+  </div>
+</Base>

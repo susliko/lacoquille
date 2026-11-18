@@ -1,21 +1,16 @@
 import { createSignal, For, onMount } from "solid-js";
 
 import ProgressGrid from "./progress/ProgressGrid";
+import taxonomy from "../data/knowledge/taxonomy.json";
 
-/* ── Knowledge tiles ───────────────────────────────────────────
-   Quiet paper menu — colour is meaning-reserved in this design
-   system (indigo = progress, vermillon = review/miss), so tiles
-   are white cards with ink names. See global.css. */
-const REGIONS = [
-  { id: "adjectifs", name: "Adjectifs",  sub: "accord · ordre",      path: "/reference/grammar/adjectifs" },
-  { id: "adverbes",  name: "Adverbes",   sub: "formation",           path: "/reference/grammar/adverbs" },
-  { id: "articles",  name: "Articles",   sub: "défini · partitif",   path: "/reference/grammar/articles" },
-  { id: "negation",  name: "Négation",   sub: "ne…pas · jamais",     path: "/reference/grammar/negation" },
-  { id: "pronoms",   name: "Pronoms",    sub: "personal · relative", path: "/reference/grammar/pronouns" },
-  { id: "preps",     name: "Prép.",      sub: "à · de · en",         path: "/reference/grammar/prepositions" },
-  { id: "syntaxe",   name: "Syntaxe",    sub: "word order",          path: "/reference/grammar/syntax" },
-  { id: "verbs",     name: "Verbes",     sub: "tenses & conjugation", path: "/reference/verbs" },
-];
+/* ── Knowledge tab — Le Manuel entry ───────────────────────
+   The manual itself lives at /knowledge/; the tab is a quiet
+   level list into it. No tiles (retired design). */
+const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
+const LEVEL_ROWS = LEVELS.map((lv) => ({
+  lv,
+  count: (taxonomy as any[]).filter((e) => e.lv === lv).length,
+}));
 
 /* ── Practice tiles ─────────────────────────────────────────────
    Implemented practices only — the feed is the flagship surface
@@ -89,28 +84,29 @@ export default function HomepageTabs() {
         </button>
       </div>
 
-      {/* Knowledge tab */}
+      {/* Knowledge tab — Le Manuel entry, quiet level list */}
       <div
         role="tabpanel"
         class="homepage-tab-panel"
         style={{ display: tab() === "knowledge" ? "block" : "none" }}
       >
-        <div class="poly-grid">
-          <For each={REGIONS}>
-            {(region, i) => (
-              <a href={region.path} class={`poly-card poly-card-${i()}`}>
-                <div class="poly-card-name">{region.name}</div>
-                <div class="poly-card-sub">{region.sub}</div>
-                <div class="poly-card-cta">explore →</div>
-              </a>
-            )}
-          </For>
-        </div>
-        <p style="margin-top: var(--s-3); text-align: center;">
-          <a href="/reference/grammar" style="font-size: var(--t-sm); color: var(--muted);">
-            See all grammar →
+        <div class="km-entry">
+          <a href="/knowledge/" class="km-entry-open">
+            Open the manual
+            <span class="km-entry-sub">every lesson, A1–C2 — searchable</span>
           </a>
-        </p>
+          <div class="km-entry-levels">
+            <For each={LEVEL_ROWS}>
+              {(row) => (
+                <a href={`/knowledge/?l=${row.lv}`} class="km-entry-level">
+                  <span class="lv">{row.lv}</span>
+                  <span class="n">{row.count}</span>
+                </a>
+              )}
+            </For>
+          </div>
+          <a href="/knowledge/verbs/" class="km-entry-verbs">Verb tables →</a>
+        </div>
       </div>
 
       {/* Practice tab */}

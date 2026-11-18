@@ -1,0 +1,53 @@
+---
+import Base from "../../../layouts/Base.astro";
+import VerbDiagram from "../../../components/VerbDiagram";
+import { getCollection } from "astro:content";
+import diagramData from "../../../content/verbs/diagram.json";
+
+const tenseEntries = await getCollection("tenses");
+
+const tenseTitles: Record<string, string> = {};
+const tenseRules:  Record<string, string> = {};
+for (const entry of tenseEntries) {
+  tenseTitles[entry.id] = entry.data.title;
+  tenseRules[entry.id]  = entry.data.oneLineRule;
+}
+const tenseList = tenseEntries
+  .map(entry => ({ slug: entry.id, title: entry.data.title, rule: entry.data.oneLineRule }))
+  .sort((a, b) => a.title.localeCompare(b.title, "fr"));
+---
+
+<Base
+  title="Verb tables"
+  description="Every French verb tense and mood in one interactive diagram, with conjugation tables."
+  breadcrumb={[{ label: "Grammar", href: "/knowledge" }, { label: "Verb tables" }]}
+>
+  <div style="margin-bottom: 1.5rem;">
+    <a href="/knowledge/"><p class="home-eyebrow">Grammar</p></a>
+    <h1>Verb tables</h1>
+    <p style="color: var(--text-2); margin-top: 0.4rem;">
+      Every French tense and mood — the diagram, the forms, and when to use each one.
+    </p>
+  </div>
+
+  <VerbDiagram
+    client:only="solid-js"
+    data={diagramData as any}
+    tenseTitles={tenseTitles}
+    tenseRules={tenseRules}
+  />
+
+  <div class="verbs-index">
+    <section>
+      <h2>All tenses & moods</h2>
+      <ul class="choice-index-list">
+        {tenseList.map(t => (
+          <li>
+            <a href={`/knowledge/verbs/tenses/${t.slug}`}>{t.title}</a>
+            <span class="topic-desc"> — {t.rule}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  </div>
+</Base>

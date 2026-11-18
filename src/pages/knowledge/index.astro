@@ -1,0 +1,193 @@
+---
+import Base from "../../layouts/Base.astro";
+import "../../styles/knowledge.css";
+import taxonomy from "../../data/knowledge/taxonomy.json";
+
+const title = "Grammar";
+const description =
+  "The grammar manual: every topic from A1 to C2 — tense, mood, nouns, adjectives, pronouns, sentence.";
+
+/* Grid column order (T M N S), N expanded into its three subgroups. */
+const PARTS = [
+  ["T", "Tense"],
+  ["M", "Mood"],
+  ["Nn", "Nouns & articles"],
+  ["Na", "Adjectives & adverbs"],
+  ["Np", "Pronouns"],
+  ["S", "Sentence"],
+] as const;
+const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
+
+type Entry = {
+  id: string; lv: string; cat: string; sub: string;
+  name: string; slugs: string[]; blurb: string;
+};
+const entries = taxonomy as Entry[];
+const groupOf = (e: Entry) => (e.cat === "N" ? "N" + e.sub : e.cat);
+const drillable = (e: Entry) => e.slugs && e.slugs.length > 0;
+const byLevel = (lv: string) => entries.filter((e) => e.lv === lv);
+---
+
+<Base title={title} description={description}>
+  <div class="km-wrap">
+    <header class="km-head">
+      <h1>Grammar</h1>
+      <a class="km-verbs-link" href="/knowledge/verbs/">Verb tables →</a>
+    </header>
+
+    <div class="km-sticky">
+      <div class="km-searchrow" id="kmSearchrow">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+        <input id="kmQ" type="search" placeholder="Search all lessons…" autocomplete="off"
+               enterkeyhint="search" aria-label="Search all lessons across levels"/>
+        <button class="km-clear" id="kmClear" aria-label="Clear search" type="button">✕</button>
+        <span class="km-kbd">/</span>
+      </div>
+      <nav class="km-tabbar" role="tablist" id="kmTabs">
+        {LEVELS.map((l) => (
+          <button class="km-tab" role="tab" aria-selected={l === "A1"} data-level={l} type="button">{l}</button>
+        ))}
+      </nav>
+    </div>
+
+    {/* one server-rendered section per level; the script toggles them */}
+    {LEVELS.map((lv) => (
+      <div class="km-level" data-level={lv} hidden={lv !== "A1"}>
+        <div class="km-chapter"><h2>Level {lv}</h2></div>
+        {PARTS.map(([g, label]) => {
+          const rows = byLevel(lv).filter((e) => groupOf(e) === g);
+          if (!rows.length) return null;
+          return (
+            <section class="km-part">
+              <div class="km-part-h"><span>{label}</span></div>
+              <div class="km-lessons">
+                {rows.map((e) => (
+                  <a class="km-lesson" href={`/knowledge/t/${e.id}/`}>
+                    <span class={`tt ${drillable(e) ? "" : "soon"}`}>{e.name}</span>
+                  </a>
+                ))}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+    ))}
+
+    {/* search results replace the level sections client-side */}
+    <div class="km-results" id="kmResults" hidden></div>
+  </div>
+
+  <script type="application/json" id="kmData" set:html={JSON.stringify(
+    entries.map((e) => ({ id: e.id, name: e.name, blurb: e.blurb, drill: drillable(e) }))
+  )} />
+  <script>
+    const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
+    const ENTRIES: { id: string; name: string; blurb: string; drill: boolean }[] =
+      JSON.parse(document.getElementById("kmData")!.textContent || "[]");
+
+    const $ = <T extends HTMLElement = HTMLElement>(sel: string) =>
+      document.querySelector(sel) as T | null;
+    const row = $("#kmSearchrow")!;
+    const input = $<HTMLInputElement>("#kmQ")!;
+    const tabs = $("#kmTabs")!;
+    const results = $("#kmResults")!;
+
+    /* accent-insensitive substring search + highlighting (from the prototype) */
+    const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+    const norm = (s: string) =>
+      s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    function hl(s: string, q: string): string {
+      if (!q) return esc(s);
+      const chars = [...s];
+      const nc: string[] = [], startOf: number[] = [], endOf: number[] = [];
+      chars.forEach((ch, oi) => {
+        if (/[\u0300-\u036f]/.test(ch)) {
+          if (endOf.length) endOf[endOf.length - 1] = oi + 1;
+          return;
+        }
+        nc.push(ch.normalize("NFD")[0].toLowerCase());
+        startOf[nc.length - 1] = oi;
+        endOf[nc.length - 1] = oi + 1;
+      });
+      const n = nc.join("");
+      const qn = norm(q);
+      if (!qn) return esc(s);
+      const ranges: [number, number][] = [];
+      let i = n.indexOf(qn);
+      while (i !== -1) {
+        ranges.push([startOf[i], endOf[i + qn.length - 1]]);
+        i = n.indexOf(qn, i + qn.length);
+      }
+      if (!ranges.length) return esc(s);
+      ranges.sort((a, b) => a[0] - b[0]);
+      const merged = [ranges[0]];
+      for (const r of ranges.slice(1)) {
+        const last = merged[merged.length - 1];
+        if (r[0] <= last[1]) last[1] = Math.max(last[1], r[1]);
+        else merged.push(r);
+      }
+      let out = "", pos = 0;
+      for (const [a, b] of merged) {
+        out += esc(chars.slice(pos, a).join("")) + "<mark>" + esc(chars.slice(a, b).join("")) + "</mark>";
+        pos = b;
+      }
+      return out + esc(chars.slice(pos).join(""));
+    }
+
+    /* level state: from ?l= if valid, else A1 */
+    const params = new URLSearchParams(location.search);
+    let level = LEVELS.includes(params.get("l") || "") ? params.get("l")! : "A1";
+
+    function setLevel(l: string, push = true) {
+      level = l;
+      if (push) history.replaceState(null, "", l === "A1" ? "/knowledge/" : `/knowledge/?l=${l}`);
+      tabs.querySelectorAll(".km-tab").forEach((t) =>
+        t.setAttribute("aria-selected", String((t as HTMLElement).dataset.level === l)));
+      document.querySelectorAll<HTMLElement>(".km-level").forEach((s) =>
+        (s.hidden = s.dataset.level !== l));
+    }
+
+    function search(q: string) {
+      const searching = q.trim().length > 0;
+      tabs.hidden = searching;
+      document.querySelectorAll<HTMLElement>(".km-level").forEach((s) => (s.hidden = searching || s.dataset.level !== level));
+      results.hidden = !searching;
+      row.classList.toggle("hasq", searching);
+      if (!searching) return;
+      const qn = norm(q);
+      const hits = ENTRIES.filter(
+        (e) => norm(e.name).includes(qn) || norm(e.blurb).includes(qn));
+      results.innerHTML = hits.length
+        ? `<div class="km-lessons">${hits
+            .map((e) => `<a class="km-lesson" href="/knowledge/t/${e.id}/"><span class="tt ${e.drill ? "" : "soon"}">${hl(e.name, q)}</span></a>`)
+            .join("")}</div>`
+        : `<div class="km-empty"><b>No lesson matches “${esc(q)}”</b>Search covers all lessons, A1–C2.</div>`;
+    }
+
+    tabs.addEventListener("click", (ev) => {
+      const t = (ev.target as HTMLElement).closest<HTMLElement>("[data-level]");
+      if (t) { setLevel(t.dataset.level!); input.value = ""; search(""); }
+    });
+    input.addEventListener("input", () => search(input.value));
+    $("#kmClear")!.addEventListener("click", () => {
+      input.value = ""; search(""); input.focus();
+    });
+    document.addEventListener("keydown", (ev) => {
+      const inField = document.activeElement === input;
+      if (ev.key === "/" && !inField) {
+        ev.preventDefault();
+        input.scrollIntoView({ behavior: "smooth", block: "center" });
+        input.focus();
+      }
+      if (ev.key === "Escape" && inField) {
+        if (input.value) { input.value = ""; search(""); }
+        else input.blur();
+      }
+    });
+
+    /* init */
+    setLevel(level, false);
+    const q0 = params.get("q");
+    if (q0) { input.value = q0; search(q0); }
+  </script>
+</Base>

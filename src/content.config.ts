@@ -8,7 +8,7 @@ const DifficultyEnum = z.enum(["beginner", "intermediate", "advanced"]).default(
 const AspectEnum = z.enum(["completed", "ongoing", "anterior", "habitual", "none"]);
 const TimePositionEnum = z.enum(["far-past", "past", "near-past", "present", "near-future", "future", "far-future"]);
 
-// ── Tense reference pages ─────────────────────────────────────
+// ── Tense reference pages (the conjugation-table surface) ─────
 const tenses = defineCollection({
   loader: glob({ pattern: "**/*.md", base: "./src/content/verbs/tenses" }),
   schema: z.object({
@@ -29,67 +29,7 @@ const tenses = defineCollection({
   }),
 });
 
-// ── Choice pages ──────────────────────────────────────────────
-const choice = defineCollection({
-  loader: glob({ pattern: "**/*.md", base: "./src/content/verbs/choice" }),
-  schema: z.object({
-    title: z.string(),
-    relatedTenses: z.array(z.string()),
-    relatedGuides: z.array(z.string()).optional(),
-  }),
-});
+// Grammar reference and verb-guide collections were folded into the
+// knowledge sheets (src/data/knowledge/) — see design/prototypes/knowledge/.
 
-// ── Grammar pages ─────────────────────────────────────────────
-const grammar = defineCollection({
-  loader: glob({ pattern: "**/*.md", base: "./src/content/grammar" }),
-  schema: z.object({
-    title: z.string(),
-    difficulty: DifficultyEnum,
-    oneLineRule: z.string(),
-    pitfalls: z.array(z.string()).optional(),
-    examples: z.array(z.object({
-      fr: z.string(),
-      en: z.string(),
-    })).optional(),
-  }),
-});
-
-// ── Verb groups ────────────────────────────────────────────────
-const groups = defineCollection({
-  loader: glob({ pattern: "**/*.md", base: "./src/content/verbs/groups" }),
-  schema: z.object({
-    title: z.string(),
-    description: z.string().optional(),
-    relatedVerbs: z.array(z.string()).optional(),
-  }),
-});
-
-// ── Movement verb pages ─────────────────────────────────────────
-const movement = defineCollection({
-  loader: glob({ pattern: "**/*.md", base: "./src/content/verbs/movement" }),
-  schema: z.object({
-    title: z.string(),
-    oneLineRule: z.string(),
-    pitfalls: z.array(z.string()).optional(),
-    examples: z.array(z.object({
-      fr: z.string(),
-      en: z.string(),
-    })).optional(),
-  }),
-});
-
-// ── Non-finite verb forms ───────────────────────────────────────
-const nonfinite = defineCollection({
-  loader: glob({ pattern: "**/*.md", base: "./src/content/verbs/non-finite" }),
-  schema: z.object({
-    title: z.string(),
-    oneLineRule: z.string(),
-    pitfalls: z.array(z.string()).optional(),
-    examples: z.array(z.object({
-      fr: z.string(),
-      en: z.string(),
-    })).optional(),
-  }),
-});
-
-export const collections = { tenses, choice, grammar, groups, movement, nonfinite };
+export const collections = { tenses };

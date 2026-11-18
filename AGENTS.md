@@ -99,6 +99,16 @@ If you need to do further testing after the initial snapshot, use agent-browser 
 ## Architecture
 
 - **Astro 5** static-first framework with **SolidJS** islands for interactivity
+- **Knowledge** (`/knowledge/`) = Le Manuel: `src/data/knowledge/taxonomy.json` (121 entries, the 1:1
+  grid contract) + `rules.json` (rule sheets keyed by entry id). Rule sheets are authored in
+  `design/prototypes/knowledge/rules-src/` (chunks + `build.py` gates: coverage, see-refs, AI-tells;
+  `extract.py` regenerates taxonomy/topics from `taxonomy.ts` + `topics.rs`). After editing rules:
+  `python3 design/prototypes/knowledge/rules-src/build.py` then copy `taxonomy.json` + `rules.json`
+  into `src/data/knowledge/`. Old `/reference/*` URLs 301 via `src/data/knowledge/redirects.json`
+  + `astro.config.mjs`; static builds need one literal entry per URL.
+- Verb tables live at `/knowledge/verbs/` (diagram + per-tense conjugation pages from
+  `src/content/verbs/tenses/`); periphrases (futur proche, passé récent, présent progressif)
+  are computed in `ConjugationTable.astro`, never stored.
 - Single source of truth for the verb diagram: `src/content/verbs/diagram.json` — **both** the SVG nodes/edges and the tense content `.md` files must be kept in sync
 - Conjugation data lives in `src/data/conjugations/` (parler, être, avoir, aller, faire, finir, vendre)
 - `VerbDiagram.tsx` is a SolidJS island — **uses `solid-js` imports, NOT React** (tsconfig has `jsxImportSource: "solid-js"`)

@@ -34,6 +34,7 @@ R = {
 "Infinitive clauses": {
   "rules": [
     {"h": "Tight formal prose", "p": "croire savoir, prétendre avoir fini, sans hésiter. Formal French prefers an infinitive clause where speech would use que.", "ex": {"fr": "Il prétend <em>avoir tout vu</em>.", "en": "He claims to have seen everything."}},
+    {"h": "Perception verbs keep the infinitive", "p": "After voir, entendre, regarder, écouter, sentir, the second verb stays an infinitive, never a conjugated form or a que-clause.", "ex": {"fr": "Je l'<em>entends chanter</em>.", "en": "I hear her singing."}},
   ]},
 "Literary hypotheticals": {
   "rules": [
@@ -97,7 +98,8 @@ R = {
 "Subjonctif imparfait": {
   "rules": [
     {"h": "qu'il parlât", "p": "Imperfect subjunctive: stem + -asse, -asses, -ât, -assions, -assiez, -assent. Literature only; it maps one-to-one onto the present subjunctive.", "ex": {"fr": "bien qu'il <em>fût</em> tard, ils continuaient.", "en": "although it was late, they carried on."}},
-  ]},
+  ],
+  "exc": "Its past twin, the subjonctif plus-que-parfait (qu'il eût parlé), is effectively obsolete — the subjonctif passé does the job in modern French."},
 "Conditionnel passé 2e forme": {
   "rules": [
     {"h": "j'eusse parlé", "p": "Same meaning as j'aurais parlé. Identical in shape to the literary pluperfect subjunctive; very formal writing only.", "ex": {"fr": "Si j'<em>eusse su</em>, je <em>fusse venu</em>.", "en": "Had I known, I would have come."}},

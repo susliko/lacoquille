@@ -27,6 +27,7 @@ R = {
   "rules": [
     {"h": "Wish, request, hypothesis", "p": "je voudrais softens a request, j'aimerais states a wish, and the conditionnel completes an unreal si-clause.", "ex": {"fr": "Je <em>viendrais</em> bien, mais je travaille.", "en": "I'd love to come, but I'm working."}},
     {"h": "The future of yesterday", "p": "In reported speech and news, a past future becomes conditionnel: il a dit qu'il viendrait.", "ex": {"fr": "Elle a promis qu'elle <em>appellerait</em>.", "en": "She promised she would call."}},
+    {"h": "The journalist's conditionnel", "p": "The conditionnel marks unconfirmed, second-hand information — the speaker isn't vouching for it. Constant in news.", "ex": {"fr": "Le suspect <em>serait</em> en fuite.", "en": "The suspect is reportedly on the run."}},
   ]},
 "Subjonctif présent: forms": {
   "rules": [
@@ -52,19 +53,22 @@ R = {
   ]},
 "Gérondif": {
   "rules": [
-    {"h": "en + -ant", "p": "Means 'by doing' or 'while doing'. The en-form shares its subject with the main verb.", "ex": {"fr": "Il apprend le français <em>en écoutant</em> la radio.", "en": "He learns French by listening to the radio."}},
+    {"h": "en + -ant", "p": "Means 'by doing' or 'while doing'. The en-form shares its subject with the main verb, and the -ant never agrees.", "ex": {"fr": "Il apprend le français <em>en écoutant</em> la radio ; elles chantaient <em>en marchant</em>.", "en": "He learns French by listening to the radio; they sang while walking."}},
+    {"h": "Form it from the nous form", "p": "Drop -ons, add -ant: parler → en parlant, finir → en finissant. The odd ones: avoir → ayant, savoir → sachant.", "ex": {"fr": "C'est en <em>sachant</em> écouter qu'on apprend.", "en": "You learn by knowing how to listen."}},
   ]},
 # ── B1 · Nouns & articles ───────────────────────────────────
 "Nominalization": {
   "rules": [
     {"h": "Verb becomes noun", "p": "arriver → l'arrivée, développer → le développement. Formal writing prefers the noun version of an action.", "ex": {"fr": "<em>La construction</em> du pont a pris deux ans.", "en": "The construction of the bridge took two years."}},
     {"h": "Adjective becomes noun", "p": "utile → l'utilité, possible → la possibilité. -ité and -(t)ion do most of the work.", "ex": {"fr": "C'est d'une grande <em>utilité</em>.", "en": "It's of great use."}},
+    {"h": "The infinitive as a noun", "p": "The infinitive itself can be the subject or object where English uses the -ing form: mentir est mal, j'aime dormir.", "ex": {"fr": "<em>Mentir</em> est mal.", "en": "Lying is wrong."}},
   ]},
 # ── B1 · Pronouns ───────────────────────────────────────────
 "Double object pronouns": {
   "rules": [
     {"h": "The order line", "p": "me te nous vous → le la les → lui leur → y → en. Il me le donne fits all three first slots.", "ex": {"fr": "Elle <em>me l'</em>a offert pour mon anniversaire.", "en": "She gave it to me for my birthday."}},
     {"h": "The imperative exception", "p": "Positive commands attach the pronouns after the verb: donne-le-moi. Negative ones wrap as usual: ne me le donne pas.", "ex": {"fr": "Donnez-<em>le-moi</em> !", "en": "Give it to me!"}},
+    {"h": "Elide when they touch", "p": "me, te, le, la shrink before y and en: m'y, t'en, l'y, l'en. And lui/leur never combine with y — one or the other.", "ex": {"fr": "Il <em>m'y</em> envoie demain.", "en": "He's sending me there tomorrow."}},
   ]},
 "Dont": {
   "rules": [
@@ -79,6 +83,8 @@ R = {
 "Indefinite pronouns": {
   "rules": [
     {"h": "someone, everyone, nobody", "p": "quelqu'un, tout le monde, personne ne, rien ne, quelque chose, tout. personne and rien need ne.", "ex": {"fr": "<em>Tout le monde</em> est là, <em>personne ne</em> manque.", "en": "Everyone's here, nobody's missing."}},
+    {"h": "de before an adjective", "p": "quelque chose, quelqu'un, rien take de + adjective: quelque chose de beau, quelqu'un de gentil, rien d'intéressant.", "ex": {"fr": "C'est <em>quelqu'un de</em> très gentil.", "en": "He/she is someone very kind."}},
+    {"h": "The rest of the band", "p": "chacun = each one, quelques-unes = some (agrees), plusieurs = several, certains = some, d'autres = others.", "ex": {"fr": "J'ai lu <em>quelques-uns</em> de ses livres.", "en": "I've read a few of his books."}},
   ]},
 "Ce qui, ce que, ce dont": {
   "rules": [
@@ -98,6 +104,8 @@ R = {
 "Reported speech (present)": {
   "rules": [
     {"h": "One step back in time", "p": "Present → imparfait, passé composé → plus-que-parfait, futur → conditionnel. 'Je pars' becomes il a dit qu'il partait.", "ex": {"fr": "« J'arrive » → Elle a dit qu'elle <em>arrivait</em>.", "en": "'I'm arriving.' → She said she was arriving."}},
+    {"h": "Reporting a question", "p": "Yes/no questions report with si. Wh-questions keep their word in statement order, no inversion.", "ex": {"fr": "Elle m'a demandé <em>si</em> je venais ; il a demandé <em>où j'allais</em>.", "en": "She asked if I was coming; he asked where I was going."}},
+    {"h": "Reporting a command", "p": "A command becomes de + infinitive after dire or demander. Negatives keep ne pas before the infinitive: elle nous a demandé de ne pas partir.", "ex": {"fr": "Il m'a dit <em>de fermer</em> la porte.", "en": "He told me to close the door."}},
   ],
   "see": ["Sequence of tenses"]},
 "Ne… que, aucun, ni… ni": {
@@ -112,7 +120,7 @@ R = {
   ]},
 "Pour que, afin de": {
   "rules": [
-    {"h": "Same aim, two grammars", "p": "pour que + subjunctive when a new subject acts; pour or afin de + infinitive when the subject stays.", "ex": {"fr": "Je parle lentement <em>pour que tu comprennes</em>.", "en": "I speak slowly so that you understand."}},
+    {"h": "Same aim, two grammars", "p": "pour que + subjunctive when a new subject acts; pour or afin de + infinitive when the subject stays. The same split runs through avant: avant de partir, avant qu'il parte.", "ex": {"fr": "Je parle lentement <em>pour que tu comprennes</em> ; <em>avant de partir</em>, ferme la porte.", "en": "I speak slowly so that you understand; before leaving, close the door."}},
   ]},
 "Concession & opposition": {
   "rules": [
@@ -134,12 +142,14 @@ R = {
 "Futur antérieur": {
   "rules": [
     {"h": "Future before future", "p": "Futur of avoir or être + participle: j'aurai fini, je serai rentré. For an action done before another future one.", "ex": {"fr": "Quand tu arriveras, j'<em>aurai déjà mangé</em>.", "en": "When you arrive, I'll have already eaten."}},
+    {"h": "After quand, dès que", "p": "Inside a time clause, a future action that must complete first lands in the futur antérieur.", "ex": {"fr": "Quand tu <em>auras fini</em>, appelle-moi.", "en": "When you've finished, call me."}},
   ],
   "see": ["Futur simple"]},
 "Past infinitive": {
   "rules": [
     {"h": "avoir or être + participle, as an infinitive", "p": "après avoir mangé, après être rentré. Keeps the infinitive after a preposition while pointing at the past.", "ex": {"fr": "Après <em>avoir travaillé</em>, il dort.", "en": "After working, he sleeps."}},
-    {"h": "être past infinitives agree", "p": "après être partis, after être partie. Same agreement rule as the passé composé.", "ex": {"fr": "après <em>être rentrés</em> du voyage.", "en": "after coming back from the trip."}},
+    {"h": "être past infinitives agree", "p": "après être partis, après être partie. Same agreement rule as the passé composé.", "ex": {"fr": "après <em>être rentrés</em> du voyage.", "en": "after coming back from the trip."}},
+    {"h": "ayant fini, étant parti", "p": "The participle has its own past: ayant + participle, étant + participle. The action finished before the main one.", "ex": {"fr": "<em>Ayant fini</em> son travail, il est sorti.", "en": "Having finished his work, he went out."}},
   ]},
 "Sequence of tenses": {
   "rules": [
@@ -155,12 +165,15 @@ R = {
 "Conditionnel passé": {
   "rules": [
     {"h": "The regret machine", "p": "aurais or serais + participle: j'aurais dit, je serais venu. Pairs with si + plus-que-parfait for the past that never happened.", "ex": {"fr": "<em>Si j'avais su</em>, je <em>serais venu</em>.", "en": "If I'd known, I'd have come."}},
+    {"h": "Standalone reproach", "p": "With no si-clause at all, the conditionnel passé scolds or regrets — the hypothesis stays unspoken.", "ex": {"fr": "Tu <em>aurais pu</em> me prévenir !", "en": "You could have warned me!"}},
   ]},
 "Subjonctif after verbs & impersonals": {
   "rules": [
     {"h": "Want, doubt, deny", "p": "vouloir, douter, nier, craindre, éviter que + subjunctive. Impersonals follow: il est possible que, il vaut mieux que.", "ex": {"fr": "Je doute qu'il <em>vienne</em>.", "en": "I doubt he'll come."}},
     {"h": "Certainty and stating go indicative", "p": "je suis sûr que, il est évident que, il dit que. But nier and douter stay subjunctive even though they sound certain.", "ex": {"fr": "Je nie qu'il <em>ait menti</em>.", "en": "I deny that he lied."}},
-  ]},
+    {"h": "Superlatives and uniqueness", "p": "After le meilleur, le seul, le premier, le dernier, the subordinate verb often goes subjunctive.", "ex": {"fr": "C'est le meilleur film que j'<em>aie</em> vu.", "en": "It's the best film I've seen."}},
+  ],
+  "exc": "Affirmative espérer que takes the indicative: j'espère qu'il vient. Only negated or questioned espérer leans subjunctive."},
 "Subjonctif after conjunctions": {
   "rules": [
     {"h": "Learn the gang as one block", "p": "pour que, afin que, avant que, bien que, quoique, jusqu'à ce que, à condition que, à moins que, pourvu que, sans que, de peur que always take the subjunctive. No exceptions to weigh.", "ex": {"fr": "Reste ici <em>jusqu'à ce qu'il revienne</em>.", "en": "Stay here until he comes back."}},
@@ -184,6 +197,8 @@ R = {
 "Si + plus-que-parfait": {
   "rules": [
     {"h": "The missed-train si", "p": "si + plus-que-parfait → conditionnel passé. Regret about the past that can't be redone.", "ex": {"fr": "<em>Si nous étions partis</em> plus tôt, nous <em>aurions vu</em> le coucher de soleil.", "en": "If we'd left earlier, we'd have seen the sunset."}},
+    {"h": "Mixed conditionals", "p": "Past condition, present result: si + plus-que-parfait → conditionnel présent. The missed chance explains now.", "ex": {"fr": "Si tu <em>avais étudié</em>, tu <em>comprendrais</em> maintenant.", "en": "If you had studied, you would understand now."}},
+    {"h": "si beyond if", "p": "si also introduces indirect questions (je me demande si elle viendra), suggestions (si on allait au cinéma ?) and wishes (si seulement il était là !).", "ex": {"fr": "<em>Si on allait</em> au cinéma ?", "en": "What if we went to the cinema?"}},
   ],
   "see": ["Conditionnel passé", "Si + imparfait"]},
 "Au cas où, à condition que": {

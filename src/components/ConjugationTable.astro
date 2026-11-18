@@ -1,6 +1,6 @@
 ---
 import { VERBS, PERSONS } from "../data/conjugations/index";
-import type { TenseId } from "../data/conjugations/types";
+import type { TenseId, Person } from "../data/conjugations/types";
 
 interface Props {
   tenseId: string;
@@ -9,7 +9,37 @@ interface Props {
 
 const { tenseId, verbName = "parler" } = Astro.props;
 const verb = VERBS[verbName];
-const forms = verb?.forms[tenseId as TenseId];
+
+/* Periphrases are computed, never stored (same convention as the diagram). */
+function periphrase(t: string, person: Person): string | null {
+  const inf = verb?.infinitive;
+  if (!verb || !inf) return null;
+  const auxForms = (aux: string) =>
+    (VERBS[aux]?.forms["present-indicatif"] ?? {}) as Record<string, string | null>;
+  switch (t) {
+    case "futur-proche": {
+      const aller = auxForms("aller")[person];
+      return aller ? `${aller} ${inf}` : null;
+    }
+    case "passe-recent": {
+      const venir = auxForms("venir")[person];
+      if (!venir) return null;
+      const de = /^[aeiouéèh]/i.test(inf) ? "d'" : "de ";
+      return `${venir} ${de}${inf}`;
+    }
+    case "present-progressif": {
+      const etre = auxForms("être")[person];
+      return etre ? `${etre} en train de ${inf}` : null;
+    }
+    default:
+      return null;
+  }
+}
+const stored = verb?.forms[tenseId as TenseId];
+const forms: Record<string, string | null> | undefined = stored ??
+  (periphrase(tenseId, "je") !== null
+    ? Object.fromEntries(PERSONS.map((p) => [p, periphrase(tenseId, p)]))
+    : undefined);
 ---
 
 {forms && (
@@ -30,7 +60,7 @@ const forms = verb?.forms[tenseId as TenseId];
       </thead>
       <tbody>
         {PERSONS.map(person => {
-          let form = forms[person];
+          let form = forms![person];
           if ((form === null || form === undefined) && (person === "elle" || person === "on")) {
             form = (forms as any)["il"] ?? null;
           }

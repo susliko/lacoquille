@@ -234,7 +234,7 @@ export default function VerbDiagram({ data, tenseTitles }: Props) {
   }
 
   function openNode(id: string) {
-    window.location.href = `/reference/verbs/tenses/${id}`;
+    window.location.href = `/knowledge/verbs/tenses/${id}`;
   }
 
   // ── Node card (SVG) — shared renderer with size params ───────

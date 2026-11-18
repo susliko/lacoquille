@@ -23,7 +23,9 @@ R = {
   "rules": [
     {"h": "The pronoun copies the subject", "p": "se lever → je me lève, tu te lèves, il se lève, nous nous levons, vous vous levez, ils se lèvent.", "ex": {"fr": "Je <em>me</em> lève à sept heures.", "en": "I get up at seven."}},
     {"h": "Daily routine is pronominal", "p": "Many verbs take the pronoun even though English doesn't: s'appeler, se lever, se coucher, se rappeler.", "ex": {"fr": "Elle <em>s'</em>appelle Léa.", "en": "Her name is Léa."}},
-  ]},
+    {"h": "Reciprocal and passive se", "p": "With a plural subject the same form reads 'each other': nous nous aimons, ils s'écrivent. With a thing as subject it reads passive: ce livre se vend bien.", "ex": {"fr": "Nous <em>nous</em> aimons ; ce livre <em>se vend</em> bien.", "en": "We love each other; this book sells well."}},
+  ],
+  "exc": "Some verbs exist only with se: se souvenir, s'en aller, il se peut que = maybe."},
 "Être en train de": {
   "rules": [
     {"h": "Happening right now", "p": "être en train de + infinitive points at this exact moment. The plain present covers both now and habitually; this pins it to now.", "ex": {"fr": "Je <em>suis en train de</em> cuisiner, je te rappelle.", "en": "I'm cooking right now, I'll call you back."}},
@@ -32,10 +34,12 @@ R = {
   "rules": [
     {"h": "aller + infinitive", "p": "The near future works like English 'going to'. aller conjugates, the main verb stays an infinitive.", "ex": {"fr": "On <em>va voir</em> un film ce soir.", "en": "We're going to watch a film tonight."}},
     {"h": "Decided vs predicted", "p": "Futur proche sounds decided or imminent; futur simple sounds predicted or distant. Tonight's plans take futur proche.", "ex": {"fr": "Il <em>va pleuvoir</em>, prends ton parapluie.", "en": "It's going to rain, take your umbrella."}},
+    {"h": "The past near future", "p": "Aller in the imparfait + infinitive = was about to. The plan was set, then something interrupted it.", "ex": {"fr": "Il <em>allait</em> partir quand elle est arrivée.", "en": "He was about to leave when she arrived."}},
   ]},
 "Passé récent": {
   "rules": [
     {"h": "venir de + infinitive", "p": "'Just did it'. venir conjugates, de stays, the action stays an infinitive.", "ex": {"fr": "Je <em>viens de</em> finir mes devoirs.", "en": "I've just finished my homework."}},
+    {"h": "The past of just", "p": "For 'had just', venir moves to the imparfait: je venais de finir. Never the passé composé of venir for this meaning.", "ex": {"fr": "Il <em>venait de</em> partir quand elle est arrivée.", "en": "He had just left when she arrived."}},
   ]},
 "Passé composé: first steps": {
   "rules": [
@@ -47,6 +51,9 @@ R = {
   "rules": [
     {"h": "Present tense, no subject", "p": "Take the tu, nous or vous present form and drop the pronoun: parle ! parlons ! parlez !", "ex": {"fr": "<em>Écoute</em> bien et <em>répète</em>.", "en": "Listen carefully and repeat."}},
     {"h": "Three rebels", "p": "être → sois, soyons, soyez. avoir → aie, ayons, ayez. savoir → sache, sachons, sachez.", "ex": {"fr": "<em>Sois</em> gentil avec le chat !", "en": "Be nice to the cat!"}},
+    {"h": "The tu -s drops, then returns", "p": "-er verbs and aller drop the tu -s: parle ! va ! But it comes back before y and en: vas-y, parles-en.", "ex": {"fr": "N'hésite pas, <em>vas-y</em> !", "en": "Don't hesitate, go on!"}},
+    {"h": "Reflexive commands", "p": "Attach the reflexive pronoun after the verb: lève-toi, levons-nous, levez-vous. The negative wraps normally: ne te lève pas.", "ex": {"fr": "<em>Lève-toi</em> !", "en": "Get up!"}},
+    {"h": "Past imperative: aie fini, sois parti", "p": "avoir or être imperative + participle orders an action done by a deadline. Formal register only — speech uses the present imperative plus a deadline.", "ex": {"fr": "Soyez <em>rentrés</em> avant minuit.", "en": "Be back before midnight."}},
   ]},
 "Polite conditionnel": {
   "rules": [
@@ -83,11 +90,12 @@ R = {
 "Definite & indefinite articles": {
   "rules": [
     {"h": "Known vs new", "p": "le, la, les point at something known; un, une, des introduce something new.", "ex": {"fr": "J'ai <em>un</em> chien. <em>Le</em> chien s'appelle Rex.", "en": "I have a dog. The dog is called Rex."}},
-    {"h": "Melting articles", "p": "le and la become l' before a vowel. de + le = du, à + le = au, with plurals aux.", "ex": {"fr": "C'est l'ami <em>du</em> voisin.", "en": "That's the neighbour's friend."}},
+    {"h": "Melting articles", "p": "le and la become l' before a vowel, but les never elides. de + le = du, à + le = au, à + les = aux, de + les = des.", "ex": {"fr": "C'est l'ami <em>du</em> voisin, le chien <em>des</em> voisins.", "en": "That's the neighbour's friend, the neighbours' dog."}},
+    {"h": "General statements keep the article", "p": "Abstract and mass nouns take le/la where English uses nothing: le bonheur, le lait, la musique.", "ex": {"fr": "<em>La</em> musique est importante.", "en": "Music is important."}},
   ]},
 "Partitive articles": {
   "rules": [
-    {"h": "du, de la, des = some", "p": "For stuff you don't count: du pain, de la confiture, des pâtes. English often skips the article; French never does.", "ex": {"fr": "Je prends <em>du</em> café le matin.", "en": "I have coffee in the morning."}},
+    {"h": "du, de la, des = some", "p": "For stuff you don't count: du pain, de la confiture, des pâtes. Before a vowel it's de l': de l'eau. English often skips the article; French never does.", "ex": {"fr": "Je prends <em>du</em> café, elle boit <em>de l'</em>eau.", "en": "I have coffee, she drinks water."}},
     {"h": "Negative drains it to de", "p": "In the negative, du, de la and des all collapse to de.", "ex": {"fr": "Il n'y a plus <em>de</em> lait.", "en": "There's no milk left."}},
     {"h": "Liking keeps its article", "p": "aimer, préférer and adorer keep the definite article, even in the negative: je n'aime pas le café.", "ex": {"fr": "Je n'aime pas <em>le</em> café noir.", "en": "I don't like black coffee."}},
   ],
@@ -98,11 +106,14 @@ R = {
   "rules": [
     {"h": "Copy the noun", "p": "Feminine adds -e, plural adds -s: un petit garçon, une petite fille, des petites filles.", "ex": {"fr": "Elle est <em>contente</em>, ils sont <em>contents</em>.", "en": "She's happy, they're happy."}},
     {"h": "Mixed groups read masculine", "p": "One male in a group and the whole group goes masculine plural.", "ex": {"fr": "Marc et Léa sont <em>petits</em>.", "en": "Marc and Léa are short."}},
-  ]},
+    {"h": "Irregular feminines", "p": "bon → bonne, nouveau → nouvelle, vieux → vieille, beau → belle, blanc → blanche, frais → fraîche. A masculine already ending in -e doesn't move: rouge stays rouge.", "ex": {"fr": "une <em>belle</em> journée, une table <em>rouge</em>.", "en": "a beautiful day, a red table."}},
+  ],
+  "exc": "Noun and compound colours never agree: des robes marron, orange, bleu marine — but rose agrees: des robes roses. beau, nouveau, vieux take bel, nouvel, vieil before a vowel: un bel homme, un vieil ami."},
 "Adjective position": {
   "rules": [
     {"h": "Most follow, a short band leads", "p": "Most adjectives follow the noun. Beauty, age, goodness and size go before: beau, joli, jeune, vieux, nouveau, bon, mauvais, meilleur, grand, petit, gros, long.", "ex": {"fr": "une <em>grande</em> maison, une voiture <em>rouge</em>.", "en": "a big house, a red car."}},
     {"h": "Position can flip meaning", "p": "un grand homme = a great man; un homme grand = a tall man. ancien, cher and propre behave the same way.", "ex": {"fr": "mon <em>ancien</em> prof (ex-) / un meuble <em>ancien</em> (antique)", "en": "my former teacher / an antique piece of furniture."}},
+    {"h": "dernier and seul flip too", "p": "la semaine dernière = last week, la dernière semaine = the final one of a series. seul before the noun = only, after it = alone. Two trailing adjectives join with et; des shrinks to de before a pre-placed adjective (de grandes maisons).", "ex": {"fr": "la <em>semaine dernière</em> / la <em>dernière</em> semaine ; une robe <em>verte et</em> bleue.", "en": "last week / the final week; a green and blue dress."}},
   ]},
 "Possessive adjectives": {
   "rules": [
@@ -117,12 +128,16 @@ R = {
   "rules": [
     {"h": "très boosts adjectives, beaucoup boosts verbs", "p": "très grand works, beaucoup grand does not. j'aime beaucoup works, j'aime très does not.", "ex": {"fr": "Ce gâteau est <em>très</em> bon, j'aime <em>beaucoup</em>.", "en": "This cake is very good, I like it a lot."}},
     {"h": "trop = too", "p": "trop + adjective, trop de + noun.", "ex": {"fr": "C'est <em>trop</em> cher et il y a <em>trop de</em> monde.", "en": "It's too expensive and there are too many people."}},
+    {"h": "assez, peu, autant", "p": "assez = quite, peu = not very, before an adjective. Verbs compare with autant que, not aussi: il travaille autant que moi.", "ex": {"fr": "C'est <em>assez</em> bon, et il travaille <em>autant que</em> moi.", "en": "It's quite good, and he works as much as I do."}},
+    {"h": "Making adverbs: feminine + -ment", "p": "lent → lente → lentement; an adjective ending in a mute -e adds -ment directly (vraiment); -ant and -ent give -amment and -emment (évidemment). Irregulars: bon → bien, mauvais → mal.", "ex": {"fr": "Elle écoute <em>attentivement</em>, <em>évidemment</em>.", "en": "She listens attentively, obviously."}},
+    {"h": "Where adverbs sit", "p": "After the verb they modify (elle écoute attentivement), before an adjective or another adverb (très intelligent), and between auxiliary and participle in compound tenses (elle a bien mangé). Several adverbs stack manner, place, time.", "ex": {"fr": "Elle a <em>bien</em> mangé ; il court <em>rapidement</em> dans le parc <em>le matin</em>.", "en": "She ate well; he runs quickly in the park in the morning."}},
   ]},
 # ── A1 · Pronouns ───────────────────────────────────────────
 "Subject pronouns & on": {
   "rules": [
     {"h": "on does everything", "p": "on replaces nous in everyday speech and conjugates like il: on va, on est, on mange.", "ex": {"fr": "<em>On y va</em> ?", "en": "Shall we go?"}},
     {"h": "tu or vous", "p": "tu for friends, family and children; vous for strangers, teachers and groups. Unsure? vous.", "ex": {"fr": "Comment <em>vous</em> appelez-vous ?", "en": "What's your name? (formal)"}},
+    {"h": "il is often nobody", "p": "Weather, time and general statements use a dummy il: il pleut, il est trois heures, il faut. ils covers any group with one male; elles only all-female groups.", "ex": {"fr": "<em>Il</em> pleut, <em>il</em> est trois heures.", "en": "It's raining, it's three o'clock."}},
   ]},
 "Stressed pronouns": {
   "rules": [
@@ -133,16 +148,21 @@ R = {
   "rules": [
     {"h": "Wrap the verb", "p": "ne before the conjugated verb, pas after. In casual speech the ne often falls silent.", "ex": {"fr": "Je <em>ne</em> comprends <em>pas</em>.", "en": "I don't understand."}},
     {"h": "pas swaps out", "p": "jamais = never, plus = anymore. They take pas's slot: je ne mange jamais de viande.", "ex": {"fr": "Elle ne sort <em>plus</em> le soir.", "en": "She doesn't go out in the evenings anymore."}},
+    {"h": "Negating an infinitive", "p": "ne pas wraps the infinitive itself, not the governing verb: je préfère ne pas partir.", "ex": {"fr": "Je préfère <em>ne pas</em> partir.", "en": "I prefer not to leave."}},
   ],
   "see": ["Partitive articles", "Ne… plus, rien, personne"]},
 "Three question forms": {
   "rules": [
     {"h": "Three roads, one meaning", "p": "Intonation: tu viens ? est-ce que: est-ce que tu viens ? inversion: viens-tu ?", "ex": {"fr": "<em>Est-ce que</em> tu viens avec nous ?", "en": "Are you coming with us?"}},
     {"h": "The formality ladder", "p": "Intonation is casual, inversion is formal, est-ce que sits safely in the middle.", "ex": {"fr": "Où <em>habites-tu</em> ?", "en": "Where do you live? (formal)"}},
+    {"h": "Inversion fine print", "p": "A vowel-final verb takes a -t- bridge: va-t-il, parle-t-elle. Noun subjects stay in front: Marie vient-elle ? And je never inverts — use est-ce que je.", "ex": {"fr": "Où <em>habite-t</em>-elle ? <em>Marie vient-elle</em> ? <em>Est-ce que je</em> parle bien ?", "en": "Where does she live? Is Marie coming? Do I speak well?"}},
   ]},
 "Question words": {
   "rules": [
     {"h": "The seven essentials", "p": "qui = who, que or quoi = what, où = where, quand = when, comment = how, pourquoi = why, combien = how much.", "ex": {"fr": "<em>Quand</em> est-ce qu'on part ? Demain.", "en": "When are we leaving? Tomorrow."}},
+    {"h": "que vs quoi", "p": "que opens the question and shrinks to qu' before a vowel; quoi takes over after a preposition and stands alone in casual speech.", "ex": {"fr": "<em>Qu'</em>est-ce que tu veux ? Tu fais <em>quoi</em> ?", "en": "What do you want? What are you doing?"}},
+    {"h": "qu'est-ce qui and combien de", "p": "When 'what' is the subject of its own question, it's qu'est-ce qui. combien takes de before a noun: combien de temps.", "ex": {"fr": "<em>Qu'est-ce qui</em> se passe ? <em>Combien de</em> temps ça prend ?", "en": "What's happening? How long does it take?"}},
+    {"h": "Embedded questions keep statement order", "p": "After savoir, demander, dire, no inversion — and que becomes ce que: je ne sais pas ce que tu veux.", "ex": {"fr": "Dis-moi <em>où tu habites</em>.", "en": "Tell me where you live."}},
   ]},
 "Il y a, c'est, voilà": {
   "rules": [
@@ -163,6 +183,7 @@ R = {
 "Prepositions of place": {
   "rules": [
     {"h": "à = at, de = from, dans = inside", "p": "à Paris, de Lyon, dans la chambre. Countries: en with feminine or vowel-initial names (en France, en Iran), au with masculine consonant ones (au Portugal, au Canada), aux with plurals (aux États-Unis).", "ex": {"fr": "Je rentre <em>dans</em> la maison, je viens <em>de</em> la boulangerie.", "en": "I'm going back into the house, I'm coming from the bakery."}},
+    {"h": "Coming from, heading toward", "p": "Coming from a country mirrors the à-side: de France (feminine or vowel), du Canada, des États-Unis. vers = toward, direction without arrival.", "ex": {"fr": "Je reviens <em>de</em> France et je marche <em>vers</em> la gare.", "en": "I'm coming back from France and walking toward the station."}},
   ]},
 "Prepositions of time": {
   "rules": [
@@ -177,13 +198,15 @@ R = {
   "rules": [
     {"h": "The default auxiliary", "p": "Every verb takes avoir except the être band and pronominals.", "ex": {"fr": "Elle <em>a acheté</em> une voiture.", "en": "She bought a car."}},
     {"h": "-ir and -re participles", "p": "finir → fini. Regular -re verbs drop the re and add -u: attendre → attendu, vendre → vendu, rendre → rendu. Two irregular families: prendre → pris (apprendre, comprendre, reprendre), mettre → mis (permettre, promettre).", "ex": {"fr": "J'<em>ai attendu</em>, puis j'<em>ai pris</em> le bus.", "en": "I waited, then took the bus."}},
+    {"h": "The irregular participles to know", "p": "eu, été, fait, pris, mis, vu, dit, su, voulu, pu, dû, bu, lu — most compound tenses lean on these. Used as an adjective, the participle agrees like one: une table cassée.", "ex": {"fr": "Il a <em>pris</em> son temps et a <em>bu</em> son café ; une lettre <em>écrite</em> à la main.", "en": "He took his time and drank his coffee; a handwritten letter."}},
   ]},
 "Passé composé with être": {
   "rules": [
     {"h": "The house verbs", "p": "Seventeen verbs of coming, going and staying take être: aller, arriver, descendre, devenir, entrer, monter, mourir, naître, partir, passer, rentrer, rester, retourner, revenir, sortir, tomber, venir. Every prefixed cousin follows its parent: redevenir, repartir, ressortir.", "ex": {"fr": "Ils <em>sont partis</em> à l'aube.", "en": "They left at dawn."}},
     {"h": "The participle agrees", "p": "With être the participle works like an adjective: elle est allée, elles sont allées.", "ex": {"fr": "Marie <em>est montée</em> avec ses valises.", "en": "Marie went up with her suitcases."}},
+    {"h": "Movement fine print", "p": "Each verb drags its preposition: aller à Paris, venir de Lyon, entrer dans la maison, sortir du cinéma. aller moves away from the speaker, venir toward. sortir crosses a boundary out; partir is the departure itself.", "ex": {"fr": "Je <em>vais</em> au marché, tu <em>viens</em> ? Il <em>sort de</em> la voiture et <em>part</em> pour Lyon.", "en": "I'm going to the market, coming? He gets out of the car and leaves for Lyon."}},
   ],
-  "exc": "monter, descendre, rentrer, sortir and passer take avoir when a direct object follows: j'ai monté les valises, j'ai passé une heure là-bas."},
+  "exc": "monter, descendre, rentrer, retourner, sortir and passer take avoir when a direct object follows: j'ai monté les valises, j'ai retourné les crêpes, j'ai passé une heure là-bas."},
 "Imparfait": {
   "rules": [
     {"h": "One stem for everyone", "p": "Take the nous form of the present, drop -ons, add -ais, -ais, -ait, -ions, -iez, -aient. Only être misbehaves: ét-.", "ex": {"fr": "Nous <em>chantions</em>, vous <em>chantiez</em>.", "en": "We sang, you sang."}},
@@ -193,12 +216,15 @@ R = {
   "rules": [
     {"h": "Scene vs action", "p": "Imparfait paints the scene: weather, age, mood. Passé composé moves the plot: what happened next.", "ex": {"fr": "Il <em>pleuvait</em> quand je <em>suis sorti</em>.", "en": "It was raining when I went out."}},
     {"h": "Habit vs event", "p": "An uncounted habit with toujours or chaque été takes imparfait; a counted series of events takes passé composé.", "ex": {"fr": "Chaque été nous <em>allions</em> à la mer ; un jour, nous <em>avons pris</em> le train.", "en": "Every summer we went to the sea; one day we took the train."}},
+    {"h": "Stative verbs stay imparfait", "p": "savoir, croire, vouloir, pouvoir, aimer describe states and default to imparfait. The passé composé marks the moment the state begins: j'ai su = I found out.", "ex": {"fr": "Je <em>savais</em> la réponse ; quand j'<em>ai su</em> la vérité, j'ai pleuré.", "en": "I knew the answer; when I learned the truth, I cried."}},
+    {"h": "A closed span takes passé composé", "p": "pendant + a measured, finished span → passé composé: j'ai habité à Paris pendant deux ans (it's over). Open description with no endpoint → imparfait: j'habitais à Paris.", "ex": {"fr": "J'<em>ai habité</em> à Paris pendant deux ans.", "en": "I lived in Paris for two years."}},
   ],
   "see": ["Imparfait", "Passé composé with avoir", "Passé composé with être"]},
 "Futur simple": {
   "rules": [
     {"h": "Infinitive + avoir's endings", "p": "parler → je parlerai, finir → je finirai. Endings: -ai, -as, -a, -ons, -ez, -ont.", "ex": {"fr": "Tu <em>verras</em>, tout <em>ira</em> bien.", "en": "You'll see, everything will be fine."}},
     {"h": "The irregular stems", "p": "être → ser-, avoir → aur-, aller → ir-, faire → fer-, venir → viendr-, tenir → tiendr-, voir → verr-, savoir → saur-, pouvoir → pourr-, vouloir → voudr-, devoir → devr-, recevoir → recevr-, envoyer → enverr-, courir → courr-, mourir → mourr-, valoir → vaudr-, acquérir → acquerr-; falloir → il faudra, pleuvoir → il pleuvra.", "ex": {"fr": "J'<em>aurai</em> le temps, je <em>ferai</em> ça demain.", "en": "I'll have time, I'll do that tomorrow."}},
+    {"h": "quand takes the futur", "p": "After quand, lorsque, dès que pointing at the future, French uses the futur where English keeps the present.", "ex": {"fr": "Quand tu <em>arriveras</em>, appelle-moi.", "en": "When you arrive, call me."}},
   ],
   "exc": "appeler and jeter double their consonant: j'appellerai, je jetterai."},
 # ── A2 · Mood ───────────────────────────────────────────────
@@ -206,13 +232,15 @@ R = {
   "rules": [
     {"h": "Some verbs need a bridge", "p": "décider de, penser à, rêver de, s'intéresser à, avoir besoin de. The preposition is part of the verb; learn the pair.", "ex": {"fr": "Elle <em>rêve de</em> voyager.", "en": "She dreams of travelling."}},
     {"h": "Second verb stays an infinitive", "p": "je commence à travailler, j'ai peur de voler, il continue à manger.", "ex": {"fr": "Il a commencé <em>à pleuvoir</em>.", "en": "It started to rain."}},
+    {"h": "A few verbs bridge with en", "p": "croire en (believe in) and avoir confiance en. And jouer splits: jouer à = games and sports, jouer de = instruments.", "ex": {"fr": "Je <em>crois en</em> toi ; je joue <em>au</em> foot et <em>du</em> piano.", "en": "I believe in you; I play football and the piano."}},
   ],
   "exc": "Same verb, different bridge, different meaning: penser à quelqu'un (think of someone) vs penser de (have an opinion about)."},
 # ── A2 · Adjectives & adverbs ───────────────────────────────
 "Comparative": {
   "rules": [
     {"h": "plus, aussi, moins", "p": "plus rapide que, aussi rapide que, moins rapide que. The adjective sits in the middle, que does the comparing.", "ex": {"fr": "Le train est <em>plus rapide que</em> le bus.", "en": "The train is faster than the bus."}},
-    {"h": "bon and mauvais go irregular", "p": "meilleur = better, pire = worse. Plus bon doesn't exist; plus mauvais exists but pire is the usual choice.", "ex": {"fr": "Ce café est <em>meilleur que</em> l'autre.", "en": "This coffee is better than the other one."}},
+    {"h": "bon and mauvais go irregular", "p": "meilleur = better, pire = worse. Plus bon doesn't exist; plus mauvais exists but pire is the usual choice. bien compares with mieux, never plus bien.", "ex": {"fr": "Il chante <em>mieux</em> que moi.", "en": "He sings better than me."}},
+    {"h": "de plus en plus", "p": "de plus en plus = more and more, de moins en moins = less and less, fixed order, before the adjective.", "ex": {"fr": "C'est de <em>plus en plus</em> difficile.", "en": "It's more and more difficult."}},
   ]},
 "Superlative": {
   "rules": [
@@ -229,6 +257,7 @@ R = {
   "rules": [
     {"h": "Replace the person after à", "p": "à Paul → lui, à mes parents → leur. lui covers him and her alike.", "ex": {"fr": "Je téléphone à Paul → je <em>lui</em> téléphone.", "en": "I'm calling Paul → I'm calling him."}},
     {"h": "Only with à-verbs", "p": "Téléphoner à, parler à, écrire à, offrir à. If there's no à, you need a direct pronoun.", "ex": {"fr": "Je <em>leur</em> ai écrit une carte.", "en": "I wrote them a card."}},
+    {"h": "me, te, nous, vous go both ways", "p": "First and second persons use one pronoun for direct and indirect: il me voit, il me parle. lui and leur exist only in the third person.", "ex": {"fr": "Il <em>me</em> voit et il <em>me</em> parle.", "en": "He sees me and he speaks to me."}},
   ],
   "see": ["Direct object pronouns"]},
 "En": {
@@ -239,7 +268,7 @@ R = {
   "see": ["Y", "Partitive articles"]},
 "Y": {
   "rules": [
-    {"h": "y = there, for places", "p": "y replaces à + place: je vais à Paris → j'y vais. It also covers verbs that take à + thing, like penser à and croire à.", "ex": {"fr": "Tu vas au marché ? J'<em>y</em> vais maintenant.", "en": "Are you going to the market? I'm on my way there."}},
+    {"h": "y = there, for places", "p": "y replaces any location phrase: à + place (je vais à Paris → j'y vais), but also dans, sur, chez (chez le médecin → j'y vais). It also covers verbs that take à + thing, like penser à and croire à.", "ex": {"fr": "Tu vas au marché ? J'<em>y</em> vais maintenant.", "en": "Are you going to the market? I'm on my way there."}},
     {"h": "Never for people", "p": "For à + person, keep à with a stressed pronoun: je pense à toi stays.", "ex": {"fr": "Je vais à la banque, puis j'<em>y</em> retire de l'argent.", "en": "I'm going to the bank, then I'll withdraw money there."}},
   ]},
 "Uses of on": {
@@ -266,12 +295,15 @@ R = {
 "Ça, cela, ceci": {
   "rules": [
     {"h": "ça does the daily work", "p": "ça is the spoken all-purpose 'it / that'. cela is the same word dressed up for writing; ceci points at the closer thing.", "ex": {"fr": "<em>Ça</em> marche pour demain ?", "en": "Does that work for tomorrow?"}},
+    {"h": "celui, celle, ceux, celles = the one(s)", "p": "Standalone 'the one / the ones', agreeing with the noun it replaces. celui-ci = this one, celui-là = that one. Never point at a person with ceci or cela — use the celui series.", "ex": {"fr": "Mes clés ? Prends <em>celles</em> de la cuisine.", "en": "My keys? Take the ones from the kitchen."}},
+    {"h": "celui qui = the one who", "p": "Free relative, people or things: celui qui travaille gagne. With a plural predicate, c'est becomes ce sont: ce sont eux.", "ex": {"fr": "<em>Celui qui</em> travaille gagne. <em>Ce sont</em> eux.", "en": "The one who works wins. It's them."}},
   ]},
 # ── A2 · Sentence ───────────────────────────────────────────
 "Ne… plus, rien, personne": {
   "rules": [
     {"h": "pas swaps out", "p": "plus = anymore, rien = nothing, personne = no one. They take pas's slot after the verb.", "ex": {"fr": "Je n'ai <em>plus</em> d'argent.", "en": "I have no money left."}},
     {"h": "rien and personne can lead", "p": "As subjects they come first, and ne still guards the verb: personne ne sait, rien n'a changé.", "ex": {"fr": "<em>Personne ne</em> comprend.", "en": "Nobody understands."}},
+    {"h": "Negatives stack, never cancel", "p": "Two negatives in one sentence intensify: je ne comprends jamais rien, personne n'a plus rien. Unlike English, they never make a positive.", "ex": {"fr": "Je ne comprends <em>jamais rien</em>.", "en": "I never understand anything."}},
   ]},
 "Exclamations": {
   "rules": [

@@ -19,10 +19,13 @@ function findHtmlFiles(dir) {
 }
 
 function extractLinks(html) {
+  // Strip script bodies first: inline bundles contain template literals like
+  // href="...${x}" that the naive regex would report as broken links.
+  const markup = html.replace(/<script[\s\S]*?<\/script>/g, '');
   const regex = /href="([^"]+)"/g;
   const links = [];
   let match;
-  while ((match = regex.exec(html)) !== null) {
+  while ((match = regex.exec(markup)) !== null) {
     links.push(match[1]);
   }
   return links;
