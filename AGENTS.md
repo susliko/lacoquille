@@ -46,6 +46,12 @@ Project **lacoquille** → file **00 — lacoquille Design System**:
   `http://localhost:9001/mcp/stream?userToken=<PAT>` (init → `notifications/initialized` →
   `tools/call execute_code`), keeping the `mcp-session-id` header. Script kept at `/tmp/opencode/pp.sh`.
 
+## Android sandbox
+
+This checkout also runs on a Pi-Bolt Android sandbox. Cargo does **not** exist there;
+a prebuilt Debian/rust toolchain lives in `~/toolchains/` (see
+`docs/android-local.md` for cold-start commands and the LD_LIBRARY_PATH rule).
+
 ## Commands
 
 ```sh
