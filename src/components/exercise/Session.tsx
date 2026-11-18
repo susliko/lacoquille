@@ -16,7 +16,7 @@
  *   current → p3 · correct → p2 · retried → p1 · missed → review
  */
 
-import { createSignal, For, Match, onMount, Show, Switch } from "solid-js";
+import { createSignal, For, Match, onCleanup, onMount, Show, Switch } from "solid-js";
 import {
   SESSION,
   countWord,
@@ -24,7 +24,7 @@ import {
 } from "./data";
 import { fetchSession } from "./api";
 import { dueInfo, recordResult } from "./store";
-import { Pips, TopicChip, type PipState } from "./ui";
+import { Pips, TopicChip, trackKeyboard, type PipState } from "./ui";
 import {
   ChoiceView,
   ClozeView,
@@ -105,8 +105,11 @@ export default function ExerciseSession() {
     return "miss";
   };
 
+  let rootRef!: HTMLDivElement;
+  onMount(() => onCleanup(trackKeyboard(rootRef)));
+
   return (
-    <div class="ex-root">
+    <div class="ex-root" ref={rootRef}>
       <div class="ex-app">
         <Show
           when={ready()}

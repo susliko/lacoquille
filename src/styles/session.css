@@ -6,6 +6,14 @@
 
 /* ── App frame ─────────────────────────────────────────────────── */
 
+/* The exercise shell is a full-viewport app. Neutralize the global
+   <main> page gutter (global.css) — its 22px top / 32px bottom padding
+   pushes the 100dvh shell below the fold and clips the bottom button. */
+main {
+  padding: 0;
+  max-width: none;
+}
+
 .ex-loading {
   flex: 1;
   display: flex;
@@ -37,7 +45,11 @@
 }
 
 .ex-root {
-  min-height: 100dvh;
+  /* `--shell` = exact px height from trackKeyboard() (keyboard-aware;
+     works even when the WebView's viewport metrics are broken/0).
+     Fallback: dvh minus the keyboard overlay (`--kb`, same source). */
+  height: var(--shell, calc(100dvh - var(--kb, 0px)));
+  overflow: hidden; /* the page never scrolls — the card scrolls inside */
   background: var(--paper);
   display: flex;
   justify-content: center;
@@ -53,7 +65,7 @@
 .ex-app {
   width: 100%;
   max-width: var(--app-max);
-  min-height: 100dvh;
+  height: 100%;
   background: var(--card);
   display: flex;
   flex-direction: column;
@@ -148,6 +160,12 @@
 
 .ex-view {
   flex: 1;
+  min-height: 0; /* allow shrink below content — the item scrolls here */
+  overflow-y: auto;
+  /* Keep focus-driven scrolling clear of the sticky foot (~130px with
+     accent keys): the focused input must never end up underneath the
+     Check button when the keyboard squeezes the viewport. */
+  scroll-padding-bottom: 140px;
   display: flex;
   flex-direction: column;
 }
@@ -481,6 +499,13 @@
 .ex-foot {
   margin-top: auto;
   padding-top: 24px;
+  /* Pin the Check / Next button to the bottom of the card: even when
+     the item content (or the feedback card) is taller than the screen,
+     the button stays visible — content scrolls under it, never the
+     button itself. */
+  position: sticky;
+  bottom: 0;
+  background: var(--card);
 }
 
 .ex-accents {
@@ -542,6 +567,8 @@
 
 .ex-done {
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -645,6 +672,9 @@
   margin-top: auto;
   padding-top: 24px;
   width: 100%;
+  position: sticky;
+  bottom: 0;
+  background: var(--card);
 }
 
 .ex-done-again {

@@ -17,7 +17,7 @@ import { createSignal, For, Match, onCleanup, onMount, Show, Switch } from "soli
 import type { ExerciseItem } from "./data";
 import { fetchFeed, type DrillPlan, type FeedRun } from "./feedApi";
 import { feedContext, recordFeed } from "./feedStore";
-import { TopicChip } from "./ui";
+import { TopicChip, trackKeyboard } from "./ui";
 import {
   ChoiceView,
   ClozeView,
@@ -145,8 +145,11 @@ export default function EndlessFeed() {
     }
   };
 
+  let rootRef!: HTMLDivElement;
+  onMount(() => onCleanup(trackKeyboard(rootRef)));
+
   return (
-    <div class="ex-root">
+    <div class="ex-root" ref={rootRef}>
       <div class="ex-app">
         <Show
           when={phase() !== "boot" && phase() !== "error"}

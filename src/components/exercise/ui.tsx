@@ -185,3 +185,46 @@ export function EnterToContinue(props: { enabled: boolean; onContinue: () => voi
   });
   return null as JSX.Element;
 }
+
+/* ── Keyboard: keep the shell above the soft keyboard ─────────── */
+
+/**
+ * Keep the shell correctly sized against the soft keyboard and publish
+ * its height as `--shell` (px) on the exercise root.
+ *
+ * - Keyboard: WebViews that honour `interactive-widget=resizes-content`
+ *   shrink the layout viewport themselves (delta ≈ 0, a no-op); the rest
+ *   keep `100dvh` fixed while the keyboard overlays the page — there the
+ *   shell must shrink by the keyboard height or the input and the Check
+ *   button end up underneath it.
+ * - Broken surfaces: some embedded WebViews report `innerHeight`/dvh as 0
+ *   until (and sometimes long after) their surface is measured, which
+ *   collapses the shell into a crammed pile. When every viewport metric
+ *   is 0, fall back to the physical screen — the only source that never
+ *   lies. Real browsers always have working metrics and never hit it.
+ */
+export function trackKeyboard(root: HTMLElement): () => void {
+  const vv = window.visualViewport;
+  if (!vv) return () => {};
+  const update = () => {
+    const kb = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+    root.style.setProperty("--kb", `${kb}px`);
+    let h = Math.max(window.innerHeight, document.documentElement.clientHeight, Math.round(vv.height));
+    if (h <= 0 && window.screen?.height) {
+      const dpr = window.devicePixelRatio || 1;
+      h = Math.round(window.screen.height / dpr);
+    }
+    if (h > 0) root.style.setProperty("--shell", `${h - kb}px`);
+  };
+  update();
+  vv.addEventListener("resize", update);
+  vv.addEventListener("scroll", update);
+  window.addEventListener("resize", update);
+  window.addEventListener("orientationchange", update);
+  return () => {
+    vv.removeEventListener("resize", update);
+    vv.removeEventListener("scroll", update);
+    window.removeEventListener("resize", update);
+    window.removeEventListener("orientationchange", update);
+  };
+}
