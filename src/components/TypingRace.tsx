@@ -94,7 +94,7 @@ export default function TypingRace() {
   const resetRace = () => {
     setTyped(0);
     setErrors(0);
-    setErrorSet(new Set());
+    setErrorSet(new Set<number>());
     setStartTime(null);
     setElapsedSecs(0);
     setFinished(false);
