@@ -117,11 +117,15 @@ If you need to do further testing after the initial snapshot, use agent-browser 
 
 Single Fly.io Machine serves both the Astro static frontend and the Rust backend.
 
+**Deployment is automatic on push to `main`** — no manual `fly deploy` needed
+(GitHub Actions CI/CD). Push, then watch the run on the repo's Actions tab;
+production is https://lacoquille.fly.dev/ a few minutes later.
+
 The `Dockerfile` is multi-stage: Node 22 builds the frontend, Rust compiles the binary, and Debian slim runs both.
 
 ```sh
-fly launch   # First time: creates app + Machine
-fly deploy  # Subsequent deploys
+fly launch   # First time only: creates app + Machine
+fly deploy   # Manual override if CI is unavailable
 ```
 
 - `fly.toml` — app name, region, port 8080, `/health` health check; `vm` section sets 256MB RAM + 1 shared CPU
