@@ -682,7 +682,6 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
         </div>
       </div>
       <div class="control-group">
-        <span class="control-label">Person</span>
         <div class="person-pills">
           {PERSONS.map(p => (
             <button class={`person-pill${selectedPerson() === p ? " active" : ""}`}
