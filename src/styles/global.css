@@ -810,19 +810,21 @@ article {
 }
 
 /* ── Knowledge tab — link straight to the manual (/knowledge/).
-   Kept out of the tab ARIA set: it navigates, not toggles. */
-.homepage-tab-link {
+   Compound selector so it wins over .homepage-tab-btn's
+   `border: none; background: transparent` further down. Kept out
+   of the tab ARIA set: it navigates, it doesn't toggle panels. */
+.homepage-tab-btn.homepage-tab-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  color: var(--ink);
+  color: var(--muted);
   border: 1px solid var(--line);
   background: var(--card);
 }
-.homepage-tab-link:hover {
-  border-color: var(--accent);
+.homepage-tab-btn.homepage-tab-link:hover {
   color: var(--ink);
+  border-color: var(--faint);
 }
 
 /* ── Practice hub grid ──────────────────────────────────────────
@@ -966,7 +968,7 @@ article {
   }
 
   .homepage-tab-panel .poly-card {
-    flex: 0 0 calc(100% / 2);
+    flex: 0 0 calc(100% / 2 - var(--s-2) / 2);
     height: 25%;
   }
 }
