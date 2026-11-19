@@ -1,16 +1,10 @@
 import { createSignal, For, onMount } from "solid-js";
 
 import ProgressGrid from "./progress/ProgressGrid";
-import taxonomy from "../data/knowledge/taxonomy.json";
 
-/* ── Knowledge tab — Le Manuel entry ───────────────────────
-   The manual itself lives at /knowledge/; the tab is a quiet
-   level list into it. No tiles (retired design). */
-const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
-const LEVEL_ROWS = LEVELS.map((lv) => ({
-  lv,
-  count: (taxonomy as any[]).filter((e) => e.lv === lv).length,
-}));
+/* ── Knowledge is a link, not a tab: the button goes straight to
+   /knowledge/ (the grammar manual). Only Practice / Progress are
+   in-page tabs; Practice is the default view. */
 
 /* ── Practice tiles ─────────────────────────────────────────────
    Implemented practices only — the feed is the flagship surface
@@ -25,19 +19,19 @@ const PRACTICE = [
 ];
 
 /* ── Component ────────────────────────────────────────────────── */
-type Tab = "knowledge" | "practice" | "progress";
+type Tab = "practice" | "progress";
 
 export default function HomepageTabs() {
   const getTab = (): Tab => {
-    if (typeof window === "undefined") return "knowledge";
+    if (typeof window === "undefined") return "practice";
     const p = new URLSearchParams(window.location.search).get("tab");
-    return p === "practice" || p === "progress" ? p : "knowledge";
+    return p === "progress" ? "progress" : "practice";
   };
 
   // Start at the SSR-safe default, then sync from the URL once mounted.
   // Initializing straight from the URL leaves hydration mismatched (the
   // panel switches but the buttons keep their server-rendered state).
-  const [tab, setTab] = createSignal<Tab>("knowledge");
+  const [tab, setTab] = createSignal<Tab>("practice");
 
   onMount(() => {
     setTab(getTab());
@@ -49,23 +43,18 @@ export default function HomepageTabs() {
   const switchTab = (t: Tab) => {
     setTab(t);
     const url = new URL(window.location.href);
-    if (t === "knowledge") url.searchParams.delete("tab");
+    if (t === "practice") url.searchParams.delete("tab");
     else url.searchParams.set("tab", t);
     history.replaceState(null, "", url.toString());
   };
 
   return (
     <div class="homepage-tabs-root">
-      {/* Tab bar */}
+      {/* Tab bar — Knowledge navigates to the manual; not a panel */}
       <div class="homepage-tab-bar" role="tablist">
-        <button
-          role="tab"
-          aria-selected={tab() === "knowledge"}
-          class={`homepage-tab-btn ${tab() === "knowledge" ? "homepage-tab-active" : "homepage-tab-inactive"}`}
-          onClick={() => switchTab("knowledge")}
-        >
+        <a href="/knowledge/" class="homepage-tab-btn homepage-tab-link">
           Knowledge
-        </button>
+        </a>
         <button
           role="tab"
           aria-selected={tab() === "practice"}
@@ -84,32 +73,7 @@ export default function HomepageTabs() {
         </button>
       </div>
 
-      {/* Knowledge tab — Le Manuel entry, quiet level list */}
-      <div
-        role="tabpanel"
-        class="homepage-tab-panel"
-        style={{ display: tab() === "knowledge" ? "block" : "none" }}
-      >
-        <div class="km-entry">
-          <a href="/knowledge/" class="km-entry-open">
-            Open the manual
-            <span class="km-entry-sub">every lesson, A1–C2 — searchable</span>
-          </a>
-          <div class="km-entry-levels">
-            <For each={LEVEL_ROWS}>
-              {(row) => (
-                <a href={`/knowledge/?l=${row.lv}`} class="km-entry-level">
-                  <span class="lv">{row.lv}</span>
-                  <span class="n">{row.count}</span>
-                </a>
-              )}
-            </For>
-          </div>
-          <a href="/knowledge/verbs/" class="km-entry-verbs">Verb tables →</a>
-        </div>
-      </div>
-
-      {/* Practice tab */}
+      {/* Practice tab (default) */}
       <div
         role="tabpanel"
         class="homepage-tab-panel"

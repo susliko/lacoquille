@@ -809,83 +809,20 @@ article {
   margin-top: var(--s-1);
 }
 
-/* ── Knowledge tab — Le Manuel entry ─────────────────────
-   Quiet list into /knowledge/: open the manual, the six
-   levels with lesson counts, verb tables. */
-.km-entry {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-2);
-}
-.km-entry-open {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: var(--s-4);
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  box-shadow: var(--shadow-1);
-  text-decoration: none;
-  font-weight: 800;
-  font-size: var(--t-md);
-  color: var(--ink);
-  transition: border-color var(--transition), background var(--transition);
-}
-.km-entry-open:hover {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-}
-.km-entry-sub {
-  font-size: var(--t-xs);
-  font-weight: 500;
-  color: var(--muted);
-}
-.km-entry-levels {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: var(--s-2);
-}
-@media (max-width: 480px) {
-  .km-entry-levels { grid-template-columns: repeat(3, 1fr); }
-}
-.km-entry-level {
-  display: flex;
-  align-items: baseline;
+/* ── Knowledge tab — link straight to the manual (/knowledge/).
+   Kept out of the tab ARIA set: it navigates, not toggles. */
+.homepage-tab-link {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 10px 0;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
   text-decoration: none;
-  transition: border-color var(--transition), background var(--transition);
-}
-.km-entry-level:hover {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-}
-.km-entry-level .lv {
-  font-weight: 800;
-  font-size: var(--t-sm);
   color: var(--ink);
+  border: 1px solid var(--line);
+  background: var(--card);
 }
-.km-entry-level .n {
-  font-size: var(--t-xs);
-  color: var(--muted);
-}
-.km-entry-verbs {
-  text-align: center;
-  padding: 11px 0;
-  border: 1px dashed var(--line);
-  border-radius: var(--r-md);
-  font-size: var(--t-sm);
-  font-weight: 700;
-  color: var(--accent-ink);
-  text-decoration: none;
-}
-.km-entry-verbs:hover {
+.homepage-tab-link:hover {
   border-color: var(--accent);
+  color: var(--ink);
 }
 
 /* ── Practice hub grid ──────────────────────────────────────────
