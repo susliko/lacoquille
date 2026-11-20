@@ -35,6 +35,11 @@ const cleanTitle = title.replace(/ — La Coquille$/, "").replace(/ · La Coquil
     <meta name="description" content={description} />
     <title>{cleanTitle} · La Coquille</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Self-hosted Manrope (latin + latin-ext), preloaded: the tab bar
+       labels render in the real face on first paint — no FOUT swap
+       mid-navigation, no third-party request. -->
+    <link rel="preload" href="/fonts/manrope-normal-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/manrope-normal-latin-ext.woff2" as="font" type="font/woff2" crossorigin />
     <!-- SPA-style navigations: swaps the page instead of a full reload,
          keeps the JS context alive, and enables link prefetch. This is
          what makes grid ↔ practice navigation feel native. -->

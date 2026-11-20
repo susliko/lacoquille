@@ -13,7 +13,11 @@ const TABS = [
   { k: "grammar", href: "/knowledge/", label: "Grammar" },
 ] as const;
 ---
-<nav class="tab-bar" aria-label="Main">
+<nav
+  class="tab-bar"
+  aria-label="Main"
+  transition:persist="tab-bar"
+>
   {TABS.map((t) => (
     <a
       href={t.href}
@@ -35,3 +39,23 @@ const TABS = [
     </a>
   ))}
 </nav>
+
+<script>
+  /* The bar is transition:persist — one DOM node for the whole session,
+     so navigation can never rebuild or crossfade it (the old bar faded
+     out with the page and popped back in after the slide). The node
+     carries the previous page's active tab, so re-sync it from the URL
+     on every swap. Pushed screens have no bar — guard for that. */
+  const syncTabs = () => {
+    const bar = document.querySelector(".tab-bar");
+    if (!bar) return;
+    const path = location.pathname;
+    for (const a of bar.querySelectorAll("a.tab")) {
+      const on = a.pathname === path;
+      a.classList.toggle("on", on);
+      if (on) a.setAttribute("aria-current", "page");
+      else a.removeAttribute("aria-current");
+    }
+  };
+  document.addEventListener("astro:page-load", syncTabs);
+</script>
