@@ -18,14 +18,14 @@ import type {
   TilesData,
   TransformData,
 } from "./data";
-import { eqLoose, seqLoose } from "./grade";
+import { gradeAnswer, seqLoose } from "./grade";
+import PeekSheet from "./PeekSheet";
 import {
   AnswerField,
   EnterToContinue,
   ExerciseFoot,
   FeedbackPanel,
   Gap,
-  noteFor,
 } from "./ui";
 
 export interface ViewProps<T> {
@@ -41,16 +41,18 @@ export interface ViewProps<T> {
  * without the views re-rendering anything themselves.
  */
 function Tail(props: {
-  verdict: () => "ok" | "miss" | null;
-  isRetry: boolean;
+  verdict: () => "ok" | "accent" | "miss" | null;
   answer?: string;
   rule: string[];
+  /** Feed topic slug — arms the peek when the rule sheet exists. */
+  slug?: string;
   canCheck: () => boolean;
   check: () => void;
   next: () => void;
   /** Provide for typing exercises — shows the accent keys while answering. */
   onAccent?: (c: string) => void;
 }) {
+  const [peek, setPeek] = createSignal(false);
   return (
     <>
       <Show when={props.verdict()}>
@@ -58,7 +60,7 @@ function Tail(props: {
           verdict={props.verdict()!}
           answer={props.answer}
           rule={props.rule}
-          note={noteFor(props.verdict()!, props.isRetry)}
+          onPeek={props.slug ? () => setPeek(true) : undefined}
         />
       </Show>
       <ExerciseFoot
@@ -67,7 +69,7 @@ function Tail(props: {
           props.verdict()
             ? {
                 label: "Next",
-                kind: props.verdict() === "ok" ? "next-ok" : "next-miss",
+                kind: props.verdict() === "miss" ? "next-miss" : "next-ok",
                 onClick: props.next,
               }
             : {
@@ -77,7 +79,17 @@ function Tail(props: {
               }
         }
       />
-      <EnterToContinue enabled={!!props.verdict()} onContinue={props.next} />
+      <EnterToContinue enabled={!!props.verdict() && !peek()} onContinue={props.next} />
+      <Show when={peek()}>
+        <PeekSheet
+          slug={props.slug}
+          onClose={() => setPeek(false)}
+          onNext={() => {
+            setPeek(false);
+            props.next();
+          }}
+        />
+      </Show>
     </>
   );
 }
@@ -86,11 +98,11 @@ function Tail(props: {
 
 export function ClozeView(props: ViewProps<ClozeData>) {
   const [value, setValue] = createSignal("");
-  const [verdict, setVerdict] = createSignal<"ok" | "miss" | null>(null);
+  const [verdict, setVerdict] = createSignal<"ok" | "accent" | "miss" | null>(null);
 
   const check = () => {
     if (!value().trim() || verdict()) return;
-    setVerdict(eqLoose(value(), props.item.answer) ? "ok" : "miss");
+    setVerdict(gradeAnswer(value(), props.item.answer));
   };
   const next = () => props.onResolve(verdict() === "ok");
 
@@ -110,9 +122,9 @@ export function ClozeView(props: ViewProps<ClozeData>) {
       />
       <Tail
         verdict={verdict}
-        isRetry={props.isRetry}
         answer={props.item.answer}
         rule={props.item.rule}
+        slug={props.item.topicSlug}
         canCheck={() => !!value().trim()}
         check={check}
         next={next}
@@ -126,7 +138,7 @@ export function ClozeView(props: ViewProps<ClozeData>) {
 
 export function ChoiceView(props: ViewProps<ChoiceData>) {
   const [picked, setPicked] = createSignal<number | null>(null);
-  const [verdict, setVerdict] = createSignal<"ok" | "miss" | null>(null);
+  const [verdict, setVerdict] = createSignal<"ok" | "accent" | "miss" | null>(null);
 
   const check = () => {
     if (picked() === null || verdict()) return;
@@ -166,9 +178,9 @@ export function ChoiceView(props: ViewProps<ChoiceData>) {
 
       <Tail
         verdict={verdict}
-        isRetry={props.isRetry}
         answer={props.item.options[props.item.correct]}
         rule={props.item.rule}
+        slug={props.item.topicSlug}
         canCheck={() => picked() !== null}
         check={check}
         next={next}
@@ -182,7 +194,7 @@ export function ChoiceView(props: ViewProps<ChoiceData>) {
 export function TilesView(props: ViewProps<TilesData>) {
   /** Indices into item.bank, in placement order. */
   const [placed, setPlaced] = createSignal<number[]>([]);
-  const [verdict, setVerdict] = createSignal<"ok" | "miss" | null>(null);
+  const [verdict, setVerdict] = createSignal<"ok" | "accent" | "miss" | null>(null);
 
   const used = () => new Set(placed());
   const canCheck = () =>
@@ -247,9 +259,9 @@ export function TilesView(props: ViewProps<TilesData>) {
 
       <Tail
         verdict={verdict}
-        isRetry={props.isRetry}
         answer={props.item.target.join(" ")}
         rule={props.item.rule}
+        slug={props.item.topicSlug}
         canCheck={canCheck}
         check={check}
         next={next}
@@ -262,11 +274,11 @@ export function TilesView(props: ViewProps<TilesData>) {
 
 export function TransformView(props: ViewProps<TransformData>) {
   const [value, setValue] = createSignal("");
-  const [verdict, setVerdict] = createSignal<"ok" | "miss" | null>(null);
+  const [verdict, setVerdict] = createSignal<"ok" | "accent" | "miss" | null>(null);
 
   const check = () => {
     if (!value().trim() || verdict()) return;
-    setVerdict(eqLoose(value(), props.item.answer) ? "ok" : "miss");
+    setVerdict(gradeAnswer(value(), props.item.answer));
   };
   const next = () => props.onResolve(verdict() === "ok");
 
@@ -289,9 +301,9 @@ export function TransformView(props: ViewProps<TransformData>) {
       />
       <Tail
         verdict={verdict}
-        isRetry={props.isRetry}
         answer={props.item.answer}
         rule={props.item.rule}
+        slug={props.item.topicSlug}
         canCheck={() => !!value().trim()}
         check={check}
         next={next}
@@ -306,13 +318,13 @@ export function TransformView(props: ViewProps<TransformData>) {
 export function ErrorSpotView(props: ViewProps<ErrorSpotData>) {
   const [picked, setPicked] = createSignal<number | null>(null);
   const [fix, setFix] = createSignal("");
-  const [verdict, setVerdict] = createSignal<"ok" | "miss" | null>(null);
+  const [verdict, setVerdict] = createSignal<"ok" | "accent" | "miss" | null>(null);
 
   const canCheck = () => picked() !== null && !!fix().trim() && !verdict();
   const check = () => {
     if (!canCheck()) return;
-    const ok = picked() === props.item.wrong && eqLoose(fix(), props.item.fix);
-    setVerdict(ok ? "ok" : "miss");
+    const spotOk = picked() === props.item.wrong;
+    setVerdict(spotOk ? gradeAnswer(fix(), props.item.fix) : "miss");
   };
   const next = () => props.onResolve(verdict() === "ok");
 
@@ -349,9 +361,9 @@ export function ErrorSpotView(props: ViewProps<ErrorSpotData>) {
 
       <Tail
         verdict={verdict}
-        isRetry={props.isRetry}
         answer={props.item.fix}
         rule={props.item.rule}
+        slug={props.item.topicSlug}
         canCheck={canCheck}
         check={check}
         next={next}
@@ -384,11 +396,11 @@ function speakFr(text: string): boolean {
 
 export function DictationView(props: ViewProps<DictationData>) {
   const [value, setValue] = createSignal("");
-  const [verdict, setVerdict] = createSignal<"ok" | "miss" | null>(null);
+  const [verdict, setVerdict] = createSignal<"ok" | "accent" | "miss" | null>(null);
 
   const check = () => {
     if (!value().trim() || verdict()) return;
-    setVerdict(eqLoose(value(), props.item.answer) ? "ok" : "miss");
+    setVerdict(gradeAnswer(value(), props.item.answer));
   };
   const next = () => props.onResolve(verdict() === "ok");
 
@@ -426,9 +438,9 @@ export function DictationView(props: ViewProps<DictationData>) {
       />
       <Tail
         verdict={verdict}
-        isRetry={props.isRetry}
         answer={props.item.answer}
         rule={props.item.rule}
+        slug={props.item.topicSlug}
         canCheck={() => !!value().trim()}
         check={check}
         next={next}

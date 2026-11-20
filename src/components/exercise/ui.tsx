@@ -132,41 +132,38 @@ export function ExerciseFoot(props: {
 
 /* ── Feedback panel (frames 03 & 04) ──────────────────────────── */
 
-export type Verdict = "ok" | "miss";
+export type Verdict = "ok" | "accent" | "miss";
 
 export function FeedbackPanel(props: {
   verdict: Verdict;
-  /** The correct answer, shown on a miss. */
+  /** The correct answer, shown on a miss or accent near-miss. */
   answer?: string;
   rule: string[];
-  note: string;
+  /** Opens the peek — the rule sheet over the feed. */
+  onPeek?: () => void;
 }) {
   return (
     <div class="ex-feedback" classList={{ [`is-${props.verdict}`]: true }}>
       <div class="ex-feedback-title">
-        {props.verdict === "ok" ? "✓ Correct" : "× Not quite"}
+        {props.verdict === "ok"
+          ? "✓ Correct"
+          : props.verdict === "accent"
+            ? "✓ Right — mind the accent"
+            : "× Not quite"}
       </div>
-      <Show when={props.verdict === "miss" && props.answer}>
+      <Show when={props.verdict !== "ok" && props.answer}>
         <div class="ex-feedback-answer">{props.answer}</div>
       </Show>
       <div class="ex-feedback-rule">
         <For each={props.rule}>{(line) => <p>{line}</p>}</For>
       </div>
-      <div class="ex-feedback-note">{props.note}</div>
+      <Show when={props.onPeek}>
+        <button type="button" class="ex-why" onClick={props.onPeek}>
+          Why?
+        </button>
+      </Show>
     </div>
   );
-}
-
-/** Scheduling copy under the rule (frames 03/04). */
-export function noteFor(verdict: Verdict, isRetry: boolean): string {
-  if (!isRetry) {
-    return verdict === "ok"
-      ? "Scheduled again in 4 days"
-      : "Back in this session in a few minutes";
-  }
-  return verdict === "ok"
-    ? "Good recovery — back tomorrow"
-    : "It will come back tomorrow";
 }
 
 /* ── Keyboard: Enter → continue while in feedback ─────────────── */

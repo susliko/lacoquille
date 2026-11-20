@@ -13,11 +13,13 @@
  * the end of the current run for an immediate retry.
  */
 
-import { createSignal, For, Match, onCleanup, onMount, Show, Switch } from "solid-js";
+import { createMemo, createSignal, For, Match, onCleanup, onMount, Show, Switch } from "solid-js";
 import type { ExerciseItem } from "./data";
 import { fetchFeed, type DrillPlan, type FeedRun } from "./feedApi";
 import { feedContext, recordFeed } from "./feedStore";
-import { TopicChip, trackKeyboard } from "./ui";
+import { isTaught, markTaught, peekFor } from "./peek";
+import { readSettings } from "../settings/settingsStore";
+import { Pips, TopicChip, trackKeyboard, type PipState } from "./ui";
 import {
   ChoiceView,
   ClozeView,
@@ -44,6 +46,14 @@ const EMPTY_SITTING: Sitting = { answered: 0, correct: 0, byTopic: {} };
 /** Run boundary: with how many items left to start prefetching. */
 const PREFETCH_AT = 2;
 
+/**
+ * Time ends a session, not item count (docs/01-decisions.md): a typed
+ * cloze takes four times as long as a tap, so items are a bad clock —
+ * and time cannot accumulate into a backlog. ~5 min matches the hero's
+ * "about 5 min" forecast.
+ */
+const SESSION_MS = 5 * 60 * 1000;
+
 export default function EndlessFeed() {
   const [phase, setPhase] = createSignal<"boot" | "active" | "buffering" | "error">("boot");
   const [plan, setPlan] = createSignal<DrillPlan | null>(null);
@@ -51,6 +61,12 @@ export default function EndlessFeed() {
   const [pos, setPos] = createSignal(0);
   const [sitting, setSitting] = createSignal<Sitting>(EMPTY_SITTING);
   const [exited, setExited] = createSignal(false);
+  /** Per-slot verdicts, parallel to the queue — the run's pips. */
+  const [runPips, setRunPips] = createSignal<PipState[]>([]);
+  /** Unseen topic → teaching card shows before the run's first item. */
+  const [teachSlug, setTeachSlug] = createSignal<string | null>(null);
+
+  let deadline = Date.now() + SESSION_MS;
 
   let nextRun: FeedRun | null = null;
   let prefetching = false;
@@ -61,10 +77,19 @@ export default function EndlessFeed() {
     (item as { topicSlug?: string }).topicSlug ??
     item.topic.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
+  /** Tap-based kinds when "Typing items" is off (settings). */
+  const TAP_KINDS = new Set(["choice", "tiles"]);
+
   const adopt = (run: FeedRun) => {
     setPlan(run.plan);
-    setQueue(run.items.map((item) => ({ item, retry: false })));
+    const typing = readSettings().typing;
+    const items = typing ? run.items : run.items.filter((i) => TAP_KINDS.has(i.kind));
+    const usable = items.length ? items : run.items; // never dead-end the feed
+    setQueue(usable.map((item) => ({ item, retry: false })));
+    setRunPips(usable.map(() => ""));
     setPos(0);
+    const slug = topicSlugOf(usable[0]);
+    setTeachSlug(!isTaught(slug) ? slug : null);
     setPhase("active");
   };
 
@@ -125,8 +150,20 @@ export default function EndlessFeed() {
       };
     });
 
+    setRunPips((p) => {
+      const next = [...p];
+      next[pos()] = correct ? "ok" : "miss";
+      return next;
+    });
+
     if (!correct && !slot.retry) {
       setQueue((q) => [...q, { item: slot.item, retry: true }]);
+      setRunPips((p) => [...p, ""]);
+    }
+    if (Date.now() >= deadline) {
+      // The clock ends the session — the end screen offers "keep going".
+      setExited(true);
+      return;
     }
     const next = pos() + 1;
     setPos(next);
@@ -166,14 +203,22 @@ export default function EndlessFeed() {
         >
           <Show
             when={!exited()}
-            fallback={<FeedSummary sitting={sitting()} onResume={() => setExited(false)} />}
+            fallback={
+              <FeedSummary
+                sitting={sitting()}
+                onResume={() => {
+                  deadline = Date.now() + SESSION_MS;
+                  setExited(false);
+                }}
+              />
+            }
           >
             <header class="ex-top ex-feed-top">
               <Show when={plan()} fallback={<span class="ex-streak" />}>
                 {(p) => (
                   <div class="ex-feed-focus">
                     <TopicChip level={p().level} topic={p().topicTitle} />
-                    <span class="ex-streak">{sitting().answered} answered</span>
+                    <Pips total={queue().length} stateFor={(i) => runPips()[i] ?? (i === pos() ? "current" : "")} />
                   </div>
                 )}
               </Show>
@@ -182,32 +227,44 @@ export default function EndlessFeed() {
               </button>
             </header>
 
-            <Show
-              when={phase() === "active" && current()}
-              keyed
-              fallback={<div class="ex-loading"><p>Preparing your next focus…</p></div>}
-            >
-              {(slot) => (
-                <Switch>
-                  <Match when={slot.item.kind === "cloze" && slot.item}>
-                    {(cloze) => <ClozeView item={cloze()} isRetry={slot.retry} onResolve={resolve} />}
-                  </Match>
-                  <Match when={slot.item.kind === "choice" && slot.item}>
-                    {(choice) => <ChoiceView item={choice()} isRetry={slot.retry} onResolve={resolve} />}
-                  </Match>
-                  <Match when={slot.item.kind === "tiles" && slot.item}>
-                    {(tiles) => <TilesView item={tiles()} isRetry={slot.retry} onResolve={resolve} />}
-                  </Match>
-                  <Match when={slot.item.kind === "transform" && slot.item}>
-                    {(tr) => <TransformView item={tr()} isRetry={slot.retry} onResolve={resolve} />}
-                  </Match>
-                  <Match when={slot.item.kind === "error-spot" && slot.item}>
-                    {(es) => <ErrorSpotView item={es()} isRetry={slot.retry} onResolve={resolve} />}
-                  </Match>
-                  <Match when={slot.item.kind === "dictation" && slot.item}>
-                    {(d) => <DictationView item={d()} isRetry={slot.retry} onResolve={resolve} />}
-                  </Match>
-                </Switch>
+            <Show when={teachSlug()} keyed fallback={
+              <Show
+                when={phase() === "active" && current()}
+                keyed
+                fallback={<div class="ex-loading"><p>Preparing your next focus…</p></div>}
+              >
+                {(slot) => (
+                  <Switch>
+                    <Match when={slot.item.kind === "cloze" && slot.item}>
+                      {(cloze) => <ClozeView item={cloze()} isRetry={slot.retry} onResolve={resolve} />}
+                    </Match>
+                    <Match when={slot.item.kind === "choice" && slot.item}>
+                      {(choice) => <ChoiceView item={choice()} isRetry={slot.retry} onResolve={resolve} />}
+                    </Match>
+                    <Match when={slot.item.kind === "tiles" && slot.item}>
+                      {(tiles) => <TilesView item={tiles()} isRetry={slot.retry} onResolve={resolve} />}
+                    </Match>
+                    <Match when={slot.item.kind === "transform" && slot.item}>
+                      {(tr) => <TransformView item={tr()} isRetry={slot.retry} onResolve={resolve} />}
+                    </Match>
+                    <Match when={slot.item.kind === "error-spot" && slot.item}>
+                      {(es) => <ErrorSpotView item={es()} isRetry={slot.retry} onResolve={resolve} />}
+                    </Match>
+                    <Match when={slot.item.kind === "dictation" && slot.item}>
+                      {(d) => <DictationView item={d()} isRetry={slot.retry} onResolve={resolve} />}
+                    </Match>
+                  </Switch>
+                )}
+              </Show>
+            }>
+              {(slug) => (
+                <TeachCard
+                  slug={slug}
+                  onDone={() => {
+                    markTaught(slug);
+                    setTeachSlug(null);
+                  }}
+                />
               )}
             </Show>
           </Show>
@@ -217,22 +274,64 @@ export default function EndlessFeed() {
   );
 }
 
+/* ── Teaching card (handoff §5) ──────────────────────────────────
+   A topic's first appearance gets two or three sentences and one
+   example, built from the compact rule sheets. Cold-testing a
+   brand-new topic guarantees a failure — demoralising, not useful. */
+
+function TeachCard(props: { slug: string; onDone: () => void }) {
+  const content = createMemo(() => peekFor(props.slug));
+  return (
+    <div class="ex-view">
+      <Show when={content()} fallback={
+        <div class="ex-loading">
+          <p>New topic coming up.</p>
+          <button type="button" class="ex-btn" onClick={props.onDone}>Got it</button>
+        </div>
+      }>
+        {(b) => (
+          <>
+            <div class="ex-teach-eyebrow">Before you start</div>
+            <h2 class="ex-teach-title">{b().title}</h2>
+            <For each={b().blocks.slice(0, 2)}>
+              {(blk) => (
+                <div class="ex-teach-block">
+                  <Show when={blk.h}><b class="ex-teach-h">{blk.h}</b></Show>
+                  <p innerHTML={blk.p} />
+                </div>
+              )}
+            </For>
+            <Show when={b().examples[0]}>
+              {(ex) => (
+                <div class="ex-teach-ex">
+                  <span class="ex-teach-fr" innerHTML={ex()[0]} />
+                  <span class="ex-teach-en">{ex()[1]}</span>
+                </div>
+              )}
+            </Show>
+            <div class="ex-teach-foot">
+              <a class="ex-teach-link" href={`/knowledge/t/${b().entryId}`}>
+                Full page
+              </a>
+              <button type="button" class="ex-btn" onClick={props.onDone}>
+                Got it
+              </button>
+            </div>
+          </>
+        )}
+      </Show>
+    </div>
+  );
+}
+
 /* ── Sitting summary (exit screen) ─────────────────────────────── */
 
 function FeedSummary(props: { sitting: Sitting; onResume: () => void }) {
-  const rate = () =>
-    props.sitting.answered === 0
-      ? 0
-      : Math.round((props.sitting.correct / props.sitting.answered) * 100);
-
   const rows = () => Object.entries(props.sitting.byTopic);
 
   return (
     <div class="ex-done">
       <h1 class="ex-done-title">Nice sitting</h1>
-      <p class="ex-done-sub">
-        {props.sitting.answered} items, {rate()}% correct.
-      </p>
 
       <Show when={rows().length > 0}>
         <div class="ex-miss-rows">
@@ -241,7 +340,7 @@ function FeedSummary(props: { sitting: Sitting; onResume: () => void }) {
               <div class="ex-miss-row" data-topic={slug}>
                 <span class="ex-miss-topic">{t.title}</span>
                 <span class="ex-miss-note">
-                  {t.correct} correct · {t.missed} missed
+                  {t.missed > t.correct ? "coming back soon" : "going well"}
                 </span>
               </div>
             )}
@@ -249,13 +348,10 @@ function FeedSummary(props: { sitting: Sitting; onResume: () => void }) {
         </div>
       </Show>
 
-      <div class="ex-next-card">
-        <div class="ex-next-label">Next visit</div>
-        <div class="ex-next-value">The coach will pick up from here</div>
-      </div>
+      <p class="ex-done-gridline">Your grammar grid has caught up.</p>
 
       <div class="ex-done-actions">
-        <a class="ex-btn" href="/practice">Back to the map</a>
+        <a class="ex-btn" href="/">Done for now</a>
         <button type="button" class="ex-done-again" onClick={() => props.onResume()}>
           keep going
         </button>

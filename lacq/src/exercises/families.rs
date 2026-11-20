@@ -304,25 +304,67 @@ pub fn generate(
             c.options = opts.into_iter().map(|(_, o)| o).collect();
         }
     }
+    // Cap cloze at ~40% of a run (handoff docs/06: cloze is primary
+    // for 85 of 121 topics, so always taking a primary makes the feed
+    // one exercise type with different sentences). Secondary kinds are
+    // promoted where the family has them; a cloze-only family stays
+    // cloze-only. Yield is never reduced below what the pool fills.
+    let (mut non_cloze, mut cloze): (Vec<ExerciseItem>, Vec<ExerciseItem>) =
+        pool.into_iter().partition(|i| !matches!(i, ExerciseItem::Cloze(_)));
+
     let mut picked: Vec<ExerciseItem> = Vec::with_capacity(count);
-    let mut fallback: Vec<ExerciseItem> = Vec::new();
-    for item in pool {
-        if picked.len() == count {
-            break;
-        }
-        if exclude.contains(item.id()) {
-            fallback.push(item);
+    {
+        let want = (count * 2) / 5;
+        let cloze_budget = if non_cloze.len() >= count - want.min(count) {
+            want.min(count)
         } else {
-            picked.push(item);
-        }
-    }
-    for item in fallback {
-        if picked.len() == count {
-            break;
-        }
-        picked.push(item);
+            count.saturating_sub(non_cloze.len())
+        };
+        take_into(&mut cloze, cloze_budget, exclude, &mut picked);
+        take_into(&mut non_cloze, count - picked.len(), exclude, &mut picked);
+        // remainder: cloze beyond the cap is fine when nothing else remains
+        take_into(&mut cloze, count - picked.len(), exclude, &mut picked);
+        take_into(&mut non_cloze, count - picked.len(), exclude, &mut picked);
     }
     picked
+}
+
+/// Pull up to `n` items from `list`, skipping excluded ids unless the
+/// list cannot otherwise fill. Same fallback semantics as the run
+/// picker this replaced; leftovers stay in `list`.
+fn take_into(
+    list: &mut Vec<ExerciseItem>,
+    n: usize,
+    exclude: &HashSet<String>,
+    out: &mut Vec<ExerciseItem>,
+) {
+    if n == 0 {
+        return;
+    }
+    let mut taken = 0;
+    let mut deferred = Vec::new();
+    let mut kept = Vec::new();
+    for item in list.drain(..) {
+        if taken < n {
+            if exclude.contains(item.id()) {
+                deferred.push(item);
+            } else {
+                out.push(item);
+                taken += 1;
+            }
+        } else {
+            kept.push(item);
+        }
+    }
+    for item in deferred {
+        if taken < n {
+            out.push(item);
+            taken += 1;
+        } else {
+            kept.push(item);
+        }
+    }
+    *list = kept;
 }
 
 #[cfg(test)]
@@ -334,6 +376,32 @@ mod tests {
         topics::by_slug(slug)
             .map(|t| generate(t, level, count, &HashSet::new(), seed))
             .unwrap_or_default()
+    }
+
+    #[test]
+    fn cloze_capped_when_pool_has_secondary_kinds() {
+        // A family whose pool mixes cloze and non-cloze must not serve
+        // more than ~40% cloze (2 of 5). Yield stays at the full count.
+        let topic = topics::by_slug("pronouns-cod-coi").expect("topic");
+        let items = generate(&topic, None, 5, &HashSet::new(), 42);
+        assert_eq!(items.len(), 5);
+        let cloze = items
+            .iter()
+            .filter(|i| matches!(i, ExerciseItem::Cloze(_)))
+            .count();
+        assert!(
+            cloze <= 2,
+            "cloze exceeded the 40% cap: {cloze}/5 for pronouns-basic"
+        );
+    }
+
+    #[test]
+    fn cloze_only_family_stays_at_full_yield() {
+        // A family with no secondary kinds must keep yielding `count`
+        // cloze items — the cap never reduces yield below the pool.
+        let topic = topics::by_slug("present-er-verbs").expect("topic");
+        let items = generate(&topic, None, 5, &HashSet::new(), 7);
+        assert_eq!(items.len(), 5);
     }
 
     #[test]
