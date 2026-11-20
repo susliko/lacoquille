@@ -1,0 +1,37 @@
+---
+/* Bottom tab bar — the app's three destinations (handoff 2026-11).
+   Server-rendered: the active tab is baked per page at build time.
+   Pushed screens (settings, drills, the feed, lesson sheets) take
+   no bar — they are layers, not destinations. */
+interface Props {
+  active: "practice" | "vocab" | "grammar";
+}
+const { active } = Astro.props;
+const TABS = [
+  { k: "practice", href: "/", label: "Practice" },
+  { k: "vocab", href: "/vocab/", label: "Vocab" },
+  { k: "grammar", href: "/knowledge/", label: "Grammar" },
+] as const;
+---
+<nav class="tab-bar" aria-label="Main">
+  {TABS.map((t) => (
+    <a
+      href={t.href}
+      class:list={["tab", t.k === active && "on"]}
+      aria-current={t.k === active ? "page" : undefined}
+    >
+      <span class="ic" aria-hidden="true">
+        {t.k === "practice" && (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.2"/></svg>
+        )}
+        {t.k === "vocab" && (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M4 6h13M3 12h8M3 17h11"/><circle cx="18.5" cy="16.5" r="3.4"/><path d="M21 19l1.6 1.6"/></svg>
+        )}
+        {t.k === "grammar" && (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7C10.5 5.5 8 5 4 5.5v12.8c4-.5 6.5 0 8 1.7 1.5-1.7 4-2.2 8-1.7V5.5C16 5 13.5 5.5 12 7z"/><path d="M12 7v12.5"/></svg>
+        )}
+      </span>
+      {t.label}
+    </a>
+  ))}
+</nav>

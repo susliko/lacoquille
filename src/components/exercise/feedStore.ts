@@ -12,7 +12,7 @@
 import type { TopicStat } from "./feedApi";
 
 const KEY = "lacoquille.feed.v1";
-const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
+export const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 export type Level = (typeof LEVELS)[number];
 
 const RECENT_ITEMS_CAP = 40;

@@ -44,3 +44,7 @@ lacq/target/
 
 # python
 __pycache__/
+
+# design handoff archives
+lacoquille-handoff.zip
+french-app-handoff.zip

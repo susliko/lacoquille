@@ -19,6 +19,7 @@ import {
   GG_SUBS,
   type FamKey,
 } from "./taxonomy";
+import { readSettings } from "../settings/settingsStore";
 import {
   entriesIn,
   entryStates,
@@ -121,11 +122,13 @@ interface Trigger {
 
 const HINT_KEY = "grammarMapHintOff";
 
-export default function ProgressGrid(props: { visible: boolean }) {
+export default function ProgressGrid(props: { visible: boolean; titled?: boolean }) {
   const [catalog, setCatalog] = createSignal<TopicsCatalog | null>(null);
   const [failed, setFailed] = createSignal(false);
   const [sheet, setSheet] = createSignal<Sheet | null>(null);
   const [hintOff, setHintOff] = createSignal(false);
+  /** "Levels shown" setting — rows above the cap are hidden entirely. */
+  const [levels, setLevels] = createSignal<readonly string[]>(GG_LEVELS);
   let lastTrigger: Trigger | null = null;
   let closeBtn: HTMLButtonElement | undefined;
   let inFlight = false;
@@ -136,6 +139,7 @@ export default function ProgressGrid(props: { visible: boolean }) {
     } catch {
       /* private mode: banner just stays dismissable for the session */
     }
+    setLevels(readSettings().levelsMax === "C2" ? GG_LEVELS : GG_LEVELS.slice(0, GG_LEVELS.indexOf(readSettings().levelsMax) + 1));
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && sheet()) closeSheet();
     };
@@ -230,7 +234,9 @@ export default function ProgressGrid(props: { visible: boolean }) {
         <Show when={states()} fallback={<p class="gg-status">Preparing your grid…</p>}>
           {(states) => (
             <>
-              <h2 class="gg-title">Grammar map</h2>
+              <Show when={props.titled !== false}>
+                <h2 class="gg-title">Grammar map</h2>
+              </Show>
 
               <Show when={!hintOff()}>
                 <div class="gg-hint">
@@ -269,8 +275,8 @@ export default function ProgressGrid(props: { visible: boolean }) {
                   </div>
                 </div>
 
-                {/* one row per level */}
-                <For each={GG_LEVELS}>
+                {/* one row per level ("Levels shown" setting caps the rows) */}
+                <For each={levels()}>
                   {(lv) => (
                     <div class="gg-mrow">
                       <LevelHead lv={lv} states={states()} on={isRow(lv)} onOpen={openSheet} />

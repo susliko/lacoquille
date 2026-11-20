@@ -1,0 +1,18 @@
+---
+import Base from "../layouts/Base.astro";
+import SettingsPanel from "../components/SettingsPanel";
+
+// Keep in step with package.json — bumped on release.
+const version = "0.0.1";
+---
+
+<Base title="Settings · La Coquille">
+  <SettingsPanel client:load version={version} />
+</Base>
+
+<style>
+  :global(main#main-content) {
+    padding: 0;
+    max-width: none;
+  }
+</style>

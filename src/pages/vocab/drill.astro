@@ -1,0 +1,16 @@
+---
+import Base from "../../layouts/Base.astro";
+import FlipDrill from "../../components/vocab/FlipDrill";
+---
+
+<Base title="Review · La Coquille">
+  <!-- pushed screen: no tab bar, its own close control -->
+  <FlipDrill client:load />
+</Base>
+
+<style>
+  :global(main#main-content) {
+    padding: 0;
+    max-width: none;
+  }
+</style>

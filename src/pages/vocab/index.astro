@@ -1,0 +1,15 @@
+---
+import Base from "../../layouts/Base.astro";
+import VocabHome from "../../components/vocab/VocabHome";
+---
+
+<Base title="Vocab · La Coquille" tab="vocab">
+  <VocabHome client:load transition:persist="vocab-home" />
+</Base>
+
+<style>
+  :global(main#main-content) {
+    padding: 0;
+    max-width: none;
+  }
+</style>

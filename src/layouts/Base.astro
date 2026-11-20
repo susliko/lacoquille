@@ -1,5 +1,6 @@
 ---
 import { ClientRouter, slide } from "astro:transitions";
+import TabBar from "../components/TabBar.astro";
 import "../styles/global.css";
 
 interface Props {
@@ -9,9 +10,13 @@ interface Props {
    *  informational — every page passes it but the layout doesn't render it. */
   section?: string;
   breadcrumb?: Array<{ label: string; href?: string }>;
+  /** Tab root this page belongs to. Set on the three tab destinations
+   *  (practice · vocab · grammar); pushed screens omit it and render
+   *  without the bottom bar. */
+  tab?: "practice" | "vocab" | "grammar";
 }
 
-const { title, description = "An interactive French grammar reference." } = Astro.props;
+const { title, description = "An interactive French grammar reference.", tab } = Astro.props;
 const cleanTitle = title.replace(/ — La Coquille$/, "").replace(/ · La Coquille$/, "");
 ---
 
@@ -37,8 +42,11 @@ const cleanTitle = title.replace(/ — La Coquille$/, "").replace(/ · La Coquil
   </head>
   <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
-    <main id="main-content" transition:animate={slide({ duration: "0.22s" })}>
-      <slot />
-    </main>
+    <div class={`app-shell${tab ? " with-tab" : ""}`}>
+      <main id="main-content" transition:animate={slide({ duration: "0.22s" })}>
+        <slot />
+      </main>
+      {tab && <TabBar active={tab} />}
+    </div>
   </body>
 </html>
