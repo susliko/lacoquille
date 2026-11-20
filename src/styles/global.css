@@ -177,6 +177,9 @@ body {
   font-size: var(--t-md);
   line-height: 1.6;
   min-height: 100vh;
+  /* viewport-fit=cover: keep content clear of a real notch/status bar
+     (0 everywhere else — including this preview's WebView) */
+  padding-top: env(safe-area-inset-top, 0px);
   font-weight: 400;
   overflow-x: hidden;
 }
@@ -1453,9 +1456,16 @@ article {
   flex: 1;
 }
 .app-shell.with-tab > main {
-  padding-bottom: calc(58px + env(safe-area-inset-bottom) + var(--s-4));
+  /* scroll clearance: the bar is fixed, so the last rows of every list
+     must be able to scroll clear of it (56px buttons + inset + air) */
+  padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px) + var(--s-6));
 }
 
+/* The bar is position:fixed. Buttons are pinned to a fixed 56px row so
+   env(safe-area-inset-bottom) can never move the labels: when the inset
+   changes (toolbar collapse, gesture bar), only the blank strip below
+   the buttons changes. The shadow — not a 1px border — separates the
+   bar from scrolled content, which visibly slides beneath it. */
 .tab-bar {
   position: fixed;
   bottom: 0;
@@ -1463,15 +1473,19 @@ article {
   right: 0;
   margin-inline: auto; /* centred without transform — never fights the router's FLIP */
   width: min(100%, var(--app-max));
-  min-height: 58px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: start; /* buttons pinned; the inset padding hangs below */
+  min-height: calc(56px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   background: var(--card);
-  border-top: 1px solid var(--line);
-  display: flex;
+  box-shadow:
+    0 -1px 0 rgba(22, 24, 29, 0.10),
+    0 -10px 18px rgba(22, 24, 29, 0.05);
   z-index: 50;
-  padding-bottom: env(safe-area-inset-bottom);
 }
 .tab-bar .tab {
-  flex: 1;
+  height: 56px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1483,14 +1497,25 @@ article {
   letter-spacing: 0.02em;
   color: var(--muted);
   text-decoration: none;
-  background: none;
-  border: none;
   cursor: pointer;
 }
 .tab-bar .tab .ic { display: flex; }
 .tab-bar .tab.on { color: var(--navy); }
 .tab-bar .tab:not(.on):hover { color: var(--ink); }
 .tab-bar .tab.on .ic { transform: translateY(-1px); }
+
+/* ---- phantom insets: the host window already excludes the system
+   bars, so env() values are double-counted — zero them (detector in
+   Base.astro) ---- */
+html.phantom-insets body { padding-top: 0; }
+html.phantom-insets .tab-bar {
+  padding-bottom: 0;
+  min-height: 56px;
+}
+html.phantom-insets .app-shell.with-tab > main,
+html.phantom-insets main#main-content {
+  padding-bottom: calc(56px + var(--s-6));
+}
 
 /* ── Practice screen (handoff 2026-11 §2) ───────────────────────
    Hero + three drill rows + the grammar grid. Metrics are the
