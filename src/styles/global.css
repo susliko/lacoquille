@@ -177,9 +177,6 @@ body {
   font-size: var(--t-md);
   line-height: 1.6;
   min-height: 100vh;
-  /* viewport-fit=cover: keep content clear of a real notch/status bar
-     (0 everywhere else — including this preview's WebView) */
-  padding-top: env(safe-area-inset-top, 0px);
   font-weight: 400;
   overflow-x: hidden;
 }
@@ -1229,7 +1226,7 @@ article {
   background: var(--card);
   border-radius: 22px 22px 0 0;
   box-shadow: var(--shadow-2);
-  padding: 10px 20px calc(24px + env(safe-area-inset-bottom));
+  padding: 10px 20px 24px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -1457,15 +1454,15 @@ article {
 }
 .app-shell.with-tab > main {
   /* scroll clearance: the bar is fixed, so the last rows of every list
-     must be able to scroll clear of it (56px buttons + inset + air) */
-  padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px) + var(--s-6));
+     must be able to scroll clear of it (56px buttons + air) */
+  padding-bottom: calc(56px + var(--s-6));
 }
 
-/* The bar is position:fixed. Buttons are pinned to a fixed 56px row so
-   env(safe-area-inset-bottom) can never move the labels: when the inset
-   changes (toolbar collapse, gesture bar), only the blank strip below
-   the buttons changes. The shadow — not a 1px border — separates the
-   bar from scrolled content, which visibly slides beneath it. */
+/* The bar is position:fixed with a fixed 56px button row — nothing in
+   its layout depends on env(), so no toolbar collapse, keyboard or
+   inset report can ever move or resize the buttons. The shadow — not
+   a 1px border — separates the bar from scrolled content, which
+   visibly slides beneath it. */
 .tab-bar {
   position: fixed;
   bottom: 0;
@@ -1476,8 +1473,11 @@ article {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   align-items: start; /* buttons pinned; the inset padding hangs below */
-  min-height: calc(56px + env(safe-area-inset-bottom, 0px));
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* No safe-area padding: browser tabs never paint under the gesture
+     bar (cover is declared-but-not-honoured there, and Chrome then
+     reports a 24px inset it will not let us fill — a phantom white
+     strip above the black one). The bar ends at the viewport edge. */
+  min-height: 56px;
   background: var(--card);
   box-shadow:
     0 -1px 0 rgba(22, 24, 29, 0.10),
@@ -1504,18 +1504,6 @@ article {
 .tab-bar .tab:not(.on):hover { color: var(--ink); }
 .tab-bar .tab.on .ic { transform: translateY(-1px); }
 
-/* ---- phantom insets: the host window already excludes the system
-   bars, so env() values are double-counted — zero them (detector in
-   Base.astro) ---- */
-html.phantom-insets body { padding-top: 0; }
-html.phantom-insets .tab-bar {
-  padding-bottom: 0;
-  min-height: 56px;
-}
-html.phantom-insets .app-shell.with-tab > main,
-html.phantom-insets main#main-content {
-  padding-bottom: calc(56px + var(--s-6));
-}
 
 /* ── Practice screen (handoff 2026-11 §2) ───────────────────────
    Hero + three drill rows + the grammar grid. Metrics are the
@@ -1890,7 +1878,7 @@ html.phantom-insets main#main-content {
 
 .v-toast {
   position: fixed;
-  bottom: calc(58px + env(safe-area-inset-bottom) + 12px);
+  bottom: 68px;
   left: 50%;
   transform: translateX(-50%);
   width: max-content;

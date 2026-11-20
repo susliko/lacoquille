@@ -14,7 +14,7 @@ import PracticeHome from "../components/PracticeHome";
   /* The homepage is a full-bleed menu; drop the content-page frame. */
   :global(main#main-content) {
     /* full-bleed menu, but keep the tab bar scroll clearance */
-    padding: 0 0 calc(56px + env(safe-area-inset-bottom, 0px) + var(--s-6));
+    padding: 0 0 calc(56px + var(--s-6));
     max-width: none;
   }
 </style>

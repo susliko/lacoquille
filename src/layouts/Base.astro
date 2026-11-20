@@ -30,7 +30,7 @@ const cleanTitle = title.replace(/ — La Coquille$/, "").replace(/ · La Coquil
          viewport scrolling; the attribute is ignored there. -->
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+      content="width=device-width, initial-scale=1, interactive-widget=resizes-content"
     />
     <meta name="description" content={description} />
     <title>{cleanTitle} · La Coquille</title>
@@ -44,37 +44,6 @@ const cleanTitle = title.replace(/ — La Coquille$/, "").replace(/ · La Coquil
          keeps the JS context alive, and enables link prefetch. This is
          what makes grid ↔ practice navigation feel native. -->
     <ClientRouter />
-    <script is:inline>
-      /* Phantom-inset guard. Some embedded WebViews report safe-area
-         insets while their window already excludes the system bars —
-         the page can't paint under them, so the env() paddings become
-         double-counted dead space (a white strip above a black strip).
-         Detect: if the visual viewport + both insets fall short of the
-         physical screen, the bars are excluded → zero the paddings.
-         Real browsers with viewport-fit=cover keep the real insets. */
-      (() => {
-        const probe = (env) => {
-          const d = document.createElement("div");
-          d.style.cssText = `position:fixed;width:0;height:${env};visibility:hidden`;
-          document.documentElement.appendChild(d);
-          const h = d.getBoundingClientRect().height;
-          d.remove();
-          return h;
-        };
-        const top = probe("env(safe-area-inset-top,0px)");
-        const bottom = probe("env(safe-area-inset-bottom,0px)");
-        const vv = window.visualViewport;
-        const avail = vv ? vv.height + vv.offsetTop : window.innerHeight;
-        const screenH = (window.screen?.height || 0) / (window.devicePixelRatio || 1);
-        // If the viewport is shorter than the physical screen by more than
-        // the reported insets, something else is withheld too (host app
-        // chrome, or the browser not granting cover) — the insets cannot
-        // map onto visible system bars here → treat them as phantom.
-        if (avail > 0 && screenH > 0 && screenH - avail > top + bottom + 4) {
-          document.documentElement.classList.add("phantom-insets");
-        }
-      })();
-    </script>
   </head>
   <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
