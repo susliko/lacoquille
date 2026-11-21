@@ -13,6 +13,7 @@
 import { createSignal, onMount, Show } from "solid-js";
 import ProgressGrid from "./progress/ProgressGrid";
 import { feedTopicStats } from "./exercise/feedStore";
+import { warmFeed } from "./exercise/feedApi";
 import { topicSummaries } from "./exercise/store";
 
 const DRILLS = [
@@ -64,6 +65,10 @@ export default function PracticeHome() {
     setFresh(
       feed.every((t) => !t.attempts) && session.every((s) => !s.attempts),
     );
+    // The hero leads to the feed — request its first run now so the
+    // tap lands on exercises, not on a loading screen (also wakes a
+    // cold backend while the learner reads the hero).
+    warmFeed();
   });
 
   return (

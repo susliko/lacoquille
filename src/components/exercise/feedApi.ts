@@ -10,6 +10,7 @@
 
 import type { ExerciseItem } from "./data";
 import { isExerciseItem } from "./api";
+import { feedContext } from "./feedStore";
 
 export interface TopicStat {
   slug: string;
@@ -61,6 +62,40 @@ export async function fetchFeed(ctx: LearnerContext, signal?: AbortSignal): Prom
   } catch {
     return null;
   }
+}
+
+/* ── Warm start: the home screen prefetches the first run ───────
+
+Tapping "Continue" used to mean a dead "Preparing your feed…" screen
+for the whole POST round-trip — worse when the Fly machine wakes from
+auto-stop. The practice home fires the identical request while the
+learner is still reading the hero; the feed consumes it on arrival. */
+
+let warm: Promise<FeedRun | null> | null = null;
+
+/** Fire the first-run request early (safe anywhere — never throws). */
+export function warmFeed(): void {
+  if (warm) return;
+  let ctx: LearnerContext;
+  try {
+    ctx = feedContext();
+  } catch {
+    return; // store unavailable (private mode etc.) — feed fetches its own
+  }
+  const p = fetchFeed(ctx);
+  warm = p;
+  p.then((run) => {
+    if (!run && warm === p) warm = null; // failed — feed fetches fresh
+  }).catch(() => {
+    if (warm === p) warm = null;
+  });
+}
+
+/** Consume the warm run if one is in flight or done; null → fetch. */
+export async function takeWarmRun(): Promise<FeedRun | null> {
+  const p = warm;
+  warm = null;
+  return p;
 }
 
 function parsePlan(v: unknown): DrillPlan | null {

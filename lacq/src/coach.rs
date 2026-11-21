@@ -73,31 +73,78 @@ impl LearnerContext {
 
 /* ── Built-in fallback: weakest first, spaced, no repeats ───────── */
 
+/// Tiny xorshift so cold-start plans vary. A fixed catalog walk made
+/// every "Continue" funnel into the same new topic (user report,
+/// 2026-11-21): the fresh-branch picked the first unseen topic in
+/// TOPICS order, every time, for every learner.
+struct Jig(u64);
+
+impl Jig {
+    fn new() -> Self {
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| (d.as_secs() << 20) ^ d.subsec_nanos() as u64)
+            .unwrap_or(0x9E37_79B9_7F4A_7C15);
+        Jig(nanos | 1)
+    }
+    fn next(&mut self) -> u64 {
+        let mut x = self.0;
+        x ^= x << 13;
+        x ^= x >> 7;
+        x ^= x << 17;
+        self.0 = x;
+        x
+    }
+    fn pick<'a, T>(&mut self, s: &[&'a T]) -> Option<&'a T> {
+        if s.is_empty() {
+            None
+        } else {
+            Some(s[(self.next() % s.len() as u64) as usize])
+        }
+    }
+}
+
 /// Pick the next topic without any external model: the topic with the
 /// lowest recent accuracy among those attempted, tie-broken by longest
 /// time since last drill; unseen topics rotate in when few have been
-/// attempted; whatever was just drilled is excluded.
+/// attempted — drawn at random from the level-appropriate pool, never
+/// a fixed walk; whatever was just drilled is excluded.
 pub fn builtin_plan(ctx: &LearnerContext) -> DrillPlan {
     let recent: HashSet<&str> =
         ctx.recent_topics.iter().map(|s| s.as_str()).collect();
     let known = ctx.known_stats();
+    let mut rng = Jig::new();
 
-    let mut candidates: Vec<&Topic> = topics::TOPICS
+    // Pool: everything not just drilled; when the learner has a level
+    // we can honour, only topics that offer it — mixed review must not
+    // drop an A1 learner into a C2 run.
+    let mut pool: Vec<&Topic> = topics::TOPICS
         .iter()
         .filter(|t| !recent.contains(t.slug))
         .collect();
-    if candidates.is_empty() {
-        // Everything was just drilled — catalog order is fine.
-        candidates = topics::TOPICS.iter().collect();
+    if let Some(l) = ctx.level.as_deref() {
+        let at_level: Vec<&Topic> = pool
+            .iter()
+            .copied()
+            .filter(|t| t.levels.iter().any(|lv| *lv == l))
+            .collect();
+        if !at_level.is_empty() {
+            pool = at_level;
+        }
+    }
+    if pool.is_empty() {
+        pool = topics::TOPICS.iter().collect();
     }
 
-    // Few topics attempted → rotate in unseen ones first.
+    // Few topics attempted → rotate in unseen ones first (random pick
+    // from the level pool, so "new topic" never means "always this one").
     if known.len() < 2 {
-        let fresh = candidates
+        let unseen: Vec<&Topic> = pool
             .iter()
-            .find(|t| !known.iter().any(|s| s.slug == t.slug))
-            .copied();
-        if let Some(t) = fresh {
+            .copied()
+            .filter(|t| !known.iter().any(|s| s.slug == t.slug))
+            .collect();
+        if let Some(t) = rng.pick(&unseen) {
             return plan_for(t, ctx, 0.0);
         }
     }
@@ -121,7 +168,7 @@ pub fn builtin_plan(ctx: &LearnerContext) -> DrillPlan {
     }
     match weakest {
         Some((stat, _)) => plan_for(topics::by_slug(&stat.slug).unwrap(), ctx, 0.0),
-        None => plan_for(candidates[0], ctx, 0.0),
+        None => plan_for(rng.pick(&pool).unwrap_or(&topics::TOPICS[0]), ctx, 0.0),
     }
 }
 
@@ -413,6 +460,28 @@ mod tests {
     fn unknown_client_slugs_are_ignored() {
         let plan = builtin_plan(&ctx(&[("not-a-topic", 9, 0, 1)], &[]));
         assert!(topics::by_slug(&plan.topic).is_some());
+    }
+
+    #[test]
+    fn cold_starts_vary_and_stay_at_level() {
+        // The regression behind "Continue drills one new topic and only
+        // it": the fresh branch used to walk the catalog in fixed order,
+        // so every cold start landed on the same topic. Repeated calls
+        // with an identical near-cold context must vary, and every pick
+        // must offer the learner's level.
+        let mut seen = HashSet::new();
+        for _ in 0..40 {
+            let plan = builtin_plan(&ctx(
+                &[("pc-etre", 4, 2, 1_700_000_000)],
+                &["pc-etre"],
+            ));
+            assert_eq!(plan.source, SOURCE_BUILTIN);
+            let topic = topics::by_slug(&plan.topic).unwrap();
+            assert!(topic.levels.iter().any(|l| *l == "A2"),
+                "cold pick {} does not offer A2", plan.topic);
+            seen.insert(plan.topic);
+        }
+        assert!(seen.len() > 1, "40 cold starts all picked: {:?}", seen);
     }
 
     #[test]

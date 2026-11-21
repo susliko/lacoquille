@@ -15,7 +15,7 @@
 
 import { createMemo, createSignal, For, Match, onCleanup, onMount, Show, Switch } from "solid-js";
 import type { ExerciseItem } from "./data";
-import { fetchFeed, type DrillPlan, type FeedRun } from "./feedApi";
+import { fetchFeed, takeWarmRun, type DrillPlan, type FeedRun } from "./feedApi";
 import { feedContext, recordFeed } from "./feedStore";
 import { isTaught, markTaught, peekFor } from "./peek";
 import { readSettings } from "../settings/settingsStore";
@@ -96,7 +96,10 @@ export default function EndlessFeed() {
   const load = async (adoptNow: boolean) => {
     prefetching = true;
     controller = new AbortController();
-    const run = await fetchFeed(feedContext(), controller.signal);
+    // The home screen may have warmed the first run already — consume
+    // it instead of another round-trip (task: open drills right away).
+    const warm = await takeWarmRun();
+    const run = warm ?? (await fetchFeed(feedContext(), controller.signal));
     prefetching = false;
     if (aborted) return;
     if (!run) {

@@ -17,6 +17,11 @@
    composite gap. */
 html {
   background: var(--paper);
+  /* Android text autosizing re-inflates text after first paint on
+     wide text blocks — pages drew narrower than the screen for an
+     instant, then rescaled. Font sizes here are explicit; freeze them. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 /* Self-hosted fonts (Google Fonts, OFL). Preloaded in Base.astro —
