@@ -30,6 +30,14 @@ for (const [sub] of [
 export default defineConfig({
   integrations: [solidJs()],
   redirects: { ...knowledgeRedirects, ...verbRedirects },
+  // Inline the CSS into every page's HTML. A <link> stylesheet is one
+  // more round-trip a cold machine or a flaky mobile connection can
+  // lose — and the router swaps DOM in without waiting for it, so a
+  // pending stylesheet paints as unstyled raw HTML (the 600ms flash
+  // on tab switches). Inlined styles make that state impossible.
+  build: {
+    inlineStylesheets: "always",
+  },
   // Prefetch every link as it scrolls into view — paired with ClientRouter,
   // tapping a lesson card swaps in an already-downloaded page. Cards are
   // ~12KB; Astro throttles viewport prefetching.

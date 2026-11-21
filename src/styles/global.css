@@ -24,6 +24,16 @@ html {
   text-size-adjust: 100%;
 }
 
+/* If a root crossfade ever runs (native view transitions), Chromium's
+   UA style composites the two snapshots with mix-blend-mode:
+   plus-lighter — additive, so any transparency between them ghosts as
+   a double exposure. Plain compositing is what this site wants; the
+   root animation itself is disabled (Base.astro). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  mix-blend-mode: normal;
+}
+
 /* Self-hosted fonts (Google Fonts, OFL). Preloaded in Base.astro —
    no third-party request, no FOUT label-swap in the tab bar. */
 @font-face {
