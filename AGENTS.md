@@ -52,6 +52,12 @@ This checkout also runs on a Pi-Bolt Android sandbox. Cargo does **not** exist t
 a prebuilt Debian/rust toolchain lives in `~/toolchains/` (see
 `docs/android-local.md` for cold-start commands and the LD_LIBRARY_PATH rule).
 
+Screencasts: analyzing shared videos / YouTube links works (`ffmpeg`, `yt-dlp`,
+`screencast-frames` — see `docs/android-screencasts.md`). Recording the phone's
+own screen is not possible from the sandbox (needs a Pi-Bolt MediaProjection
+feature or adb/scrcpy on a PC). Files shared by the user land in
+`/sdcard/Download` (readable + writable).
+
 ## Commands
 
 ```sh
