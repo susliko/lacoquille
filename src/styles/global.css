@@ -1476,6 +1476,14 @@ article {
 }
 .app-shell > main {
   flex: 1;
+  /* The generic `main { margin: 0 auto }` rule puts auto margins on the
+     flex cross axis — auto cross-axis margins disable flex stretch, so
+     main sized itself to fit-content: narrow content (the "Preparing
+     your grid…" placeholder) drew the whole page ~280px wide and
+     centered, then snapped full-width the moment the grid mounted.
+     Width must not depend on content — stretch explicitly. */
+  width: 100%;
+  margin: 0;
 }
 .app-shell.with-tab > main {
   /* scroll clearance: the bar is fixed, so the last rows of every list
