@@ -9,6 +9,16 @@
 
 @import "./tokens.css";
 
+/* Opaque root: the ClientRouter's swap composites page snapshots —
+   without a root background the crossfade reveals the raw browser
+   layer underneath (the "transparency" flash on tab switches). The
+   root crossfade is disabled in Base.astro (transition:animate="none"
+   on <html>); this is the belt-and-braces for overscroll and any
+   composite gap. */
+html {
+  background: var(--paper);
+}
+
 /* Self-hosted fonts (Google Fonts, OFL). Preloaded in Base.astro —
    no third-party request, no FOUT label-swap in the tab bar. */
 @font-face {
