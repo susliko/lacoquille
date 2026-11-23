@@ -1142,6 +1142,21 @@ pub fn by_slug(slug: &str) -> Option<&'static Topic> {
     TOPICS.iter().find(|t| t.slug == slug)
 }
 
+/// Topics that presuppose the passé-composé basics, mapped to the
+/// topic they require. The être band, the auxiliary contrast and the
+/// imparfait-vs-PC contrast all mix both auxiliaries (or drill être
+/// verbs outright), so they open only once the avoir pattern has real
+/// reps — a learner just introduced to the passé composé must meet
+/// "avoir + participle" first (user report: an être-verb exercise
+/// arrived as their very first PC material). The theory grid encodes
+/// the same order: first steps → with avoir → with être → vs imparfait.
+pub fn prerequisite(slug: &str) -> Option<&'static str> {
+    match slug {
+        "pc-etre" | "pc-aux" | "imparfait-vs-pc" => Some("pc-avoir"),
+        _ => None,
+    }
+}
+
 /// Every curated corpus topic title → its catalog slug. The progress
 /// endpoint serves this map so the client can fold its fixed-session
 /// history (keyed by curated title) into catalog topics. `slug_for_title`

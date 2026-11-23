@@ -22,8 +22,13 @@ pub(crate) fn items() -> Vec<ExerciseItem> {
                 infinitive: v.inf,
                 answer: format!("{} {}", pr.etre, agreed),
                 rule: vec![
-                    "With être, the participle agrees with the".into(),
-                    format!("subject: {} → {} ({}).", pr.p, agreed, pr.agree_note()),
+                    format!("{} takes être in the passé composé, not avoir.", cap(v.inf)),
+                    format!(
+                        "With être, the participle agrees: {} → {} ({}).",
+                        pr.p,
+                        agreed,
+                        pr.agree_note()
+                    ),
                 ],
             }));
 
@@ -47,8 +52,11 @@ pub(crate) fn items() -> Vec<ExerciseItem> {
                     fix: agreed.clone(),
                     fix_task: "Now write the correct form.",
                     rule: vec![
-                        "With être, the participle agrees with the".into(),
-                        format!("subject: {} → {}.", pr.p, agreed),
+                        format!("{} takes être: {} {} {}.", v.inf, pr.p, pr.etre, agreed),
+                        format!(
+                            "With être, the participle agrees: {} → {}.",
+                            pr.p, agreed
+                        ),
                     ],
                 }));
             }

@@ -73,6 +73,30 @@ impl LearnerContext {
 
 /* ── Built-in fallback: weakest first, spaced, no repeats ───────── */
 
+/// Passé-composé follow-ups (être band, auxiliary contrast,
+/// imparfait-vs-PC) open only after pc-avoir has real reps — roughly
+/// one run of "avoir + participle" — so a learner just introduced to
+/// the passé composé is never cold-tested on an être verb.
+const PC_PREREQ_ATTEMPTS: u32 = 5;
+
+/// Swap a topic for its prerequisite while that prerequisite is still
+/// green. Applied to every plan, whichever path produced it.
+fn gate_prerequisite<'a>(topic: &'a Topic, known: &[&TopicStat]) -> &'a Topic {
+    let Some(pre) = topics::prerequisite(topic.slug) else {
+        return topic;
+    };
+    let reps = known
+        .iter()
+        .find(|s| s.slug == pre)
+        .map(|s| s.attempts)
+        .unwrap_or(0);
+    if reps < PC_PREREQ_ATTEMPTS {
+        topics::by_slug(pre).unwrap_or(topic)
+    } else {
+        topic
+    }
+}
+
 /// Tiny xorshift so cold-start plans vary. A fixed catalog walk made
 /// every "Continue" funnel into the same new topic (user report,
 /// 2026-11-21): the fresh-branch picked the first unseen topic in
@@ -145,7 +169,7 @@ pub fn builtin_plan(ctx: &LearnerContext) -> DrillPlan {
             .filter(|t| !known.iter().any(|s| s.slug == t.slug))
             .collect();
         if let Some(t) = rng.pick(&unseen) {
-            return plan_for(t, ctx, 0.0);
+            return plan_for(gate_prerequisite(t, &known), ctx, 0.0);
         }
     }
 
@@ -167,8 +191,16 @@ pub fn builtin_plan(ctx: &LearnerContext) -> DrillPlan {
         }
     }
     match weakest {
-        Some((stat, _)) => plan_for(topics::by_slug(&stat.slug).unwrap(), ctx, 0.0),
-        None => plan_for(rng.pick(&pool).unwrap_or(&topics::TOPICS[0]), ctx, 0.0),
+        Some((stat, _)) => plan_for(
+            gate_prerequisite(topics::by_slug(&stat.slug).unwrap(), &known),
+            ctx,
+            0.0,
+        ),
+        None => plan_for(
+            gate_prerequisite(rng.pick(&pool).unwrap_or(&topics::TOPICS[0]), &known),
+            ctx,
+            0.0,
+        ),
     }
 }
 
@@ -287,7 +319,8 @@ fn build_request(ctx: &LearnerContext) -> DecisionRequest {
             "Drill the learner's weakest topics more often than their strong ones.",
             "Space topics out: avoid drilling the same topic back to back.",
             "Introduce new topics gradually once recent ones look solid.",
-            "Keep difficulty near the learner's level estimate."
+            "Keep difficulty near the learner's level estimate.",
+            "Respect each topic's `requires` field: never pick a topic whose prerequisite the learner has not attempted enough yet."
         ],
         "available_topics": topics::TOPICS
             .iter()
@@ -303,10 +336,14 @@ fn build_request(ctx: &LearnerContext) -> DecisionRequest {
 
     let mut criteria = serde_json::Map::new();
     for t in topics::TOPICS {
-        criteria.insert(
-            t.slug.to_string(),
-            serde_json::json!({ "what": t.blurb, "levels": t.levels }),
-        );
+        let mut entry = serde_json::json!({ "what": t.blurb, "levels": t.levels });
+        if let Some(pre) = topics::prerequisite(t.slug) {
+            entry["requires"] = serde_json::json!(format!(
+                "pick only once {} has at least {} attempts",
+                pre, PC_PREREQ_ATTEMPTS
+            ));
+        }
+        criteria.insert(t.slug.to_string(), entry);
     }
 
     let questions = serde_json::json!({
@@ -350,6 +387,8 @@ fn parse_response(res: DecisionResponse, ctx: &LearnerContext) -> Result<DrillPl
         .and_then(|c| c.as_str())
         .ok_or("missing next_topic.choice")?;
     let topic = topics::by_slug(topic_ans).ok_or_else(|| format!("unknown topic {topic_ans}"))?;
+    // Hard gate: the model may ignore `requires`, so substitute here.
+    let topic = gate_prerequisite(topic, &ctx.known_stats());
 
     let level = answers
         .get("level")
@@ -498,12 +537,71 @@ mod tests {
             }
         });
         let res: DecisionResponse = serde_json::from_value(raw).unwrap();
-        let plan = parse_response(res, &Default::default()).unwrap();
+        // pc-avoir reps satisfied, so pc-etre passes the prerequisite gate.
+        let plan = parse_response(res, &ctx(&[("pc-avoir", 10, 10, 0)], &[])).unwrap();
         assert_eq!(plan.topic, "pc-etre");
         assert_eq!(plan.source, SOURCE_COACH);
         assert_eq!(plan.confidence, 0.82);
         // B2 clamps into pc-etre's range → A2.
         assert_eq!(plan.level, "A2");
+    }
+
+    #[test]
+    fn coached_etre_topic_waits_for_pc_avoir() {
+        // The decision model ignores `requires` — the gate substitutes
+        // pc-avoir until the learner has reps on it.
+        let raw = serde_json::json!({
+            "answers": {
+                "next_topic": { "choice": "pc-aux", "confidence": 0.9 },
+                "level": { "choice": "A2" }
+            }
+        });
+        let res: DecisionResponse = serde_json::from_value(raw).unwrap();
+        let plan = parse_response(res, &ctx(&[("pc-avoir", 2, 2, 0)], &[])).unwrap();
+        assert_eq!(plan.topic, "pc-avoir");
+    }
+
+    #[test]
+    fn etre_topics_wait_for_pc_avoir() {
+        // pc-etre is the weakest known topic, but its prerequisite
+        // (pc-avoir, 2 attempts < 5) is unmet → the plan collapses to
+        // pc-avoir. Once the reps exist, the weak topic comes through.
+        let now = 1_700_000_000;
+        let plan = builtin_plan(&ctx(
+            &[("pc-etre", 4, 0, now), ("pc-avoir", 2, 2, now)],
+            &[],
+        ));
+        assert_eq!(plan.topic, "pc-avoir");
+
+        let plan = builtin_plan(&ctx(
+            &[("pc-etre", 4, 0, now), ("pc-avoir", 8, 8, now)],
+            &[],
+        ));
+        assert_eq!(plan.topic, "pc-etre");
+    }
+
+    #[test]
+    fn cold_start_never_opens_with_an_etre_verb_topic() {
+        // The reported failure: a learner "just introduced" to the
+        // passé composé got an être-verb exercise. With one known topic
+        // the unseen-rotation branch may draw any A2 topic; whatever
+        // PC follow-up it draws must collapse to pc-avoir while the
+        // prerequisite is green.
+        let now = 1_700_000_000;
+        for _ in 0..40 {
+            let plan = builtin_plan(&ctx(
+                &[("articles", 12, 12, now)],
+                &["articles"],
+            ));
+            assert!(
+                !matches!(
+                    plan.topic.as_str(),
+                    "pc-etre" | "pc-aux" | "imparfait-vs-pc"
+                ),
+                "PC follow-up {} served before pc-avoir reps",
+                plan.topic
+            );
+        }
     }
 
     #[test]
