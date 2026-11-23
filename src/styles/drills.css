@@ -259,7 +259,6 @@ mark.drill-cue {
   transition: opacity 0.15s, transform 0.05s;
 }
 .drill-submit:hover { opacity: 0.92; }
-.drill-submit:active { transform: translateY(1px); }
 .drill-submit:disabled { opacity: 0.4; cursor: not-allowed; }
 .drill-kbd {
   margin-left: 0.5rem;
@@ -296,7 +295,6 @@ mark.drill-cue {
   color: var(--text);
   border-color: var(--border-bright);
 }
-.drill-accent:active { transform: scale(0.95); }
 
 /* ── Verdict chip ─────────────────────────────────────────────── */
 
@@ -449,7 +447,6 @@ mark.drill-cue {
   color: var(--text);
   border-color: var(--border-bright);
 }
-.drill-end-btn:active { transform: scale(0.97); }
 
 /* ── Tense drill (2-card choice) ──────────────────────────────── */
 

@@ -162,7 +162,6 @@
 }
 .km-lesson:last-child { border-bottom: 0; }
 .km-lesson:hover { background: #fbfaf7; }
-.km-lesson:active { background: var(--accent-soft); }
 .km-lesson .tt {
   font-size: var(--t-base, 14px);
   font-weight: 600;
@@ -319,7 +318,6 @@
   border: 0;
   cursor: pointer;
 }
-.km-cta:active { transform: scale(0.99); }
 .km-secondary {
   display: block;
   width: 100%;

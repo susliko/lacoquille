@@ -1,5 +1,5 @@
 ---
-import { ClientRouter, slide } from "astro:transitions";
+import { ClientRouter } from "astro:transitions";
 import TabBar from "../components/TabBar.astro";
 import "../styles/global.css";
 
@@ -48,16 +48,20 @@ const cleanTitle = title.replace(/ — La Coquille$/, "").replace(/ · La Coquil
   <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
     <div class={`app-shell${tab ? " with-tab" : ""}`}>
-      <!-- Tab roots animate "none": the swap must be a single frame. The
-           slide ran fade+slide concurrently on ::view-transition-new(main)
-           and this device's WebView composites them sequentially — a
-           ~240ms wash where main hadn't painted yet (you could see the
-           bare background through the arriving sheet), then a ~150ms
-           slide. Tab switches must be instant; the pages themselves are
-           prefetched and their islands persist, so there is nothing to
-           animate into place. Pushed screens (drills, feeds) keep the
-           slide — opening a layer once may take its 220ms. -->
-      <main id="main-content" transition:animate={tab ? "none" : slide({ duration: "0.22s" })}>
+      <!-- Motion lives in global.css ("Motion — Material 3") + tokens.css.
+           Tab roots: the swap is a single frame (custom direct swap in the
+           script below) and the arriving main does a 180ms fade-through
+           after it — opacity only. Pushed screens (drills, feeds,
+           settings) get a cover-push: ::view-transition-new(screen)
+           slides over a static, fully opaque old snapshot, mirrored on
+           browser-back. The explicit transition:name + animate="none"
+           hand the pseudo-elements to our own CSS. Astro's built-in
+           slide is a crossfade of BOTH snapshots, and this device's
+           WebView composites them sequentially — a ~240ms wash where
+           main hadn't painted yet (bare ground visible through the
+           arriving sheet), then a late slide. One-sided motion never
+           washes: the old frame never fades, the new frame enters. -->
+      <main id="main-content" transition:name="screen" transition:animate="none">
         <slot />
       </main>
       {tab && <TabBar active={tab} />}
@@ -201,6 +205,49 @@ const cleanTitle = title.replace(/ — La Coquille$/, "").replace(/ · La Coquil
                hydrator re-checks isConnected, so it never executes */
             fresh.remove();
           }
+        }
+      });
+
+      /* M3 fade-through on tab flips. The swap stays single-frame (see
+         the startViewTransition override); the arriving main fades in
+         over the paper ground while the bar's fill-variant swap is
+         instant (no icon animation — reviewed as twitchy, removed).
+         Registered AFTER the island
+         restore above so the parked island is re-attached before the
+         fade starts. tabToTab is set by the before-preparation handler
+         for the navigation in flight, so it is valid here. If the user
+         flips again mid-fade, the old main node is discarded by the
+         swap and the once-listener dies with it. */
+      document.addEventListener("astro:after-swap", () => {
+        if (!tabToTab) return;
+        const main = document.getElementById("main-content");
+        if (!main) return;
+        main.classList.add("tab-enter");
+        main.addEventListener("animationend", () => main.classList.remove("tab-enter"), { once: true });
+      });
+    </script>
+
+    <script>
+      /* Material press feedback is pure CSS now — the "Material press
+         system" section in global.css puts an ::after state-layer veil
+         and (for compact controls) an :active compression on every
+         tappable class: settings icon, feed CTA, drill rows, drill
+         buttons and choices, grid cells, vocab rows, deck chips, pills,
+         tabs, cards, sheets. Pure CSS means it works inside Solid
+         islands whether or not they have hydrated, and nothing can
+         strand classes in throttled renderers.
+         The only JS left in the press pipeline is the tab bar's 8ms
+         haptic tick (vibration can't be expressed in CSS), dispatched
+         on the pointer gesture that grants user activation. Skipped
+         under reduced motion with the rest of the motion system. */
+      const TICK_SEL = ".tab-bar .tab";
+      const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+      document.addEventListener("pointerdown", (e) => {
+        if (reducedMotion.matches || !(e.target instanceof Element)) return;
+        if (e.target.closest(TICK_SEL)) {
+          /* M3 tick: an 8ms haptic pulse acknowledges a destination
+             change (pointerdown grants user activation). */
+          try { navigator.vibrate?.(8); } catch { /* unsupported */ }
         }
       });
     </script>

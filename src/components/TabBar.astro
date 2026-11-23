@@ -20,6 +20,8 @@ const TABS = [
   aria-label="Main"
   transition:persist="tab-bar"
 >
+  <!-- Active state = filled icon + navy ink (global.css). No background
+       indicator — the press choreography is the only motion cue. -->
   {TABS.map((t) => (
     <a
       href={t.href}
@@ -28,15 +30,22 @@ const TABS = [
       data-astro-prefetch="load"
     >
       <span class="ic" aria-hidden="true">
-        {t.k === "progress" && (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.2"/></svg>
-        )}
-        {t.k === "practice" && (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"><path d="M7 5.5v13a.7.7 0 0 0 1.07.6l10.3-6.5a.7.7 0 0 0 0-1.2L8.07 4.9A.7.7 0 0 0 7 5.5z"/></svg>
-        )}
-        {t.k === "theory" && (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7C10.5 5.5 8 5 4 5.5v12.8c4-.5 6.5 0 8 1.7 1.5-1.7 4-2.2 8-1.7V5.5C16 5 13.5 5.5 12 7z"/><path d="M12 7v12.5"/></svg>
-        )}
+        {/* M3 navigation bar: inactive = outline icon, active = filled.
+            Both variants are server-rendered; global.css swaps display
+            with the .on class. The filled dot/spine is carved in --card,
+            the bar surface colour, so it reads as a punched hole. */}
+        {t.k === "progress" && (<>
+          <svg class="ic-o" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.2"/></svg>
+          <svg class="ic-f" width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" fill="currentColor"/><circle cx="12" cy="12" r="3.2" fill="var(--card)"/></svg>
+        </>)}
+        {t.k === "practice" && (<>
+          <svg class="ic-o" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"><path d="M7 5.5v13a.7.7 0 0 0 1.07.6l10.3-6.5a.7.7 0 0 0 0-1.2L8.07 4.9A.7.7 0 0 0 7 5.5z"/></svg>
+          <svg class="ic-f" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"><path d="M7 5.5v13a.7.7 0 0 0 1.07.6l10.3-6.5a.7.7 0 0 0 0-1.2L8.07 4.9A.7.7 0 0 0 7 5.5z"/></svg>
+        </>)}
+        {t.k === "theory" && (<>
+          <svg class="ic-o" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7C10.5 5.5 8 5 4 5.5v12.8c4-.5 6.5 0 8 1.7 1.5-1.7 4-2.2 8-1.7V5.5C16 5 13.5 5.5 12 7z"/><path d="M12 7v12.5"/></svg>
+          <svg class="ic-f" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7C10.5 5.5 8 5 4 5.5v12.8c4-.5 6.5 0 8 1.7 1.5-1.7 4-2.2 8-1.7V5.5C16 5 13.5 5.5 12 7z" fill="currentColor" stroke="currentColor" stroke-width="2.1"/><path d="M12 7v12.5" stroke="var(--card)" stroke-width="2.1"/></svg>
+        </>)}
       </span>
       {t.label}
     </a>
@@ -63,6 +72,17 @@ const TABS = [
       else a.removeAttribute("aria-current");
     }
   };
+
+  /* Activation is deliberately motionless: the fill variant swaps in
+     one frame and the ink crossfades (160ms, global.css). An icon that
+     scales or pops at nav-bar size reads as a twitch — reviewed and
+     removed. The bar opts out of the expanding ripple for the same
+     reason (Base.astro); its press feel is the :active compression,
+     the ::after state-layer veil and an 8ms haptic tick — opacity
+     fades, nothing that moves or grows. */
+
+  syncTabs();
+  window.addEventListener("resize", syncTabs);
   document.addEventListener("astro:after-swap", syncTabs);
   document.addEventListener("astro:page-load", syncTabs);
 

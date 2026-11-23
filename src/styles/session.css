@@ -549,10 +549,6 @@ main {
   transition: transform var(--fast) var(--ease);
 }
 
-.ex-btn:active {
-  transform: scale(0.99);
-}
-
 .ex-btn.is-ok {
   background: var(--ok-dot);
 }
@@ -828,7 +824,6 @@ main {
   padding: var(--s-2) var(--s-5);
   cursor: pointer;
 }
-.peek-cta:active { transform: scale(0.98); }
 
 /* ── Why? button in the feedback panel ────────────────────────── */
 .ex-why {

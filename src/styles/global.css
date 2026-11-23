@@ -22,6 +22,13 @@ html {
      instant, then rescaled. Font sizes here are explicit; freeze them. */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* Kill the WebView's native tap highlight (inherited everywhere):
+     a grey rounded blob the browser paints over any tapped link BEFORE
+     our own press feedback even starts — reviewed frame-by-frame as a
+     twitch. Every interactive element carries its own press state
+     (state layer, :active compression or a colour shift), so nothing goes
+     dead under the finger. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* If a root crossfade ever runs (native view transitions), Chromium's
@@ -890,10 +897,6 @@ article {
   border-color: var(--accent);
   background: var(--accent-soft);
 }
-.poly-card:active,
-.practice-card:active {
-  transform: scale(0.99);
-}
 
 .poly-card-name,
 .practice-card .poly-card-name {
@@ -1145,7 +1148,7 @@ article {
   transition: transform 0.08s ease;
 }
 
-.gg-cell:active { transform: scale(0.97); }
+.gg-cell.on { transform: none; }
 
 .gg-cell.on {
   box-shadow: var(--shadow-1), 0 0 0 2px var(--ink);
@@ -1531,11 +1534,56 @@ article {
   color: var(--muted);
   text-decoration: none;
   cursor: pointer;
+  /* Ink crossfades on activation; the press compression below snaps
+     in at --fast (the system-wide press-scale pattern, cf .vrate). */
+  transition:
+    color 160ms var(--ease),
+    transform var(--fast) var(--ease);
 }
 .tab-bar .tab .ic { display: flex; }
+.tab-bar .tab:active { transform: scale(0.95); }
+/* M3 state layer — the tab's background press response. A full-size
+   veil in the tab's own ink that fades IN while held and fades OUT on
+   release (faster in, slower out). Deliberately NOT the expanding
+   bloom the larger surfaces once used: a 420ms bloom at nav-bar size
+   read as a twitch; this is opacity-only on a fixed layer — nothing
+   moves, nothing expands, the veil simply appears and dissolves. currentColor
+   ink: navy veil on the active tab, muted on the rest. */
+.tab-bar .tab {
+  position: relative;
+}
+.tab-bar .tab::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms var(--ease);
+}
+.tab-bar .tab:active::after {
+  opacity: 0.12; /* M3 pressed state layer */
+  transition-duration: 90ms;
+}
 .tab-bar .tab.on { color: var(--navy); }
-.tab-bar .tab:not(.on):hover { color: var(--ink); }
-.tab-bar .tab.on .ic { transform: translateY(-1px); }
+/* Hover is a mouse-only affordance: touch devices latch :hover onto
+   the last-tapped element, so an inactive tab would keep a borrowed
+   ink colour after the finger lifts (stuck-state review). */
+@media (hover: hover) {
+  .tab-bar .tab:not(.on):hover { color: var(--ink); }
+}
+/* M3 icon variants: outline at rest, filled when active. The swap is
+   instant (M3 does not crossfade the glyph) and NOT animated — an
+   icon that grows or pops on activation reads as a twitch at nav-bar
+   size; the ink crossfade plus the press feedback (veil, compression)
+   carry the change. Filled variants are carved with --card, the bar
+   surface colour, so the shapes read as punched holes (TabBar.astro). */
+.tab-bar .tab .ic-f { display: none; }
+.tab-bar .tab.on .ic-f { display: block; }
+.tab-bar .tab.on .ic-o { display: none; }
+/* No background indicator: the active tab is carried by the filled
+   icon + navy ink alone. The old gliding pill is gone — the press
+   choreography (veil, compression) is the only motion the bar makes. */
 
 
 /* ── Practice screen (handoff 2026-11 §2) ───────────────────────
@@ -1589,7 +1637,6 @@ article {
   box-shadow: 0 6px 18px rgba(21, 56, 111, 0.26);
   transition: transform 90ms var(--ease);
 }
-.ph-go:active { transform: scale(0.985); }
 .ph-eyebrow {
   display: inline-flex;
   align-items: center;
@@ -1668,7 +1715,6 @@ article {
   background: var(--card);
   text-decoration: none;
 }
-.ph-drill:active { background: var(--ground); }
 .ph-tx { flex: 1; min-width: 0; }
 .ph-tt {
   display: block;
@@ -1836,7 +1882,6 @@ article {
   cursor: pointer;
 }
 .set-row:last-child { border-bottom: 0; }
-.set-row:active { background: var(--ground); }
 .set-lb { flex: 1; min-width: 0; }
 .set-lb small {
   display: block;
@@ -2131,7 +2176,6 @@ article {
   cursor: pointer;
   transition: transform var(--fast) var(--ease);
 }
-.vrate:active { transform: scale(0.97); }
 .vrate.r1 { background: #fbeae6; color: #b8341b; }
 .vrate.r2 { background: #eff1f4; color: #5b616e; }
 .vrate.r3 { background: #e7f4ec; color: #15663f; }
@@ -2168,3 +2212,149 @@ article {
   font-weight: 700;
   text-decoration: none;
 }
+
+
+/* ══════════════════════════════════════════════════════════════
+   Motion — Material 3 (tokens in tokens.css, "motion" block).
+   One law: screens never crossfade. This WebView composites the
+   old/new view-transition snapshots sequentially, so two layers
+   fading wash out to bare ground (why tab swaps are single-frame,
+   see Base.astro). Every move here is one-sided: a layer enters.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Tab flips: fade-through ────────────────────────────────────
+   The swap itself is single-frame; the arriving main fades in over
+   the paper ground — M3's pattern for top-level destinations with
+   no hierarchy. Opacity only: transform or filter on main would
+   steal the containing block from the fixed bottom sheet and toast
+   that live INSIDE main on Progress/Practice. Depth and direction
+   come from the arriving tab's icon pop (TabBar.astro) instead. */
+@keyframes tab-fade-in { from { opacity: 0; } }
+main.tab-enter { animation: tab-fade-in var(--dur-fade) var(--ease-emph-decel); }
+
+/* ── Pushed screens (drills, feed, settings): cover-push ────────
+   main carries transition:name="screen" + animate="none" (Base.astro).
+   Astro's own emission for those is un-prefixed — the html prefix
+   here wins on specificity — and opacity: 1 defeats the opacity: 0
+   astro stamps on old snapshots for animate="none" pages. Old stays
+   static and fully opaque; the incoming layer COVERS it, mirrored
+   when the router marks the navigation back (data-astro-transition
+   on <html>). Fixed children are just pixels in the snapshot, so a
+   transform is safe on this side. */
+html::view-transition-old(screen) { animation: none; opacity: 1; mix-blend-mode: normal; }
+html::view-transition-new(screen) {
+  animation: screen-push var(--dur-push) var(--ease-emph-decel) both;
+  opacity: 1;
+  mix-blend-mode: normal;
+}
+html[data-astro-transition="back"]::view-transition-new(screen) {
+  animation-name: screen-push-back;
+}
+@keyframes screen-push      { from { transform: translateX(100%); } }
+@keyframes screen-push-back { from { transform: translateX(-100%); } }
+
+/* ── Material press system ──────────────────────────────────
+   One pattern for every tappable thing on the site, replacing both
+   the old JS ripple (delegation + spans + animationend bookkeeping)
+   and a pile of bespoke :active rules that had drifted apart (scales
+   0.95–0.99, some background swaps, many buttons nothing at all).
+   Pure CSS: :active works for touch/mouse/pen, inside Solid islands,
+   before hydration — no delegation, no stranded classes.
+
+   Two tiers, both built on the M3 state layer the tab bar uses:
+   an ::after veil in the element's own ink (currentColor → white veil
+   on navy CTAs, ink veil on light surfaces) that fades IN over 90ms
+   while held and dissolves over 200ms on release. Opacity-only on a
+   fixed layer — nothing expands, nothing lingers past the gesture
+   (the old 420ms expanding bloom read as a twitch in review).
+
+   — veil only: large surfaces (drill rows, grid cells, rows, cards,
+     lessons). They already read as pressed; scaling them shifts text.
+   — veil + compression: compact controls also shrink to 0.97 while
+     held (transform, 80ms — same --fast press feedback as the tabs).
+
+   border-radius: inherit keeps the veil inside pills, chips and
+   rounded cards without overflow clipping; pointer-events:none keeps
+   it from eating taps. The transition re-declarations below keep the
+   per-element colour fades (correct/wrong flashes, hover inks) that
+   the group compression transition would otherwise clobber. */
+:is(.ph-drill, .set-row, .km-lesson, .practice-card, .poly-card,
+    .related-guide-card) {
+  position: relative;
+}
+:is(.ph-drill, .set-row, .km-lesson, .practice-card, .poly-card,
+    .related-guide-card)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms var(--ease);
+}
+:is(.ph-drill, .set-row, .km-lesson, .practice-card, .poly-card,
+    .related-guide-card):active::after {
+  opacity: 0.12;
+  transition-duration: 90ms;
+}
+
+:is(.ph-iconbtn, .ph-go, .gg-cell, .v-btn, .drill-btn, .drill-btn-ghost,
+    .drill-submit, .drill-end-btn, .drill-accent, .drill-back, .drill-choice,
+    .drill-continue, .ex-btn, .ex-close, .ex-teach-link, .ex-done-again,
+    .peek-cta, .peek-ghost, .km-cta, .km-tab, .deckchip, .cap-chip, .cap-link,
+    .speed-pill, .person-pill, .mode-tab, .literary-toggle,
+    .verb-dropdown-trigger, .verb-dropdown-item, .vrate, .back-link,
+    .set-back, .vd-close, .vd-done-link, .nav-btn, .submit-btn, .retry-btn,
+    .play-btn, .tr-restart) {
+  position: relative;
+  transition: transform var(--fast) var(--ease);
+}
+:is(.ph-iconbtn, .ph-go, .gg-cell, .v-btn, .drill-btn, .drill-btn-ghost,
+    .drill-submit, .drill-end-btn, .drill-accent, .drill-back, .drill-choice,
+    .drill-continue, .ex-btn, .ex-close, .ex-teach-link, .ex-done-again,
+    .peek-cta, .peek-ghost, .km-cta, .km-tab, .deckchip, .cap-chip, .cap-link,
+    .speed-pill, .person-pill, .mode-tab, .literary-toggle,
+    .verb-dropdown-trigger, .verb-dropdown-item, .vrate, .back-link,
+    .set-back, .vd-close, .vd-done-link, .nav-btn, .submit-btn, .retry-btn,
+    .play-btn, .tr-restart)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms var(--ease);
+}
+:is(.ph-iconbtn, .ph-go, .gg-cell, .v-btn, .drill-btn, .drill-btn-ghost,
+    .drill-submit, .drill-end-btn, .drill-accent, .drill-back, .drill-choice,
+    .drill-continue, .ex-btn, .ex-close, .ex-teach-link, .ex-done-again,
+    .peek-cta, .peek-ghost, .km-cta, .km-tab, .deckchip, .cap-chip, .cap-link,
+    .speed-pill, .person-pill, .mode-tab, .literary-toggle,
+    .verb-dropdown-trigger, .verb-dropdown-item, .vrate, .back-link,
+    .set-back, .vd-close, .vd-done-link, .nav-btn, .submit-btn, .retry-btn,
+    .play-btn, .tr-restart):active::after {
+  opacity: 0.12;
+  transition-duration: 90ms;
+}
+:is(.ph-iconbtn, .ph-go, .gg-cell, .v-btn, .drill-btn, .drill-btn-ghost,
+    .drill-submit, .drill-end-btn, .drill-accent, .drill-back, .drill-choice,
+    .drill-continue, .ex-btn, .ex-close, .ex-teach-link, .ex-done-again,
+    .peek-cta, .peek-ghost, .km-cta, .km-tab, .deckchip, .cap-chip, .cap-link,
+    .speed-pill, .person-pill, .mode-tab, .literary-toggle,
+    .verb-dropdown-trigger, .verb-dropdown-item, .vrate, .back-link,
+    .set-back, .vd-close, .vd-done-link, .nav-btn, .submit-btn, .retry-btn,
+    .play-btn, .tr-restart):active {
+  transform: scale(0.97);
+}
+/* Keep the per-element fades the group compression transition above
+   would otherwise clobber — their transform gains --fast, the rest of
+   their transition list stays intact. */
+.back-link { transition: color var(--transition), transform var(--fast) var(--ease); }
+.verb-dropdown-trigger { transition: border-color var(--transition), transform var(--fast) var(--ease); }
+.verb-dropdown-item { transition: background var(--transition), color var(--transition), transform var(--fast) var(--ease); }
+.drill-back { transition: background 0.15s, color 0.15s, transform var(--fast) var(--ease); }
+.drill-end-btn { transition: background 0.15s, color 0.15s, border-color 0.15s, transform var(--fast) var(--ease); }
+.drill-btn { transition: opacity 0.15s, transform var(--fast) var(--ease); }
+.drill-choice, .drill-accent { transition: all 0.15s; }
