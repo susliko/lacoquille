@@ -93,21 +93,6 @@ export default function SettingsPanel(props: { version: string }) {
               </span>
               <span class="set-val">{s()!.accents === "lenient" ? "Lenient" : "Strict"}</span>
             </button>
-            <button
-              type="button"
-              class="set-row"
-              onClick={() => {
-                const order = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
-                const i = order.indexOf(s()!.levelsMax);
-                update("levelsMax", order[(i + 1) % order.length]);
-              }}
-            >
-              <span class="set-lb">
-                Levels shown
-                <small>Highest level visible in your grammar grid</small>
-              </span>
-              <span class="set-val">A1 – {s()!.levelsMax}</span>
-            </button>
             <button type="button" class="set-row" onClick={() => update("sound", !s()!.sound)}>
               <span class="set-lb">Sound</span>
               <Switch on={s()!.sound} />

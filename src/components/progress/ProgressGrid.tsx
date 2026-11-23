@@ -19,7 +19,6 @@ import {
   GG_SUBS,
   type FamKey,
 } from "./taxonomy";
-import { readSettings } from "../settings/settingsStore";
 import {
   entriesIn,
   entryStates,
@@ -127,8 +126,6 @@ export default function ProgressGrid(props: { visible: boolean; titled?: boolean
   const [failed, setFailed] = createSignal(false);
   const [sheet, setSheet] = createSignal<Sheet | null>(null);
   const [hintOff, setHintOff] = createSignal(false);
-  /** "Levels shown" setting — rows above the cap are hidden entirely. */
-  const [levels, setLevels] = createSignal<readonly string[]>(GG_LEVELS);
   let lastTrigger: Trigger | null = null;
   let closeBtn: HTMLButtonElement | undefined;
   let inFlight = false;
@@ -139,7 +136,6 @@ export default function ProgressGrid(props: { visible: boolean; titled?: boolean
     } catch {
       /* private mode: banner just stays dismissable for the session */
     }
-    setLevels(readSettings().levelsMax === "C2" ? GG_LEVELS : GG_LEVELS.slice(0, GG_LEVELS.indexOf(readSettings().levelsMax) + 1));
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && sheet()) closeSheet();
     };
@@ -276,7 +272,7 @@ export default function ProgressGrid(props: { visible: boolean; titled?: boolean
                 </div>
 
                 {/* one row per level ("Levels shown" setting caps the rows) */}
-                <For each={levels()}>
+                <For each={GG_LEVELS}>
                   {(lv) => (
                     <div class="gg-mrow">
                       <LevelHead lv={lv} states={states()} on={isRow(lv)} onOpen={openSheet} />
