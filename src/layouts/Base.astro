@@ -44,163 +44,301 @@ const cleanTitle = title.replace(/ — La Coquille$/, "").replace(/ · La Coquil
          keeps the JS context alive, and enables link prefetch. This is
          what makes grid ↔ practice navigation feel native. -->
     <ClientRouter />
-  </head>
-  <body>
-    <a href="#main-content" class="skip-link">Skip to main content</a>
-    <div class={`app-shell${tab ? " with-tab" : ""}`}>
-      <!-- Motion lives in global.css ("Motion — Material 3") + tokens.css.
-           Tab roots: the swap is a single frame (custom direct swap in the
-           script below) and the arriving main does a 180ms fade-through
-           after it — opacity only. Pushed screens (drills, feeds,
-           settings) get a cover-push: ::view-transition-new(screen)
-           slides over a static, fully opaque old snapshot, mirrored on
-           browser-back. The explicit transition:name + animate="none"
-           hand the pseudo-elements to our own CSS. Astro's built-in
-           slide is a crossfade of BOTH snapshots, and this device's
-           WebView composites them sequentially — a ~240ms wash where
-           main hadn't painted yet (bare ground visible through the
-           arriving sheet), then a late slide. One-sided motion never
-           washes: the old frame never fades, the new frame enters. -->
-      <main id="main-content" transition:name="screen" transition:animate="none">
-        <slot />
-      </main>
-      {tab && <TabBar active={tab} />}
-    </div>
-    <script>
-      /* Tab-shell island parking — the piece transition:persist cannot do.
-        persist only pairs an island with the SAME id in the incoming page;
-        the three tab roots carry different islands (practice-home /
-        vocab-home / none), so flipping tabs always destroyed the outgoing
-        screen's Solid tree and re-hydrated from scratch on return — a
-        full remount (re-reads, re-renders, lost scroll-adjacent state)
-        on every switch. Instead, park the outgoing island beside <body>
-        (documentElement level) before the router swaps — moveBefore keeps
-        it connected, so no disconnect callbacks fire and the Solid tree
-        stays live — then move it back over the fresh incoming island
-        after the swap. Result: returning to a tab re-attaches the exact
-        DOM node, no re-render, no re-fetch, state intact. Browsers
-        without Element.moveBefore simply fall through to the old
-        remount behaviour. */
-      const TAB_ISLANDS: Record<string, string | null> = {
+    <!-- Navigation choreography core. MUST stay an inline classic script
+       in <head>: Astro's router module captures `document.
+       startViewTransition` existence at module init, and every chore-
+       ography decision below has to exist before the first tap can
+       start a navigation. Plain JS — inline scripts are not processed.
+       See the block comment inside for the full rationale. -->
+    <script is:inline>
+      /* ══════════════════════════════════════════════════════════════
+         Navigation choreography — one system, no snapshot pipeline.
+
+         History: this site fought the View Transitions snapshot
+         pipeline three times (animate="none" everywhere; one-sided
+         ::view-transition pseudo animations; a tab-flip-only
+         startViewTransition override) and each layer traded one
+         browser artifact for another. The WebView composites old/new
+         snapshots sequentially (a wash of bare ground mid-swap);
+         Firefox Android doesn't run the pseudo-element animations,
+         so old and new paint stacked at full strength — both pages
+         visible at once, the exact bug from the 2026-11-23
+         screencast; and the capture/composite pipeline itself costs
+         frames on mid-range phones even with every animation off.
+
+         Root fix, not another patch: the snapshot pipeline is never
+         engaged. document.startViewTransition is replaced by a shim
+         that runs the router's swap directly, for EVERY navigation.
+         There is no ::view-transition tree, ever, on any browser.
+         Motion is then plain CSS on the live DOM, still one-sided
+         (a layer enters; nothing ever crossfades — the law in
+         tokens.css):
+
+         · Painted arrivals (tab roots via parked islands, static
+           pages, client:load SSR): the arriving main fades in over
+           the paper ground, 180ms opacity (.screen-enter).
+         · client:only arrivals (the drill screens): Astro swaps in
+           an EMPTY island and the hydrator fills it a beat later,
+           so a direct swap would flash bare paper. For exactly this
+           case the swapped-out main is frozen into a fixed overlay
+           of real pixels (clone, de-hydratable, scroll-compensated)
+           and lifted once the arriving island has actually rendered
+           (MutationObserver → double rAF → fade; 3.5s cap when a
+           chunk stalls). The previous screen stays truthful while
+           JS loads — the SPA behaviour the snapshot pipeline was
+           imitating, without the pipeline.
+
+         Reduced motion: swaps stay instant and the entrance fade
+         is skipped; the veil still masks the hydration gap but
+         lifts without a fade (masking is not motion).
+         ══════════════════════════════════════════════════════════════ */
+
+      /* ── 1 · No view transitions, on any browser ────────────────
+         Astro awaits updateCallbackDone / finished and calls
+         skipTransition on interrupted navigations — all satisfied
+         by resolving immediately. The swap runs one microtask out,
+         synchronously enough for the router's own sequencing. */
+      document.startViewTransition = function (cb) {
+        var done = Promise.resolve().then(cb);
+        return {
+          updateCallbackDone: done,
+          ready: done,
+          finished: done,
+          skipTransition: function () {},
+        };
+      };
+
+      var reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+
+      /* ── 2 · Tab-shell island parking — the piece transition:persist
+         cannot do. persist only pairs an island with the SAME id in the
+         incoming page; the three tab roots carry different islands
+         (practice-home / vocab-home / none), so flipping tabs always
+         destroyed the outgoing screen's Solid tree and re-hydrated from
+         scratch on return — a full remount (re-reads, re-renders, lost
+         scroll-adjacent state) on every switch. Instead, park the
+         outgoing island beside <body> (documentElement level) before the
+         router swaps — moveBefore keeps it connected, so no disconnect
+         callbacks fire and the Solid tree stays live — then move it back
+         over the fresh incoming island after the swap. Result: returning
+         to a tab re-attaches the exact DOM node, no re-render, no
+         re-fetch, state intact. Browsers without Element.moveBefore
+         simply fall through to the old remount behaviour. */
+      var TAB_ISLANDS = {
         "/": "progress-home",
         "/practice/": "practice-home",
         "/theory/": null,
       };
-      /* Element.moveBefore moves a node without firing disconnect/connect
-         callbacks — a plain append would run Solid's cleanup and throw the
-         state away. If it's missing, skip parking entirely and let the
-         swap behave as before (fresh island per visit). */
-      const moveBefore = (parent: Element, node: Element, before: Element | null): boolean => {
-        const m = (parent as unknown as { moveBefore?: (n: Node, c: Node | null) => void }).moveBefore;
+      var TAB_ROOTS = Object.keys(TAB_ISLANDS);
+      /* Internal links don't agree on the trailing slash (the tab bar
+         links "/practice/", the drills' back link "/practice") — every
+         membership test and cache key below must see ONE canonical
+         form, or the parked island strands at <html> while a fresh
+         island remounts over it (state lost, remount flash). */
+      var normPath = function (p) {
+        return p.length > 1 && p.endsWith("/") === false ? p + "/" : p;
+      };
+      var moveBefore = function (parent, node, before) {
+        var m = parent.moveBefore;
         if (typeof m !== "function") return false;
         m.call(parent, node, before);
         return true;
       };
-      /* Tab switches skip the View Transition layer entirely. Even with
-         every pseudo animation set to none, running startViewTransition
-         still costs the capture/composite pipeline (1-3 frames on mid-
-         range phones) and can show a stale snapshot while the new frame
-         is captured — the last visible artifact of a tab flip. Intercept
-         before-preparation to learn the destination; when both sides are
-         tab roots, run the router's swap directly. Everything else (cold
-         loads, pushed screens, browser back) keeps the real transition. */
-      const TAB_ROOTS = new Set(["/", "/practice/", "/theory/"]);
-      let tabToTab = false;
 
-      /* Tab-root HTML lives in a session map, so a hot tap never touches
-         the network. Measured RTT from a phone to the deployment is
-         ~0.8s; HTML is no-cache (deploy-safe), which means every router
-         fetch revalidates — the tap froze for a full round trip before
-         the (already instant) swap. First visits warm the map; the
-         other two roots are also prefetched in the background right
+      /* ── 3 · Tab-root HTML lives in a session map, so a hot tap never
+         touches the network. Measured RTT from a phone to the deployment
+         is ~0.8s; HTML is no-cache (deploy-safe), which means every
+         router fetch revalidates — the tap froze for a full round trip
+         before the (already instant) swap. First visits warm the map;
+         the other two roots are also prefetched in the background right
          after load. Keyed by origin+path+search, hash excluded. The map
          dies with the SPA session: a reload starts fresh against the
          deployed site, so deploys can never serve stale HTML. */
-      const tabHtml = new Map<string, string>();
-      let parser: DOMParser | null = null;
-      const warm = (path: string) => {
-        const url = location.origin + path;
-        if (![...tabHtml.keys()].some((k) => k.split("#")[0] === url)) {
+      var tabHtml = new Map();
+      var parser = null;
+      var warm = function (path) {
+        var url = location.origin + path;
+        var known = Array.from(tabHtml.keys()).some(function (k) {
+          return k.split("#")[0] === url;
+        });
+        if (!known) {
           fetch(url)
-            .then((r) => (r.ok ? r.text() : Promise.reject(new Error(String(r.status)))))
-            .then((t) => tabHtml.set(url, t))
-            .catch(() => {});
+            .then(function (r) {
+              return r.ok ? r.text() : Promise.reject(new Error(String(r.status)));
+            })
+            .then(function (t) {
+              tabHtml.set(url, t);
+            })
+            .catch(function () {});
         }
       };
-      document.addEventListener("astro:page-load", () => {
-        if (TAB_ROOTS.has(location.pathname)) {
-          for (const p of TAB_ROOTS) if (p !== location.pathname) warm(p);
-        }
-      }, { once: false });
-
-      document.addEventListener("astro:before-preparation", (ev) => {
-        const to = ev.to?.href ?? "";
-        tabToTab = TAB_ROOTS.has(location.pathname) && TAB_ROOTS.has(new URL(to, location.href).pathname);
-        if (TAB_ROOTS.has(new URL(to, location.href).pathname)) {
-          const toUrl = new URL(to, location.href);
-          const key = toUrl.origin + toUrl.pathname + toUrl.search;
-          /* replace the router's loader: parse from the session map, and
-             fall back to the network (storing the result) on a miss —
-             same contract as the default loader (newDocument + enabled
-             meta check), minus style-link preloading that tab pages
-             never need (their CSS is inlined in the cached HTML). The
-             router invokes loader() with no arguments, so close over
-             the event itself. */
-          const pe = ev;
-          ev.loader = async () => {
-            try {
-              let html = tabHtml.get(key);
-              if (html == null) {
-                const res = await fetch(key, { signal: pe.signal });
-                if (!res.ok) { pe.preventDefault(); return; }
-                html = await res.text();
-                tabHtml.set(key, html);
-              }
-              parser ??= new DOMParser();
-              pe.newDocument = parser.parseFromString(html, "text/html");
-              pe.newDocument.querySelectorAll("noscript").forEach((el) => el.remove());
-              if (!pe.newDocument.querySelector('[name="astro-view-transitions-enabled"]')) {
-                pe.preventDefault();
-              }
-            } catch {
-              pe.preventDefault(); /* aborts the SPA nav; router falls back */
-            }
-          };
+      document.addEventListener("astro:page-load", function () {
+        if (TAB_ROOTS.indexOf(normPath(location.pathname)) !== -1) {
+          for (var i = 0; i < TAB_ROOTS.length; i++) {
+            if (TAB_ROOTS[i] !== normPath(location.pathname)) warm(TAB_ROOTS[i]);
+          }
         }
       });
-      const svt = document.startViewTransition?.bind(document);
-      if (svt) {
-        document.startViewTransition = (cb: () => void) => {
-          if (tabToTab) {
-            const done = Promise.resolve().then(cb);
-            return { updateCallbackDone: done, ready: done, finished: done, skipTransition() {} } as ViewTransition;
-          }
-          return svt(cb);
+
+      document.addEventListener("astro:before-preparation", function (ev) {
+        var toUrl = new URL((ev.to && ev.to.href) || "", location.href);
+        var toPath = normPath(toUrl.pathname);
+        if (TAB_ROOTS.indexOf(toPath) === -1) return;
+        var key = toUrl.origin + toPath + toUrl.search;
+        /* replace the router's loader: parse from the session map, and
+           fall back to the network (storing the result) on a miss —
+           same contract as the default loader (newDocument + enabled
+           meta check), minus style-link preloading that tab pages
+           never need (their CSS is inlined in the cached HTML). The
+           router invokes loader() with no arguments, so close over
+           the event itself. */
+        ev.loader = function () {
+          return new Promise(function (resolve, reject) {
+            var existing = tabHtml.get(key);
+            if (existing != null) {
+              resolve(existing);
+              return;
+            }
+            fetch(key, { signal: ev.signal })
+              .then(function (res) {
+                if (!res.ok) throw new Error(String(res.status));
+                return res.text();
+              })
+              .then(function (html) {
+                tabHtml.set(key, html);
+                resolve(html);
+              })
+              .catch(reject);
+          }).then(function (html) {
+            parser = parser || new DOMParser();
+            ev.newDocument = parser.parseFromString(html, "text/html");
+            ev.newDocument.querySelectorAll("noscript").forEach(function (el) {
+              el.remove();
+            });
+            if (
+              !ev.newDocument.querySelector('[name="astro-view-transitions-enabled"]')
+            ) {
+              ev.preventDefault();
+            }
+          });
         };
-      }
-      document.addEventListener("astro:before-swap", () => {
-        const id = TAB_ISLANDS[location.pathname];
+      });
+
+      /* ── 4 · Outgoing-screen work, before the swap destroys the page ──
+         Registered before the parking listener so the clone (if any) is
+         captured while main is still whole. */
+      var veil = null;            // frozen previous screen, in the DOM
+      var veilObserver = null;
+      var veilTimer = 0;
+      var pendingClone = null;    // frozen previous screen, detached
+      var pendingScrollY = 0;
+
+      var clearVeilBookkeeping = function () {
+        if (veilObserver) {
+          veilObserver.disconnect();
+          veilObserver = null;
+        }
+        if (veilTimer) {
+          clearTimeout(veilTimer);
+          veilTimer = 0;
+        }
+      };
+      var killVeil = function () {
+        clearVeilBookkeeping();
+        if (veil) {
+          veil.remove();
+          veil = null;
+        }
+      };
+      var liftVeil = function () {
+        clearVeilBookkeeping();
+        if (!veil) return;
+        var v = veil;
+        veil = null;
+        if (reducedMotion.matches) {
+          v.remove();
+          return;
+        }
+        v.classList.add("veil-lift"); /* opacity → 0, CSS transition */
+        var gone = false;
+        var remove = function () {
+          if (gone) return;
+          gone = true;
+          v.remove();
+        };
+        v.addEventListener("transitionend", remove, { once: true });
+        setTimeout(remove, 400); /* throttled renderers: transitionend can be missed */
+      };
+
+      document.addEventListener("astro:before-swap", function (ev) {
+        killVeil(); /* a newer navigation always retires a stale veil */
+        /* Freeze the outgoing screen only when the destination renders
+           through a client:only island (empty until its hydrator runs)
+           — the one case where the live swap would expose bare paper. */
+        var newDoc = ev.newDocument;
+        var onlyIsland =
+          newDoc &&
+          newDoc.querySelector &&
+          newDoc.querySelector("astro-island[client='only']");
+        var main = document.getElementById("main-content");
+        if (onlyIsland && main) {
+          var clone = main.cloneNode(true);
+          /* The clone is a picture of the old screen: it must never
+             hydrate (astro-island wrappers become inert divs — plain
+             divs also can't collide with the parking/persist queries,
+             which select real astro-islands), never run scripts, and
+             never duplicate ids into the document. */
+          clone.removeAttribute("id");
+          var islands = clone.querySelectorAll("astro-island");
+          for (var i = 0; i < islands.length; i++) {
+            var ghost = document.createElement("div");
+            ghost.setAttribute("aria-hidden", "true");
+            while (islands[i].firstChild) ghost.appendChild(islands[i].firstChild);
+            islands[i].replaceWith(ghost);
+          }
+          clone.querySelectorAll("script").forEach(function (s) {
+            s.remove();
+          });
+          clone.querySelectorAll("[id]").forEach(function (n) {
+            n.removeAttribute("id");
+          });
+          pendingClone = clone;
+          pendingScrollY = window.scrollY;
+        } else {
+          pendingClone = null;
+        }
+      });
+
+      /* ── 5 · Island parking, after the swap (unchanged semantics) ──
+         location.pathname is already the destination here. */
+      document.addEventListener("astro:before-swap", function () {
+        var id = TAB_ISLANDS[normPath(location.pathname)];
         if (!id) return;
-        const isl = document.querySelector<HTMLElement>(`astro-island[data-astro-transition-persist="${id}"]`);
+        var isl = document.querySelector(
+          'astro-island[data-astro-transition-persist="' + id + '"]'
+        );
         if (isl && isl.isConnected && moveBefore(document.documentElement, isl, null)) {
           /* parked at <html> level for potentially many swaps — without
              display:none it would lay out below body as a ghost page */
           isl.style.display = "none";
         }
       });
-      document.addEventListener("astro:after-swap", () => {
-        const id = TAB_ISLANDS[location.pathname];
+      document.addEventListener("astro:after-swap", function () {
+        var id = TAB_ISLANDS[normPath(location.pathname)];
         if (!id) return;
-        const fresh = document.querySelector(`astro-island[data-astro-transition-persist="${id}"]`);
-        const parked =
-          document.documentElement.children.length &&
-          [...document.documentElement.children].find(
-            (n) => n.matches?.(`astro-island[data-astro-transition-persist="${id}"]`)
+        var fresh = document.querySelector(
+          'astro-island[data-astro-transition-persist="' + id + '"]'
+        );
+        var parked = Array.from(document.documentElement.children).find(function (n) {
+          return (
+            n.matches &&
+            n.matches('astro-island[data-astro-transition-persist="' + id + '"]')
           );
+        });
         if (fresh && parked && fresh !== parked) {
-          const host = fresh.parentNode;
-          if (host instanceof Element && moveBefore(host, parked, fresh)) {
-            (parked as HTMLElement).style.display = "";
+          var host = fresh.parentNode;
+          if (host && moveBefore(host, parked, fresh)) {
+            parked.style.display = "";
             /* discard the fresh island before its hydration runs — the
                hydrator re-checks isConnected, so it never executes */
             fresh.remove();
@@ -208,24 +346,82 @@ const cleanTitle = title.replace(/ — La Coquille$/, "").replace(/ · La Coquil
         }
       });
 
-      /* M3 fade-through on tab flips. The swap stays single-frame (see
-         the startViewTransition override); the arriving main fades in
-         over the paper ground while the bar's fill-variant swap is
-         instant (no icon animation — reviewed as twitchy, removed).
-         Registered AFTER the island
-         restore above so the parked island is re-attached before the
-         fade starts. tabToTab is set by the before-preparation handler
-         for the navigation in flight, so it is valid here. If the user
-         flips again mid-fade, the old main node is discarded by the
-         swap and the once-listener dies with it. */
-      document.addEventListener("astro:after-swap", () => {
-        if (!tabToTab) return;
-        const main = document.getElementById("main-content");
+      /* ── 6 · Arrival choreography (registered after parking, so tab
+         re-attachment has happened before the entrance starts) ── */
+      document.addEventListener("astro:after-swap", function () {
+        var main = document.getElementById("main-content");
         if (!main) return;
-        main.classList.add("tab-enter");
-        main.addEventListener("animationend", () => main.classList.remove("tab-enter"), { once: true });
+
+        if (pendingClone) {
+          /* client:only destination: hold the frozen previous screen
+             over the swap until the arriving island has rendered. */
+          var clone = pendingClone;
+          pendingClone = null;
+          veil = document.createElement("div");
+          veil.className = "screen-veil";
+          veil.setAttribute("aria-hidden", "true");
+          /* the document scroller resets under the veil — compensate so
+             the frozen picture shows what the user was last looking at */
+          clone.style.marginTop = -pendingScrollY + "px";
+          veil.appendChild(clone);
+          document.documentElement.appendChild(veil);
+
+          var isl =
+            main.querySelector("astro-island[client='only']") ||
+            main.querySelector("astro-island");
+          if (!isl) {
+            liftVeil();
+            return;
+          }
+          var lifted = false;
+          var once = function () {
+            if (lifted) return;
+            lifted = true;
+            /* two frames: the hydrator's write must be styled, laid out
+               and painted before the old screen lets go of the viewport */
+            requestAnimationFrame(function () {
+              requestAnimationFrame(liftVeil);
+            });
+          };
+          veilObserver = new MutationObserver(once);
+          veilObserver.observe(isl, { childList: true, subtree: true });
+          veilTimer = setTimeout(liftVeil, 3500); /* chunk stalled: show what's there */
+        } else {
+          /* painted arrival — one-sided entrance fade (M3 fade-through;
+             opacity only: transform/filter on main would steal the
+             containing block from the fixed bottom sheet and toast that
+             live inside main). Skipped under reduced motion. */
+          if (!reducedMotion.matches) {
+            main.classList.add("screen-enter");
+            var drop = function () {
+              main.classList.remove("screen-enter");
+            };
+            main.addEventListener("animationend", drop, { once: true });
+            setTimeout(drop, 400); /* safety if animationend never fires */
+          }
+        }
       });
     </script>
+  </head>
+  <body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <div class={`app-shell${tab ? " with-tab" : ""}`}>
+      <!-- Motion lives in global.css ("Motion — one-sided") + tokens.css.
+           Every navigation is a direct swap (the startViewTransition shim
+           in the head script); the arriving main does a 180ms fade-through
+           (.screen-enter, opacity only). Pushed client:only drills are
+           held by the frozen-screen veil (.screen-veil) until their
+           island renders. No ::view-transition tree ever exists — the
+           snapshot pipeline is what produced the both-pages-visible
+           composites on Firefox Android and the bare-ground wash in the
+           WebView. transition:animate="none" stays as the switch that
+           keeps Astro's own animation CSS (and its VT-less-browser
+           fallback) at none. -->
+      <main id="main-content" transition:animate="none">
+        <slot />
+      </main>
+      {tab && <TabBar active={tab} />}
+    </div>
 
     <script>
       /* Material press feedback is pure CSS now — the "Material press

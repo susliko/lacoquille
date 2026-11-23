@@ -86,14 +86,26 @@ const TABS = [
   document.addEventListener("astro:after-swap", syncTabs);
   document.addEventListener("astro:page-load", syncTabs);
 
-  /* Per-tab scroll memory. Tab roots share the document scroller, and
-     the router resets it to top on every push navigation — which trashed
-     where you were each time you flipped tabs. Save the offset when
-     leaving a tab root; restore it on arrival. A one-shot pending flag
-     makes the restore router-swap-only: cold loads and hard reloads
-     keep the browser's own scroll behaviour. sessionStorage survives
-     the swaps and reloads; keyed by pathname, tab roots only. */
+  /* Per-tab scroll memory. Tab roots share the document scroller.
+     Astro 6 resets the scroller to top AT NAVIGATION START — inside
+     its click handler, before astro:before-swap ever fires — so a
+     save in before-swap always reads 0. Save on the click itself in
+     the CAPTURE phase instead: this listener runs before the
+     router's document-level click handler can touch the scroller.
+     Restore on arrival (page-load), only from the top: on push
+     arrivals the scroller was just reset, so scrollY is 0 whenever
+     the restore is legitimate, and a late-firing restore in a
+     throttled renderer can never clobber a scroll the user already
+     made; on browser-back the browser restored natively and we
+     stand down. A one-shot pending flag makes the restore
+     router-swap-only: cold loads and hard reloads keep the
+     browser's own scroll behaviour. sessionStorage survives the
+     swaps and reloads; keyed by pathname, tab roots only. Paths are
+     normalized to the trailing-slash form: links disagree (the bar
+     links "/practice/", drill back links "/practice"), and a
+     raw-pathname key would silently miss on the non-slash form. */
   const TAB_ROOTS = ["/", "/practice/", "/theory/"];
+  const normPath = (p: string) => (p.length > 1 && !p.endsWith("/") ? p + "/" : p);
   const MAP_KEY = "lacoquille.tabScroll.v1";
   const PEND_KEY = "lacoquille.tabScroll.pending";
   type TabScroll = Record<string, number>;
@@ -101,13 +113,19 @@ const TABS = [
     try { return JSON.parse(sessionStorage.getItem(MAP_KEY) || "{}") as TabScroll; }
     catch { return {}; }
   };
+  document.addEventListener("click", (e) => {
+    if (!(e.target instanceof Element)) return;
+    const a = e.target.closest("a");
+    if (!a) return;
+    const path = normPath(location.pathname);
+    if (!TAB_ROOTS.includes(path) || window.scrollY <= 0) return;
+    const dest = normPath(new URL(a.href, location.href).pathname);
+    if (dest === path) return; /* same-page link — no navigation */
+    const map = readMap();
+    map[path] = window.scrollY;
+    try { sessionStorage.setItem(MAP_KEY, JSON.stringify(map)); } catch { /* private mode */ }
+  }, true);
   document.addEventListener("astro:before-swap", () => {
-    const path = location.pathname;
-    if (TAB_ROOTS.includes(path)) {
-      const map = readMap();
-      map[path] = window.scrollY;
-      try { sessionStorage.setItem(MAP_KEY, JSON.stringify(map)); } catch { /* private mode */ }
-    }
     try { sessionStorage.setItem(PEND_KEY, "1"); } catch { /* private mode */ }
   });
   document.addEventListener("astro:page-load", () => {
@@ -115,7 +133,13 @@ const TABS = [
     try { pending = sessionStorage.getItem(PEND_KEY) === "1"; sessionStorage.removeItem(PEND_KEY); }
     catch { /* private mode */ }
     if (!pending) return;
-    const y = readMap()[location.pathname];
+    /* Only lift from the top: on push arrivals the router just reset the
+       scroller, so this is always true when the restore is legitimate —
+       and it makes a late-firing restore (throttled renderer) unable to
+       clobber a scroll the user already made. On traverse (browser back)
+       the browser restored natively and we stand down. */
+    if (window.scrollY !== 0) return;
+    const y = readMap()[normPath(location.pathname)];
     if (typeof y === "number" && y > 0) window.scrollTo(0, y);
   });
 </script>

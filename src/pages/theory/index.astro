@@ -32,7 +32,7 @@ const byLevel = (lv: string) => entries.filter((e) => e.lv === lv);
   <div class="km-wrap">
     <header class="km-head">
       <h1>Theory</h1>
-      <a class="km-verbs-link" href="/theory/verbs/" transition:name="km-verbs">Verb tables →</a>
+      <a class="km-verbs-link" href="/theory/verbs/">Verb tables →</a>
     </header>
 
     <div class="km-sticky">
@@ -62,7 +62,7 @@ const byLevel = (lv: string) => entries.filter((e) => e.lv === lv);
               <div class="km-part-h"><span>{label}</span></div>
               <div class="km-lessons">
                 {rows.map((e) => (
-                  <a class="km-lesson" href={`/theory/t/${e.id}/`} transition:name={e.id}>
+                  <a class="km-lesson" href={`/theory/t/${e.id}/`}>
                     <span class={`tt ${drillable(e) ? "" : "soon"}`}>{e.name}</span>
                   </a>
                 ))}

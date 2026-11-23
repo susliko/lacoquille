@@ -31,16 +31,6 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* If a root crossfade ever runs (native view transitions), Chromium's
-   UA style composites the two snapshots with mix-blend-mode:
-   plus-lighter — additive, so any transparency between them ghosts as
-   a double exposure. Plain compositing is what this site wants; the
-   root animation itself is disabled (Base.astro). */
-::view-transition-old(root),
-::view-transition-new(root) {
-  mix-blend-mode: normal;
-}
-
 /* Self-hosted fonts (Google Fonts, OFL). Preloaded in Base.astro —
    no third-party request, no FOUT label-swap in the tab bar. */
 @font-face {
@@ -2215,43 +2205,49 @@ article {
 
 
 /* ══════════════════════════════════════════════════════════════
-   Motion — Material 3 (tokens in tokens.css, "motion" block).
-   One law: screens never crossfade. This WebView composites the
-   old/new view-transition snapshots sequentially, so two layers
-   fading wash out to bare ground (why tab swaps are single-frame,
-   see Base.astro). Every move here is one-sided: a layer enters.
+   Motion — one-sided (tokens in tokens.css, "motion" block).
+   One law: screens never crossfade. Every move here is one-sided:
+   a layer enters. There are no view-transition snapshots to
+   composite — navigations are direct swaps (the startViewTransition
+   shim in Base.astro), so this is plain CSS on the live DOM:
+   deterministic on every browser, including the ones that turned
+   the old snapshot pipeline into double exposures.
    ══════════════════════════════════════════════════════════════ */
 
-/* ── Tab flips: fade-through ────────────────────────────────────
+/* ── Entrance fade-through ──────────────────────────────────────
    The swap itself is single-frame; the arriving main fades in over
-   the paper ground — M3's pattern for top-level destinations with
-   no hierarchy. Opacity only: transform or filter on main would
-   steal the containing block from the fixed bottom sheet and toast
-   that live INSIDE main on Progress/Practice. Depth and direction
-   come from the arriving tab's icon pop (TabBar.astro) instead. */
-@keyframes tab-fade-in { from { opacity: 0; } }
-main.tab-enter { animation: tab-fade-in var(--dur-fade) var(--ease-emph-decel); }
+   the paper ground — M3's pattern for destinations that arrive
+   already painted (tab roots via parked islands, static pages,
+   client:load SSR). Opacity only: transform or filter on main
+   would steal the containing block from the fixed bottom sheet
+   and toast that live INSIDE main on Progress/Practice. Applied
+   by the choreography script in Base.astro. */
+@keyframes screen-fade-in { from { opacity: 0; } }
+main.screen-enter { animation: screen-fade-in var(--dur-fade) var(--ease-emph-decel); }
 
-/* ── Pushed screens (drills, feed, settings): cover-push ────────
-   main carries transition:name="screen" + animate="none" (Base.astro).
-   Astro's own emission for those is un-prefixed — the html prefix
-   here wins on specificity — and opacity: 1 defeats the opacity: 0
-   astro stamps on old snapshots for animate="none" pages. Old stays
-   static and fully opaque; the incoming layer COVERS it, mirrored
-   when the router marks the navigation back (data-astro-transition
-   on <html>). Fixed children are just pixels in the snapshot, so a
-   transform is safe on this side. */
-html::view-transition-old(screen) { animation: none; opacity: 1; mix-blend-mode: normal; }
-html::view-transition-new(screen) {
-  animation: screen-push var(--dur-push) var(--ease-emph-decel) both;
+/* ── Frozen-screen veil (client:only arrivals) ──────────────────
+   Drill screens hydrate from an EMPTY island after the swap; the
+   veil holds a clone of the outgoing main — real pixels, not a
+   snapshot — so the swap never flashes bare paper. It sits at
+   <html> level (the body node is replaced by the swap), covers
+   the viewport, eats no taps, and lifts (opacity, --dur-fade)
+   once the arriving island has rendered. See Base.astro. */
+.screen-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 80;              /* above every page layer, below nothing */
+  background: var(--paper); /* opaque: the unhydrated page stays hidden */
+  overflow: hidden;
+  pointer-events: none;
   opacity: 1;
-  mix-blend-mode: normal;
+  transition: opacity var(--dur-fade) var(--ease-emph-decel);
 }
-html[data-astro-transition="back"]::view-transition-new(screen) {
-  animation-name: screen-push-back;
+.screen-veil.veil-lift { opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  main.screen-enter { animation: none; }
+  .screen-veil { transition: none; }
 }
-@keyframes screen-push      { from { transform: translateX(100%); } }
-@keyframes screen-push-back { from { transform: translateX(-100%); } }
 
 /* ── Material press system ──────────────────────────────────
    One pattern for every tappable thing on the site, replacing both

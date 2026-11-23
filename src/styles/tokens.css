@@ -103,15 +103,15 @@
   --scrim: rgba(22, 24, 29, 0.32);
 
   /* ---- motion (Material 3) ----
-     One law: screens never crossfade. This WebView composites the old/
-     new view-transition snapshots sequentially — two layers fading wash
-     out to bare ground. Motion is one-sided: a layer enters. */
+     One law: screens never crossfade. Motion is one-sided: a layer
+     enters. Navigations are direct swaps — the view-transition
+     snapshot pipeline is never engaged (Base.astro) — so nothing
+     here can be defeated by a browser's snapshot compositing. */
   --ease: cubic-bezier(0.2, 0, 0, 1);              /* M3 emphasized  */
   --ease-emph-decel: cubic-bezier(0.05, 0.7, 0.1, 1); /* M3 enters  */
   --fast: 80ms;       /* press scale feedback            */
   --panel: 160ms;     /* feedback panel entrance         */
-  --dur-fade:   180ms; /* tab fade-through (opacity only) */
-  --dur-push:   260ms; /* pushed-screen cover slide       */
+  --dur-fade:   180ms; /* entrance fade-through + veil lift (opacity only) */
 
   /* ---- sizes ---- */
   --tap:       44px;  /* minimum touch target         */
