@@ -20,10 +20,10 @@ const tenseList = tenseEntries
 <Base
   title="Verb tables"
   description="Every French verb tense and mood in one interactive diagram, with conjugation tables."
-  breadcrumb={[{ label: "Grammar", href: "/knowledge" }, { label: "Verb tables" }]}
+  breadcrumb={[{ label: "Theory", href: "/theory" }, { label: "Verb tables" }]}
 >
   <div style="margin-bottom: 1.5rem;">
-    <a href="/knowledge/"><p class="home-eyebrow">Grammar</p></a>
+    <a href="/theory/"><p class="home-eyebrow">Theory</p></a>
     <h1 transition:name="km-verbs">Verb tables</h1>
     <p style="color: var(--text-2); margin-top: 0.4rem;">
       Every French tense and mood — the diagram, the forms, and when to use each one.
@@ -43,7 +43,7 @@ const tenseList = tenseEntries
       <ul class="choice-index-list">
         {tenseList.map(t => (
           <li>
-            <a href={`/knowledge/verbs/tenses/${t.slug}`}>{t.title}</a>
+            <a href={`/theory/verbs/tenses/${t.slug}`}>{t.title}</a>
             <span class="topic-desc"> — {t.rule}</span>
           </li>
         ))}

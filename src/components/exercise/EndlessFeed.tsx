@@ -313,7 +313,7 @@ function TeachCard(props: { slug: string; onDone: () => void }) {
               )}
             </Show>
             <div class="ex-teach-foot">
-              <a class="ex-teach-link" href={`/knowledge/t/${b().entryId}`}>
+              <a class="ex-teach-link" href={`/theory/t/${b().entryId}`}>
                 Full page
               </a>
               <button type="button" class="ex-btn" onClick={props.onDone}>

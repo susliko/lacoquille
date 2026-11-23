@@ -11,9 +11,9 @@ interface Props {
   section?: string;
   breadcrumb?: Array<{ label: string; href?: string }>;
   /** Tab root this page belongs to. Set on the three tab destinations
-   *  (practice · vocab · grammar); pushed screens omit it and render
+   *  (progress · practice · theory); pushed screens omit it and render
    *  without the bottom bar. */
-  tab?: "practice" | "vocab" | "grammar";
+  tab?: "progress" | "practice" | "theory";
 }
 
 const { title, description = "An interactive French grammar reference.", tab } = Astro.props;
@@ -78,9 +78,9 @@ const cleanTitle = title.replace(/ — La Coquille$/, "").replace(/ · La Coquil
         without Element.moveBefore simply fall through to the old
         remount behaviour. */
       const TAB_ISLANDS: Record<string, string | null> = {
-        "/": "practice-home",
-        "/vocab/": "vocab-home",
-        "/knowledge/": null,
+        "/": "progress-home",
+        "/practice/": "practice-home",
+        "/theory/": null,
       };
       /* Element.moveBefore moves a node without firing disconnect/connect
          callbacks — a plain append would run Solid's cleanup and throw the
@@ -100,7 +100,7 @@ const cleanTitle = title.replace(/ — La Coquille$/, "").replace(/ · La Coquil
          before-preparation to learn the destination; when both sides are
          tab roots, run the router's swap directly. Everything else (cold
          loads, pushed screens, browser back) keeps the real transition. */
-      const TAB_ROOTS = new Set(["/", "/vocab/", "/knowledge/"]);
+      const TAB_ROOTS = new Set(["/", "/practice/", "/theory/"]);
       let tabToTab = false;
 
       /* Tab-root HTML lives in a session map, so a hot tap never touches

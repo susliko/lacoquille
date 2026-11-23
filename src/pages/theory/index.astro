@@ -3,9 +3,9 @@ import Base from "../../layouts/Base.astro";
 import "../../styles/knowledge.css";
 import taxonomy from "../../data/knowledge/taxonomy.json";
 
-const title = "Grammar";
+const title = "Theory";
 const description =
-  "The grammar manual: every topic from A1 to C2 — tense, mood, nouns, adjectives, pronouns, sentence.";
+  "The manual: every grammar topic from A1 to C2 — tense, mood, nouns, adjectives, pronouns, sentence.";
 
 /* Grid column order (T M N S), N expanded into its three subgroups. */
 const PARTS = [
@@ -28,11 +28,11 @@ const drillable = (e: Entry) => e.slugs && e.slugs.length > 0;
 const byLevel = (lv: string) => entries.filter((e) => e.lv === lv);
 ---
 
-<Base title={title} description={description} tab="grammar">
+<Base title={title} description={description} tab="theory">
   <div class="km-wrap">
     <header class="km-head">
-      <h1>Grammar</h1>
-      <a class="km-verbs-link" href="/knowledge/verbs/" transition:name="km-verbs">Verb tables →</a>
+      <h1>Theory</h1>
+      <a class="km-verbs-link" href="/theory/verbs/" transition:name="km-verbs">Verb tables →</a>
     </header>
 
     <div class="km-sticky">
@@ -62,7 +62,7 @@ const byLevel = (lv: string) => entries.filter((e) => e.lv === lv);
               <div class="km-part-h"><span>{label}</span></div>
               <div class="km-lessons">
                 {rows.map((e) => (
-                  <a class="km-lesson" href={`/knowledge/t/${e.id}/`} transition:name={e.id}>
+                  <a class="km-lesson" href={`/theory/t/${e.id}/`} transition:name={e.id}>
                     <span class={`tt ${drillable(e) ? "" : "soon"}`}>{e.name}</span>
                   </a>
                 ))}
@@ -141,7 +141,7 @@ const byLevel = (lv: string) => entries.filter((e) => e.lv === lv);
     function setLevel(l: string, push = true) {
       if (!tabs) return;
       level = l;
-      if (push) history.replaceState(null, "", l === "A1" ? "/knowledge/" : `/knowledge/?l=${l}`);
+      if (push) history.replaceState(null, "", l === "A1" ? "/theory/" : `/theory/?l=${l}`);
       tabs.querySelectorAll(".km-tab").forEach((t) =>
         t.setAttribute("aria-selected", String((t as HTMLElement).dataset.level === l)));
       document.querySelectorAll<HTMLElement>(".km-level").forEach((s) =>
@@ -162,7 +162,7 @@ const byLevel = (lv: string) => entries.filter((e) => e.lv === lv);
         (e) => norm(e.name).includes(qn) || norm(e.blurb).includes(qn));
       r.innerHTML = hits.length
         ? `<div class="km-lessons">${hits
-            .map((e) => `<a class="km-lesson" href="/knowledge/t/${e.id}/"><span class="tt ${e.drill ? "" : "soon"}">${hl(e.name, q)}</span></a>`)
+            .map((e) => `<a class="km-lesson" href="/theory/t/${e.id}/"><span class="tt ${e.drill ? "" : "soon"}">${hl(e.name, q)}</span></a>`)
             .join("")}</div>`
         : `<div class="km-empty"><b>No lesson matches “${esc(q)}”</b>Search covers all lessons, A1–C2.</div>`;
     }

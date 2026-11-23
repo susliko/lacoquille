@@ -99,7 +99,7 @@ export default function FlipDrill() {
   return (
     <div class="vd-root">
       <header class="vd-bar">
-        <a class="vd-close" href="/vocab/" aria-label="Done">
+        <a class="vd-close" href="/practice/" aria-label="Done">
           <Back />
         </a>
         <div class="vd-title">Review</div>
@@ -124,7 +124,7 @@ export default function FlipDrill() {
                 ? `${readVocab().session.rated} rated. They'll come back when they come back.`
                 : "Nothing is waiting — add words from the Vocab tab."}
             </p>
-            <a class="vd-done-link" href="/vocab/">
+            <a class="vd-done-link" href="/practice/">
               Back
             </a>
           </div>

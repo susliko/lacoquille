@@ -32,7 +32,7 @@ const LITERARY = ["C1", "C2"];
   <div class="km-wrap">
     <header class="km-sheet-head">
       <div class="km-backrow">
-        <a class="km-back" href={`/knowledge/?l=${entry.lv}`}>← {entry.lv} · {label}</a>
+        <a class="km-back" href={`/theory/?l=${entry.lv}`}>← {entry.lv} · {label}</a>
       </div>
       <h2 transition:name={entry.id}>{entry.name}</h2>
       <div class="km-metachips">
@@ -69,7 +69,7 @@ const LITERARY = ["C1", "C2"];
           <div class="chips">
             {sheet.see.map((id) => {
               const t = byId(id);
-              return t ? <a href={`/knowledge/t/${t.id}/`}>{t.name}</a> : null;
+              return t ? <a href={`/theory/t/${t.id}/`}>{t.name}</a> : null;
             })}
           </div>
         </div>
@@ -81,7 +81,7 @@ const LITERARY = ["C1", "C2"];
         <span class="km-notyet">Not drillable yet — joins the practice feed later</span>
       )}
       {tenseSlug && (
-        <a class="km-secondary" href={`/knowledge/verbs/tenses/${tenseSlug}/`}>Conjugation table →</a>
+        <a class="km-secondary" href={`/theory/verbs/tenses/${tenseSlug}/`}>Conjugation table →</a>
       )}
     </div>
   </div>

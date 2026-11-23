@@ -1,13 +1,13 @@
 ---
 import Base from "../layouts/Base.astro";
-import PracticeHome from "../components/PracticeHome";
+import ProgressHome from "../components/ProgressHome";
 ---
 
-<Base title="La Coquille" tab="practice">
+<Base title="Progress" tab="progress">
   <!-- Island state across tab switches: Base.astro's parking script keeps
        this exact DOM node alive between swaps (see the tab-shell comment
        there). transition:persist stays as a marker for the router. -->
-  <PracticeHome client:load transition:persist="practice-home" />
+  <ProgressHome client:load transition:persist="progress-home" />
 </Base>
 
 <style>

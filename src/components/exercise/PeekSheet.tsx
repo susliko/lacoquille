@@ -137,7 +137,7 @@ export default function PeekSheet(props: {
         <div class="peek-foot">
           <Show when={body()}>
             {(b) => (
-              <a class="peek-ghost" href={`/knowledge/t/${b().entryId}`}>
+              <a class="peek-ghost" href={`/theory/t/${b().entryId}`}>
                 Full page
               </a>
             )}

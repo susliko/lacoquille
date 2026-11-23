@@ -20,13 +20,13 @@ const { title, oneLineRule, examples, relatedTenses } = entry.data;
   title={title}
   description={oneLineRule}
   breadcrumb={[
-    { label: "Verbes", href: "/knowledge/verbs" },
+    { label: "Verbes", href: "/theory/verbs" },
     { label: title },
   ]}
 >
   <article>
     <div style="margin-bottom: 1.5rem;">
-      <a href="/knowledge/verbs"><p class="home-eyebrow">Grammaire</p></a>
+      <a href="/theory/verbs"><p class="home-eyebrow">Théorie</p></a>
       <div class="hgroup">
         <h1>{title}</h1>
         <p class="one-line-rule">{oneLineRule}</p>
@@ -51,6 +51,6 @@ const { title, oneLineRule, examples, relatedTenses } = entry.data;
 
     <ConjugationTable tenseId={entry.id} />
 
-    <a href="/knowledge/verbs" class="back-link">← Verbs</a>
+    <a href="/theory/verbs" class="back-link">← Verbs</a>
   </article>
 </Base>

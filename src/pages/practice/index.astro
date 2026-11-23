@@ -1,23 +1,20 @@
 ---
 import Base from "../../layouts/Base.astro";
-import PracticeHub from "../../components/PracticeHub";
+import PracticeTab from "../../components/PracticeTab";
 ---
 
-<Base title="Practice" section="practice">
-  <div class="hub-shell">
-    <PracticeHub client:load />
-  </div>
+<Base title="Practice" tab="practice">
+  <!-- Island state across tab switches: Base.astro's parking script keeps
+       this exact DOM node alive between swaps (see the tab-shell comment
+       there). transition:persist stays as a marker for the router. -->
+  <PracticeTab client:load transition:persist="practice-home" />
 </Base>
 
 <style>
-  /* The hub is a full-bleed menu; drop the content-page frame. */
+  /* The practice tab is a full-bleed menu; drop the content-page frame. */
   :global(main#main-content) {
-    padding: 0;
+    /* full-bleed menu, but keep the tab bar scroll clearance */
+    padding: 0 0 calc(56px + var(--s-6));
     max-width: none;
-  }
-
-  .hub-shell {
-    height: 100dvh;
-    overflow: hidden;
   }
 </style>

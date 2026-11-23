@@ -746,7 +746,7 @@ export default function VerbDiagram({ data, tenseTitles, tenseRules }: Props) {
                 ))}
               </ul>
             </Show>
-            <a class="cap-link" href={`/knowledge/verbs/tenses/${c().node.id}`}>
+            <a class="cap-link" href={`/theory/verbs/tenses/${c().node.id}`}>
               Open the full {titleOf(c().node.id)} page →
             </a>
           </div>

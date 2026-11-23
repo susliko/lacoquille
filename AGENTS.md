@@ -105,14 +105,23 @@ If you need to do further testing after the initial snapshot, use agent-browser 
 ## Architecture
 
 - **Astro 5** static-first framework with **SolidJS** islands for interactivity
-- **Knowledge** (`/knowledge/`) = Le Manuel: `src/data/knowledge/taxonomy.json` (121 entries, the 1:1
+- **Knowledge** (`/theory/`, the Theory tab — moved off `/knowledge/` in the 2026-11 nav
+  regroup): `src/data/knowledge/taxonomy.json` (121 entries, the 1:1
   grid contract) + `rules.json` (rule sheets keyed by entry id). Rule sheets are authored in
   `design/prototypes/knowledge/rules-src/` (chunks + `build.py` gates: coverage, see-refs, AI-tells;
   `extract.py` regenerates taxonomy/topics from `taxonomy.ts` + `topics.rs`). After editing rules:
   `python3 design/prototypes/knowledge/rules-src/build.py` then copy `taxonomy.json` + `rules.json`
-  into `src/data/knowledge/`. Old `/reference/*` URLs 301 via `src/data/knowledge/redirects.json`
-  + `astro.config.mjs`; static builds need one literal entry per URL.
-- Verb tables live at `/knowledge/verbs/` (diagram + per-tense conjugation pages from
+  into `src/data/knowledge/`. Old `/reference/*` and `/knowledge/*` URLs 301 via
+  `src/data/knowledge/redirects.json` + `astro.config.mjs` (`theoryRedirects`); static builds need
+  one literal entry per URL.
+- **Navigation (regroup 2026-11)**: three tabs — **Progress** `/` (grade cards: CEFR estimate from
+  `feedStore` + vocabulary word-count split from `vocabStore`, then the full grid via
+  `ProgressHome.tsx`), **Practice** `/practice/` (`PracticeTab.tsx`: grammar hero + drills, and the
+  vocabulary section — review row → `/vocab/drill/`, paste-mining, decks; absorbed the old Vocab
+  tab), **Theory** `/theory/` (the manual). `/vocab/` and `/knowledge/*` redirect into the new
+  routes. Tab shells to keep in sync when touching tabs: `TabBar.astro` (TABS + TAB_ROOTS scroll
+  memory) and `Base.astro` (`tab` prop type, TAB_ISLANDS parking map, TAB_ROOTS prefetch set).
+- Verb tables live at `/theory/verbs/` (diagram + per-tense conjugation pages from
   `src/content/verbs/tenses/`); periphrases (futur proche, passé récent, présent progressif)
   are computed in `ConjugationTable.astro`, never stored.
 - Single source of truth for the verb diagram: `src/content/verbs/diagram.json` — **both** the SVG nodes/edges and the tense content `.md` files must be kept in sync

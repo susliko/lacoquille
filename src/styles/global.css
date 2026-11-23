@@ -1693,6 +1693,86 @@ article {
   font-weight: 800;
 }
 
+/* ── Progress tab — grade cards (regroup 2026-11) ─────────────
+   Where you stand, not what you did. Two cards on the white card
+   ground; the vocabulary split bar reuses the grid's indigo scale
+   (p2 mature · p1 learning · p0 new). */
+.pg-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-2);
+}
+.pg-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 122px;
+  padding: 14px;
+  border-radius: 20px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-1);
+}
+.pg-eyebrow {
+  font-size: var(--t-2xs);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.pg-big {
+  margin: 7px 0 5px;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  color: var(--navy);
+}
+.pg-big.pg-dim { color: var(--faint); }
+.pg-bar {
+  display: flex;
+  gap: 2px;
+  width: 100%;
+  height: 6px;
+  margin-top: auto;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.pg-bar i { display: block; height: 100%; }
+.pg-sub {
+  margin-top: 7px;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+/* ── Practice tab — two sections (regroup 2026-11) ────────────
+   Grammar keeps the hero; vocabulary review is a row one step
+   below it (one primary action per page). .pt-drills adds a
+   breath between the hero and the drill rows; decks reuse the
+   settings-list rows (.set-rows). */
+.pt-drills { margin-top: var(--s-3); }
+.pt-review .ph-tt { color: var(--navy); }
+.pt-disc {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pt-disc svg { width: 16px; height: 16px; }
+.pt-decks { margin-top: var(--s-4); }
+.pt-decks-head {
+  margin: 0 2px 8px;
+  font-size: var(--t-sm);
+  font-weight: 800;
+  color: var(--muted);
+}
+
 /* ── Settings (pushed screen, handoff 2026-11) ──────────────────
    Back-arrow header, grouped rows. Rows are the prototype's 52px
    bordered list; switches are chip-coloured until on. */
@@ -1910,6 +1990,7 @@ article {
 .v-deckrow .set-lb small { color: var(--muted); }
 
 .v-toast {
+
   position: fixed;
   bottom: 68px;
   left: 50%;
