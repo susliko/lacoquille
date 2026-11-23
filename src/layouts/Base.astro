@@ -102,9 +102,67 @@ const cleanTitle = title.replace(/ — La Coquille$/, "").replace(/ · La Coquil
          loads, pushed screens, browser back) keeps the real transition. */
       const TAB_ROOTS = new Set(["/", "/vocab/", "/knowledge/"]);
       let tabToTab = false;
+
+      /* Tab-root HTML lives in a session map, so a hot tap never touches
+         the network. Measured RTT from a phone to the deployment is
+         ~0.8s; HTML is no-cache (deploy-safe), which means every router
+         fetch revalidates — the tap froze for a full round trip before
+         the (already instant) swap. First visits warm the map; the
+         other two roots are also prefetched in the background right
+         after load. Keyed by origin+path+search, hash excluded. The map
+         dies with the SPA session: a reload starts fresh against the
+         deployed site, so deploys can never serve stale HTML. */
+      const tabHtml = new Map<string, string>();
+      let parser: DOMParser | null = null;
+      const warm = (path: string) => {
+        const url = location.origin + path;
+        if (![...tabHtml.keys()].some((k) => k.split("#")[0] === url)) {
+          fetch(url)
+            .then((r) => (r.ok ? r.text() : Promise.reject(new Error(String(r.status)))))
+            .then((t) => tabHtml.set(url, t))
+            .catch(() => {});
+        }
+      };
+      document.addEventListener("astro:page-load", () => {
+        if (TAB_ROOTS.has(location.pathname)) {
+          for (const p of TAB_ROOTS) if (p !== location.pathname) warm(p);
+        }
+      }, { once: false });
+
       document.addEventListener("astro:before-preparation", (ev) => {
         const to = ev.to?.href ?? "";
         tabToTab = TAB_ROOTS.has(location.pathname) && TAB_ROOTS.has(new URL(to, location.href).pathname);
+        if (TAB_ROOTS.has(new URL(to, location.href).pathname)) {
+          const toUrl = new URL(to, location.href);
+          const key = toUrl.origin + toUrl.pathname + toUrl.search;
+          /* replace the router's loader: parse from the session map, and
+             fall back to the network (storing the result) on a miss —
+             same contract as the default loader (newDocument + enabled
+             meta check), minus style-link preloading that tab pages
+             never need (their CSS is inlined in the cached HTML). The
+             router invokes loader() with no arguments, so close over
+             the event itself. */
+          const pe = ev;
+          ev.loader = async () => {
+            try {
+              let html = tabHtml.get(key);
+              if (html == null) {
+                const res = await fetch(key, { signal: pe.signal });
+                if (!res.ok) { pe.preventDefault(); return; }
+                html = await res.text();
+                tabHtml.set(key, html);
+              }
+              parser ??= new DOMParser();
+              pe.newDocument = parser.parseFromString(html, "text/html");
+              pe.newDocument.querySelectorAll("noscript").forEach((el) => el.remove());
+              if (!pe.newDocument.querySelector('[name="astro-view-transitions-enabled"]')) {
+                pe.preventDefault();
+              }
+            } catch {
+              pe.preventDefault(); /* aborts the SPA nav; router falls back */
+            }
+          };
+        }
       });
       const svt = document.startViewTransition?.bind(document);
       if (svt) {
