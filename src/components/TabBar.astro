@@ -23,6 +23,7 @@ const TABS = [
       href={t.href}
       class:list={["tab", t.k === active && "on"]}
       aria-current={t.k === active ? "page" : undefined}
+      data-astro-prefetch="load"
     >
       <span class="ic" aria-hidden="true">
         {t.k === "practice" && (
@@ -44,8 +45,11 @@ const TABS = [
   /* The bar is transition:persist — one DOM node for the whole session,
      so navigation can never rebuild or crossfade it (the old bar faded
      out with the page and popped back in after the slide). The node
-     carries the previous page's active tab, so re-sync it from the URL
-     on every swap. Pushed screens have no bar — guard for that. */
+     carries the previous page's active tab, so re-sync it on every
+     swap — after-swap runs before the first post-swap paint, so the
+     highlight never draws a stale tab even though the swap itself is
+     animation-free (tab roots, see Base.astro). Pushed screens have no
+     bar — guard for that. */
   const syncTabs = () => {
     const bar = document.querySelector(".tab-bar");
     if (!bar) return;
@@ -57,5 +61,39 @@ const TABS = [
       else a.removeAttribute("aria-current");
     }
   };
+  document.addEventListener("astro:after-swap", syncTabs);
   document.addEventListener("astro:page-load", syncTabs);
+
+  /* Per-tab scroll memory. Tab roots share the document scroller, and
+     the router resets it to top on every push navigation — which trashed
+     where you were each time you flipped tabs. Save the offset when
+     leaving a tab root; restore it on arrival. A one-shot pending flag
+     makes the restore router-swap-only: cold loads and hard reloads
+     keep the browser's own scroll behaviour. sessionStorage survives
+     the swaps and reloads; keyed by pathname, tab roots only. */
+  const TAB_ROOTS = ["/", "/vocab/", "/knowledge/"];
+  const MAP_KEY = "lacoquille.tabScroll.v1";
+  const PEND_KEY = "lacoquille.tabScroll.pending";
+  type TabScroll = Record<string, number>;
+  const readMap = (): TabScroll => {
+    try { return JSON.parse(sessionStorage.getItem(MAP_KEY) || "{}") as TabScroll; }
+    catch { return {}; }
+  };
+  document.addEventListener("astro:before-swap", () => {
+    const path = location.pathname;
+    if (TAB_ROOTS.includes(path)) {
+      const map = readMap();
+      map[path] = window.scrollY;
+      try { sessionStorage.setItem(MAP_KEY, JSON.stringify(map)); } catch { /* private mode */ }
+    }
+    try { sessionStorage.setItem(PEND_KEY, "1"); } catch { /* private mode */ }
+  });
+  document.addEventListener("astro:page-load", () => {
+    let pending = false;
+    try { pending = sessionStorage.getItem(PEND_KEY) === "1"; sessionStorage.removeItem(PEND_KEY); }
+    catch { /* private mode */ }
+    if (!pending) return;
+    const y = readMap()[location.pathname];
+    if (typeof y === "number" && y > 0) window.scrollTo(0, y);
+  });
 </script>

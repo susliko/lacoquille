@@ -48,10 +48,79 @@ const cleanTitle = title.replace(/ — La Coquille$/, "").replace(/ · La Coquil
   <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
     <div class={`app-shell${tab ? " with-tab" : ""}`}>
-      <main id="main-content" transition:animate={slide({ duration: "0.22s" })}>
+      <!-- Tab roots animate "none": the swap must be a single frame. The
+           slide ran fade+slide concurrently on ::view-transition-new(main)
+           and this device's WebView composites them sequentially — a
+           ~240ms wash where main hadn't painted yet (you could see the
+           bare background through the arriving sheet), then a ~150ms
+           slide. Tab switches must be instant; the pages themselves are
+           prefetched and their islands persist, so there is nothing to
+           animate into place. Pushed screens (drills, feeds) keep the
+           slide — opening a layer once may take its 220ms. -->
+      <main id="main-content" transition:animate={tab ? "none" : slide({ duration: "0.22s" })}>
         <slot />
       </main>
       {tab && <TabBar active={tab} />}
     </div>
+    <script>
+      /* Tab-shell island parking — the piece transition:persist cannot do.
+        persist only pairs an island with the SAME id in the incoming page;
+        the three tab roots carry different islands (practice-home /
+        vocab-home / none), so flipping tabs always destroyed the outgoing
+        screen's Solid tree and re-hydrated from scratch on return — a
+        full remount (re-reads, re-renders, lost scroll-adjacent state)
+        on every switch. Instead, park the outgoing island beside <body>
+        (documentElement level) before the router swaps — moveBefore keeps
+        it connected, so no disconnect callbacks fire and the Solid tree
+        stays live — then move it back over the fresh incoming island
+        after the swap. Result: returning to a tab re-attaches the exact
+        DOM node, no re-render, no re-fetch, state intact. Browsers
+        without Element.moveBefore simply fall through to the old
+        remount behaviour. */
+      const TAB_ISLANDS: Record<string, string | null> = {
+        "/": "practice-home",
+        "/vocab/": "vocab-home",
+        "/knowledge/": null,
+      };
+      /* Element.moveBefore moves a node without firing disconnect/connect
+         callbacks — a plain append would run Solid's cleanup and throw the
+         state away. If it's missing, skip parking entirely and let the
+         swap behave as before (fresh island per visit). */
+      const moveBefore = (parent: Element, node: Element, before: Element | null): boolean => {
+        const m = (parent as unknown as { moveBefore?: (n: Node, c: Node | null) => void }).moveBefore;
+        if (typeof m !== "function") return false;
+        m.call(parent, node, before);
+        return true;
+      };
+      document.addEventListener("astro:before-swap", () => {
+        const id = TAB_ISLANDS[location.pathname];
+        if (!id) return;
+        const isl = document.querySelector<HTMLElement>(`astro-island[data-astro-transition-persist="${id}"]`);
+        if (isl && isl.isConnected && moveBefore(document.documentElement, isl, null)) {
+          /* parked at <html> level for potentially many swaps — without
+             display:none it would lay out below body as a ghost page */
+          isl.style.display = "none";
+        }
+      });
+      document.addEventListener("astro:after-swap", () => {
+        const id = TAB_ISLANDS[location.pathname];
+        if (!id) return;
+        const fresh = document.querySelector(`astro-island[data-astro-transition-persist="${id}"]`);
+        const parked =
+          document.documentElement.children.length &&
+          [...document.documentElement.children].find(
+            (n) => n.matches?.(`astro-island[data-astro-transition-persist="${id}"]`)
+          );
+        if (fresh && parked && fresh !== parked) {
+          const host = fresh.parentNode;
+          if (host instanceof Element && moveBefore(host, parked, fresh)) {
+            (parked as HTMLElement).style.display = "";
+            /* discard the fresh island before its hydration runs — the
+               hydrator re-checks isConnected, so it never executes */
+            fresh.remove();
+          }
+        }
+      });
+    </script>
   </body>
 </html>

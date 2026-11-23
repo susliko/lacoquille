@@ -4,6 +4,8 @@ import VocabHome from "../../components/vocab/VocabHome";
 ---
 
 <Base title="Vocab · La Coquille" tab="vocab">
+  <!-- Island state across tab switches: kept alive by Base.astro's
+       tab-shell parking script (see comment there). -->
   <VocabHome client:load transition:persist="vocab-home" />
 </Base>
 
