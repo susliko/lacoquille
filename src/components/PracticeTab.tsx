@@ -9,11 +9,11 @@
  *   Vocabulary — review (the Anki-style flip drill), paste-in
  *   mining, and the decks, absorbed from the old Vocab tab.
  *
- * The hero is still the only navy button on the page: vocabulary
- * review is a row, one visual step down (handoff 01-decisions:
- * one primary action). Fresh users see "Start practicing",
- * returning users "Continue". No due counts beyond the review
- * row's waiting line — the review loop's own screen owns its state.
+ * Grammar and vocabulary practice are twin navy buttons of the
+ * same style — "Learn grammar" (the endless feed) and "Learn
+ * vocabulary" (the Anki-style review over your decks). The deck
+ * waiting line under the vocab button is the only due count on
+ * the page — the review loop's own screen owns its state.
  */
 
 import { createSignal, For, onMount, Show } from "solid-js";
@@ -89,7 +89,10 @@ export default function PracticeTab() {
   });
 
   /* ── vocabulary ── */
-  const [decks, setDecks] = createSignal(deckCounts());
+  // SSR-safe defaults (empty), populated on mount — otherwise the
+  // client's first render diverges from the SSR HTML and hydration
+  // throws a mismatch for anyone with existing decks.
+  const [decks, setDecks] = createSignal<ReturnType<typeof deckCounts>>([]);
   const [ready, setReady] = createSignal(0);
   const [pasteOpen, setPasteOpen] = createSignal(false);
   const [text, setText] = createSignal("");
@@ -145,18 +148,17 @@ export default function PracticeTab() {
           <h2>Grammar</h2>
         </div>
 
-        {/* the one button */}
+        {/* learn grammar — the endless feed */}
         <a class="ph-go" href="/practice/feed">
           <span>
-            <span class="ph-eyebrow">
-              Endless feed
+            <span class="ph-big">
+              Learn grammar
               <Show when={!fresh()}>
                 <i class="ph-flame" aria-hidden="true">
                   <Flame />
                 </i>
               </Show>
             </span>
-            <span class="ph-big">{fresh() ? "Start practicing" : "Continue"}</span>
             <span class="ph-meta">
               {fresh()
                 ? "we'll find your level as you go"
@@ -189,20 +191,20 @@ export default function PracticeTab() {
           <h2>Vocabulary</h2>
         </div>
 
-        {/* review — the vocab practice button; a row, one step below
-            the hero so the page keeps one primary action */}
-        <a class="ph-drill pt-review" href="/vocab/drill/">
-          <span class="ph-tx">
-            <span class="ph-tt">Review words</span>
-            <span class="ph-ss">
+        {/* learn vocabulary — the review drill over your decks,
+            same navy hero style as the grammar button */}
+        <a class="ph-go" href="/vocab/drill/">
+          <span>
+            <span class="ph-big">Learn vocabulary</span>
+            <span class="ph-meta">
               {ready() > 0
                 ? `${ready()} ${ready() === 1 ? "card" : "cards"} waiting from your decks`
                 : decks().some((d) => d.n > 0)
-                  ? "nothing waiting — come back later"
+                  ? "nothing waiting from your decks — come back later"
                   : "nothing yet — add words below"}
             </span>
           </span>
-          <span class="pt-disc" aria-hidden="true">
+          <span class="ph-disc" aria-hidden="true">
             <Play />
           </span>
         </a>

@@ -1626,7 +1626,8 @@ article {
 .ph-sec { padding: var(--s-3) var(--s-4) 0; }
 .ph-sec-grid { padding-bottom: var(--s-2); }
 
-/* the one button */
+/* the twin practice buttons — grammar + vocabulary,
+   same navy style */
 .ph-go {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -1654,7 +1655,12 @@ article {
 }
 .ph-flame {
   display: inline-flex;
+  margin-left: 8px;
   color: var(--review);
+}
+.ph-big .ph-flame svg {
+  width: 18px;
+  height: 18px;
 }
 .ph-big {
   display: block;
@@ -1799,23 +1805,11 @@ article {
 }
 
 /* ── Practice tab — two sections (regroup 2026-11) ────────────
-   Grammar keeps the hero; vocabulary review is a row one step
-   below it (one primary action per page). .pt-drills adds a
-   breath between the hero and the drill rows; decks reuse the
-   settings-list rows (.set-rows). */
+   Twin navy heroes: "Learn grammar" leads to the endless feed,
+   "Learn vocabulary" to the deck review drill. .pt-drills adds
+   a breath between the grammar hero and the drill rows; decks
+   reuse the settings-list rows (.set-rows). */
 .pt-drills { margin-top: var(--s-3); }
-.pt-review .ph-tt { color: var(--navy); }
-.pt-disc {
-  flex: none;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: var(--navy);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.pt-disc svg { width: 16px; height: 16px; }
 .pt-decks { margin-top: var(--s-4); }
 .pt-decks-head {
   margin: 0 2px 8px;
@@ -1953,7 +1947,7 @@ article {
 .v-empty p { margin: 0; font-weight: 700; color: var(--ink); }
 .v-empty-sub { font-size: 13.5px; font-weight: 500 !important; color: var(--muted) !important; line-height: 1.5; }
 
-.v-add { margin-bottom: 8px; }
+.v-add { margin-top: var(--s-3); margin-bottom: 8px; }
 .v-add .ph-drill { margin-bottom: 0; }
 .ph-ic { display: flex; color: var(--muted); }
 
