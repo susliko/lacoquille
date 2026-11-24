@@ -9,7 +9,10 @@
  * No interval previews in the UI — a scheduling readout was cut
  * everywhere (docs/01-decisions.md).
  *
- * Anki import/export is deferred; decks here are mined or typed.
+ * Anki packages (.apkg / .colpkg) import client-side — parse, field
+ * mapping and schedule conversion live in src/lib/anki; the commit
+ * lands here as pre-scheduled cards. Decks carry an optional `src`
+ * badge ("anki") so the decks list can tell imports from mining.
  */
 
 import type { Level } from "../exercise/feedStore";
@@ -37,6 +40,9 @@ export interface VocabDeck {
   id: string;
   name: string;
   createdAt: number;
+  /** "anki" = arrived through import (badged in the decks list). */
+  src?: "anki";
+  importedAt?: number;
 }
 
 export interface VocabState {
@@ -124,9 +130,10 @@ export function addCards(
 }
 
 /** Cards due right now, mixed across decks, learning cards first. */
-export function dueQueue(): VocabCard[] {
+export function dueQueue(deckId?: string): VocabCard[] {
   const now = Math.floor(Date.now() / 1000);
-  const due = Object.values(readVocab().cards).filter((c) => c.due <= now);
+  const all = Object.values(readVocab().cards);
+  const due = (deckId ? all.filter((c) => c.deckId === deckId) : all).filter((c) => c.due <= now);
   // deterministic-ish variety: shuffle, then sort learning cards first
   for (let i = due.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -190,6 +197,72 @@ export function clearSessionCounter(): void {
   const s = readVocab();
   s.session.rated = 0;
   write(s);
+}
+
+// ---- Anki import (src/lib/anki) ----
+
+export interface PlannedCard {
+  front: string;
+  back: string;
+  due: number;
+  interval: number;
+  ease: number;
+  reps: number;
+  lapses: number;
+}
+
+/** Commit an import plan: one app deck per Anki deck (badged),
+    cards keep their converted schedule, dedup is the same one rule
+    everywhere — a front already in any deck is skipped. Returns
+    counts for the result screen. */
+export function commitAnkiImport(
+  decks: Array<{ name: string; cards: PlannedCard[] }>,
+): { added: number; decksCreated: number; deckIds: string[] } {
+  const s = readVocab();
+  const now = Math.floor(Date.now() / 1000);
+  const seen = new Set(Object.values(s.cards).map((c) => c.front.toLowerCase()));
+  let added = 0;
+  const deckIds: string[] = [];
+
+  for (const plan of decks) {
+    const fresh: Array<{ p: PlannedCard; id: string }> = [];
+    for (const p of plan.cards) {
+      const front = p.front.trim();
+      if (!front || seen.has(front.toLowerCase())) continue;
+      const id = newId();
+      fresh.push({ p, id });
+      seen.add(front.toLowerCase());
+    }
+    // a deck whose cards were all duplicates never gets created
+    if (fresh.length === 0) continue;
+    const deck: VocabDeck = {
+      id: newId(),
+      name: plan.name,
+      createdAt: now,
+      src: "anki",
+      importedAt: now,
+    };
+    s.decks.push(deck);
+    deckIds.push(deck.id);
+    for (const { p, id } of fresh) {
+      s.cards[id] = {
+        id,
+        deckId: deck.id,
+        front: p.front.trim(),
+        back: p.back.trim(),
+        cx: "",
+        due: p.due,
+        interval: p.interval,
+        ease: p.ease,
+        reps: p.reps,
+        lapses: p.lapses,
+        lastAt: 0,
+      };
+    }
+    added += fresh.length;
+  }
+  write(s);
+  return { added, decksCreated: deckIds.length, deckIds };
 }
 
 // ---- mining (paste-in v1) ----

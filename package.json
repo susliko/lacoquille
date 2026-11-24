@@ -19,12 +19,16 @@
     "@astrojs/solid-js": "^6.0.1",
     "astro": "^6.1.7",
     "express": "^5.2.1",
+    "fflate": "^0.8.3",
+    "fzstd": "^0.1.1",
     "playwright": "^1.59.1",
     "solid-js": "^1.9.12",
+    "sql.js": "^1.17.0",
     "typescript": "^5.9.3"
   },
   "devDependencies": {
     "@jayjanii/pi-minimax-mcp": "^1.0.4",
+    "@types/sql.js": "^1.16.1",
     "concurrently": "^9.2.1"
   }
 }

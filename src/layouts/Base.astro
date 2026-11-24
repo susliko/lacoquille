@@ -392,6 +392,10 @@ const cleanTitle = title.replace(/ — La Coquille$/, "").replace(/ · La Coquil
             /* discard the fresh island before its hydration runs — the
                hydrator re-checks isConnected, so it never executes */
             fresh.remove();
+            /* the parked island never re-hydrates, so stores it read
+               at mount are stale (new decks, drill results). Tabs that
+               care listen for this and re-read. */
+            document.dispatchEvent(new CustomEvent("lacoquille:tab-reactivate"));
           }
         }
       });

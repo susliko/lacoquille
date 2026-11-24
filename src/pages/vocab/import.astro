@@ -1,0 +1,18 @@
+---
+import Base from "../../layouts/Base.astro";
+import AnkiImport from "../../components/vocab/AnkiImport";
+---
+
+<Base title="Import a deck · La Coquille">
+  <!-- pushed screen: no tab bar, back arrow in the header.
+       All parsing is client-side — the backend only serves this HTML
+       and the sql.js wasm under /vendor/. -->
+  <AnkiImport client:load />
+</Base>
+
+<style>
+  :global(main#main-content) {
+    padding: 0;
+    max-width: none;
+  }
+</style>

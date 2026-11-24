@@ -16,10 +16,11 @@
  * the page — the review loop's own screen owns its state.
  */
 
-import { createSignal, For, onMount, Show } from "solid-js";
+import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { feedTopicStats } from "./exercise/feedStore";
 import { warmFeed } from "./exercise/feedApi";
 import { topicSummaries } from "./exercise/store";
+import { buildAnkiExport, downloadExport } from "../lib/anki/export";
 import {
   addCards,
   addDeck,
@@ -27,6 +28,7 @@ import {
   deckCounts,
   dueQueue,
   mineWords,
+  readVocab,
 } from "./vocab/vocabStore";
 
 const GRAMMAR_DRILLS = [
@@ -69,6 +71,19 @@ const Doc = () => (
   </svg>
 );
 
+const Deck = () => (
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3.5" y="6.5" width="13" height="14" rx="2" />
+    <path d="M7.5 3.5h11a2 2 0 0 1 2 2v11" />
+  </svg>
+);
+
+const Down = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M12 3.5v12M7 11l5 5 5-5M4.5 20.5h15" />
+  </svg>
+);
+
 type Mined = { front: string; cx: string; keep: boolean; meaning: string };
 
 export default function PracticeTab() {
@@ -86,6 +101,12 @@ export default function PracticeTab() {
     // cold backend while the learner reads the hero).
     warmFeed();
     refreshVocab();
+    // A parked island is reattached without rehydration (Base.astro),
+    // so the vocab section would show pre-import/pre-drill counts.
+    // The swap layer taps this shoulder whenever the tab comes back.
+    const onReactivate = () => refreshVocab();
+    document.addEventListener("lacoquille:tab-reactivate", onReactivate);
+    onCleanup(() => document.removeEventListener("lacoquille:tab-reactivate", onReactivate));
   });
 
   /* ── vocabulary ── */
@@ -137,6 +158,27 @@ export default function PracticeTab() {
     setPasteOpen(false);
     setToast(`${added} words added to ${name}`);
     refreshVocab();
+    setTimeout(() => setToast(""), 3500);
+  };
+
+  /** One-way export for Anki: .txt per deck (zipped when several),
+      imported through Anki's own File → Import. Words travel;
+      scheduling stays — the button's subtitle says so. */
+  const exportAnki = () => {
+    const s = readVocab();
+    const cards = Object.values(s.cards);
+    try {
+      const f = buildAnkiExport(
+        s.decks.map((d) => ({
+          name: d.name,
+          cards: cards.filter((c) => c.deckId === d.id).map((c) => ({ front: c.front, back: c.back })),
+        })),
+      );
+      downloadExport(f);
+      setToast("Deck files exported — import them from Anki");
+    } catch {
+      setToast("Nothing to export yet");
+    }
     setTimeout(() => setToast(""), 3500);
   };
 
@@ -209,7 +251,8 @@ export default function PracticeTab() {
           </span>
         </a>
 
-        {/* add words (paste-in mining, from the old Vocab tab) */}
+        {/* add words (paste-in mining; Anki import is a pushed
+            screen — the parse can take a beat on big decks) */}
         <div class="v-add">
           <button type="button" class="ph-drill" onClick={() => setPasteOpen(!pasteOpen())}>
             <span class="ph-tx">
@@ -220,6 +263,15 @@ export default function PracticeTab() {
               <Doc />
             </span>
           </button>
+          <a class="ph-drill" href="/vocab/import/">
+            <span class="ph-tx">
+              <span class="ph-tt">Import an Anki deck</span>
+              <span class="ph-ss">.apkg or .colpkg, with your review history</span>
+            </span>
+            <span class="ph-ic" aria-hidden="true">
+              <Deck />
+            </span>
+          </a>
         </div>
 
         <Show when={pasteOpen()}>
@@ -290,7 +342,8 @@ export default function PracticeTab() {
           </div>
         </Show>
 
-        {/* your decks */}
+        {/* your decks — mined and imported in one list, Anki ones
+            badged; then the one-way export for Anki */}
         <Show when={decks().length > 0}>
           <div class="pt-decks">
             <div class="pt-decks-head">Your decks</div>
@@ -302,10 +355,22 @@ export default function PracticeTab() {
                       {d.deck.name}
                       <small>{d.n} {d.n === 1 ? "card" : "cards"}</small>
                     </span>
+                    <Show when={d.deck.src === "anki"}>
+                      <span class="anki-badge">Anki</span>
+                    </Show>
                   </div>
                 )}
               </For>
             </div>
+            <button type="button" class="ph-drill" onClick={exportAnki}>
+              <span class="ph-tx">
+                <span class="ph-tt">Export for Anki</span>
+                <span class="ph-ss">.txt files Anki imports — scheduling stays here</span>
+              </span>
+              <span class="ph-ic" aria-hidden="true">
+                <Down />
+              </span>
+            </button>
           </div>
         </Show>
       </section>
