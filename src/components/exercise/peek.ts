@@ -1,34 +1,35 @@
 /**
- * Peek + teaching-card content, from the compact rule sheets
- * (src/data/knowledge/rules.json, keyed by taxonomy entry id).
- *
- * The peek is the rule over the feed in a dismissible sheet: two or
- * three sentences and a small table of worked examples — not the full
- * page, too much to read inside a feed. The teaching card is the same
- * content shown before a topic's first item ever (retrieval practice
- * assumes the material has been met).
+ * Rule-sheet content for the peek sheet + the teaching card, from
+ * src/data/knowledge/rules.json (keyed by taxonomy entry id) — the
+ * same material the Theory tab renders at /theory/t/<id>, shown
+ * as-is: every rule with its own worked example, plus the exception
+ * when the sheet carries one. No editorial slicing: the full sheet
+ * is the content (2026-11 simplification).
  */
 
 import rulesJson from "../../data/knowledge/rules.json";
 import { TAXONOMY } from "../progress/taxonomy";
 
-export interface PeekBlock {
+export interface PeekRule {
   h?: string;
   /** Rule text; may carry <em> from the source sheets. */
   p: string;
+  /** Worked example, <em> kept. */
+  ex?: { fr: string; en: string };
 }
 
 export interface PeekContent {
   entryId: string;
   title: string;
-  blocks: PeekBlock[];
-  /** [french, english] pairs, <em> kept. */
-  examples: Array<[string, string]>;
+  /** The complete rule sheet, as authored. */
+  rules: PeekRule[];
+  /** The sheet's exception note, when it has one. */
+  exc?: string;
 }
 
 const RULES = rulesJson as Record<
   string,
-  { rules: Array<{ h?: string; p: string; ex?: { fr: string; en: string } }> }
+  { rules: Array<{ h?: string; p: string; ex?: { fr: string; en: string } }>; exc?: string }
 >;
 
 /** slug → taxonomy entry (one slug may map to two rows; first wins). */
@@ -41,12 +42,7 @@ export function peekFor(slug: string | undefined): PeekContent | null {
   if (!entry) return null;
   const sheet = RULES[entry.id];
   if (!sheet?.rules?.length) return null;
-  const blocks: PeekBlock[] = sheet.rules.slice(0, 3).map((r) => ({ h: r.h, p: r.p }));
-  const examples: Array<[string, string]> = [];
-  for (const r of sheet.rules) {
-    if (r.ex && examples.length < 4) examples.push([r.ex.fr, r.ex.en]);
-  }
-  return { entryId: entry.id, title: entry.name, blocks, examples };
+  return { entryId: entry.id, title: entry.name, rules: sheet.rules, exc: sheet.exc };
 }
 
 // ---- taught-topics ledger (teaching card shows once per topic) ----

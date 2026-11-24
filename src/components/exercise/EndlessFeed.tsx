@@ -277,10 +277,12 @@ export default function EndlessFeed() {
   );
 }
 
-/* ── Teaching card (handoff §5) ──────────────────────────────────
-   A topic's first appearance gets two or three sentences and one
-   example, built from the compact rule sheets. Cold-testing a
-   brand-new topic guarantees a failure — demoralising, not useful. */
+/* ── Teaching card (handoff §5) ──────────────────────────────
+   A topic's first appearance shows the theory page's content
+   as-is — every rule with its worked example, plus the exception —
+   built from the same rule sheets the Theory tab renders.
+   Cold-testing a brand-new topic guarantees a failure —
+   demoralising, not useful. */
 
 function TeachCard(props: { slug: string; onDone: () => void }) {
   const content = createMemo(() => peekFor(props.slug));
@@ -296,19 +298,30 @@ function TeachCard(props: { slug: string; onDone: () => void }) {
           <>
             <div class="ex-teach-eyebrow">Before you start</div>
             <h2 class="ex-teach-title">{b().title}</h2>
-            <For each={b().blocks.slice(0, 2)}>
-              {(blk) => (
-                <div class="ex-teach-block">
-                  <Show when={blk.h}><b class="ex-teach-h">{blk.h}</b></Show>
-                  <p innerHTML={blk.p} />
-                </div>
+            <For each={b().rules}>
+              {(r, i) => (
+                <article class="ex-teach-rule">
+                  <span class="ex-teach-n" aria-hidden="true">{i() + 1}</span>
+                  <div class="ex-teach-rule-body">
+                    <Show when={r.h}><b class="ex-teach-h">{r.h}</b></Show>
+                    <p innerHTML={r.p} />
+                    <Show when={r.ex}>
+                      {(ex) => (
+                        <div class="ex-teach-ex">
+                          <span class="ex-teach-fr" innerHTML={ex().fr} />
+                          <span class="ex-teach-en">{ex().en}</span>
+                        </div>
+                      )}
+                    </Show>
+                  </div>
+                </article>
               )}
             </For>
-            <Show when={b().examples[0]}>
-              {(ex) => (
-                <div class="ex-teach-ex">
-                  <span class="ex-teach-fr" innerHTML={ex()[0]} />
-                  <span class="ex-teach-en">{ex()[1]}</span>
+            <Show when={b().exc}>
+              {(exc) => (
+                <div class="ex-teach-exc">
+                  <b>Exception</b>
+                  <p>{exc()}</p>
                 </div>
               )}
             </Show>

@@ -105,7 +105,7 @@ export default function PeekSheet(props: {
               <>
                 <div class="peek-eyebrow">The rule</div>
                 <h3 id="peek-title" class="peek-title">{b().title}</h3>
-                <For each={b().blocks}>
+                <For each={b().rules}>
                   {(blk) => (
                     <div class="peek-block">
                       <Show when={blk.h}>
@@ -115,19 +115,25 @@ export default function PeekSheet(props: {
                     </div>
                   )}
                 </For>
-                <Show when={b().examples.length > 0}>
+                <Show when={b().rules.some((r) => r.ex)}>
                   <table class="peek-ex">
                     <tbody>
-                      <For each={b().examples}>
-                        {([fr, en]) => (
+                      <For each={b().rules.filter((r) => r.ex).map((r) => r.ex!)}>
+                        {(ex) => (
                           <tr>
-                            <td class="peek-ex-fr" innerHTML={fr} />
-                            <td class="peek-ex-en">{en}</td>
+                            <td class="peek-ex-fr" innerHTML={ex.fr} />
+                            <td class="peek-ex-en">{ex.en}</td>
                           </tr>
                         )}
                       </For>
                     </tbody>
                   </table>
+                </Show>
+                <Show when={b().exc}>
+                  <div class="peek-exc">
+                    <p class="lbl">Exception</p>
+                    <p>{b().exc}</p>
+                  </div>
                 </Show>
               </>
             )}

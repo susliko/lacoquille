@@ -5,7 +5,9 @@
  * vermillon ring = time to review. Three openable scopes — a cell,
  * a whole level (row head), a whole family (column head) — each
  * opening the bottom sheet. Colours come from the design tokens;
- * every metric is the prototype's.
+ * every metric is the prototype's. Every topic row in the sheet is
+ * a link into the Theory tab (/theory/t/<id>) — the grid reads
+ * where you stand, the manual explains the theme.
  */
 
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
@@ -521,7 +523,7 @@ function SheetBody(props: {
               </Show>
               <For each={gr.list}>
                 {(t) => (
-                  <div class="gg-topic">
+                  <a class="gg-topic" href={`/theory/t/${t.entry.id}`}>
                     <Show when={gr.showLevel}>
                       <span class="lvtag">{t.entry.lv}</span>
                     </Show>
@@ -530,7 +532,8 @@ function SheetBody(props: {
                       <span class="due">Review</span>
                     </Show>
                     <span class={`gg-chip gg-sw-${t.tier}`}>{TIER_LABELS[t.tier]}</span>
-                  </div>
+                    <ChevRight />
+                  </a>
                 )}
               </For>
             </>

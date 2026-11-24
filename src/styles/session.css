@@ -796,6 +796,21 @@ main {
 }
 .peek-ex-fr { font-weight: 700; color: var(--ink); width: 55%; }
 .peek-ex-en { color: var(--muted); }
+.peek-exc {
+  padding: 12px 14px;
+  border-radius: var(--r-lg);
+  background: var(--no-bg);
+  margin: 10px 0 4px;
+}
+.peek-exc .lbl {
+  font-size: var(--t-xs);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--review-text);
+  margin: 0 0 2px;
+}
+.peek-exc p + p { margin: 0; font-size: var(--t-base); line-height: 1.55; color: var(--muted); }
 .peek-foot {
   display: flex;
   align-items: center;
@@ -856,12 +871,32 @@ main {
   color: var(--accent-ink);
 }
 .ex-teach-title {
-  margin: 4px 0 10px;
+  margin: 4px 0 12px;
   font-size: var(--t-xl);
   font-weight: 800;
   letter-spacing: -0.01em;
 }
-.ex-teach-block { margin-bottom: 10px; }
+/* One rule = one numbered block, the theory page's km-rule
+   structure carried into the feed (number, heading, text, example). */
+.ex-teach-rule {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.ex-teach-n {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-size: var(--t-xs, 12px);
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.ex-teach-rule-body { flex: 1; min-width: 0; }
 .ex-teach-h {
   display: block;
   font-size: var(--t-sm);
@@ -869,7 +904,7 @@ main {
   color: var(--ink);
   margin-bottom: 2px;
 }
-.ex-teach-block p {
+.ex-teach-rule-body p {
   margin: 0;
   font-size: var(--t-base);
   line-height: 1.55;
@@ -882,10 +917,31 @@ main {
   padding: 12px 14px;
   border-radius: var(--r-lg);
   background: var(--hint);
-  margin-bottom: 14px;
+  margin-top: 8px;
 }
 .ex-teach-fr { font-weight: 700; color: var(--ink); }
 .ex-teach-en { font-size: var(--t-sm); color: var(--hint-ink); }
+.ex-teach-exc {
+  padding: 12px 14px;
+  border-radius: var(--r-lg);
+  background: var(--no-bg);
+  margin-bottom: 14px;
+}
+.ex-teach-exc b {
+  display: block;
+  font-size: var(--t-xs, 12px);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--review-text);
+  margin-bottom: 2px;
+}
+.ex-teach-exc p {
+  margin: 0;
+  font-size: var(--t-base);
+  line-height: 1.55;
+  color: var(--muted);
+}
 .ex-teach-foot {
   display: flex;
   align-items: center;

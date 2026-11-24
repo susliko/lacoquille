@@ -1229,7 +1229,10 @@ article {
   border: 0;
   padding: 0;
   background: var(--scrim);
-  z-index: 10;
+  /* Above the tab bar (50), the sheet's own layer convention from
+     the peek sheet (session.css) — a sheet that dimmed under the
+     tabs would leave its bottom CTA visibly cut by the bar. */
+  z-index: 70;
 }
 
 .gg-sheet {
@@ -1248,7 +1251,7 @@ article {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  z-index: 11;
+  z-index: 71;
   animation: gg-up 0.18s ease-out;
 }
 
@@ -1381,6 +1384,18 @@ article {
   gap: 10px;
   min-height: 44px;
   border-bottom: 1px solid var(--line);
+  /* The row is a link into the Theory tab (/theory/t/<id>). */
+  color: inherit;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.gg-topic:active { background: var(--paper); }
+
+.gg-topic > svg {
+  flex: none;
+  color: var(--muted);
+  margin-right: -2px;
 }
 
 .gg-topic .name {
