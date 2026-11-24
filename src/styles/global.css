@@ -1509,53 +1509,72 @@ article {
 }
 .app-shell.with-tab > main {
   /* scroll clearance: the bar is fixed, so the last rows of every list
-     must be able to scroll clear of it (56px buttons + the env chin
-     below them + air) */
+     must be able to scroll clear of it (56px buttons + the pill zone
+     they float above + air) */
   padding-bottom: calc(56px + min(env(safe-area-inset-bottom, 0px), 24px) +
     var(--s-6));
 }
 
-/* The bar is position:fixed with a fixed 56px button row. The shadow —
-   not a 1px border — separates the bar from scrolled content, which
-   visibly slides beneath it.
+/* The bar is a fixed 56px button row. The shadow — not a 1px border —
+   separates the bar from scrolled content, which visibly slides
+   beneath it.
 
-   WHY THE CHIN (the env padding below the buttons): on edge-to-edge
-   Android (Chrome; Firefox 150+ — bugzilla 2057232), the system
-   applies the gesture-bar inset to the layout viewport at rest and
-   RELEASES it mid-scroll: the viewport's bottom edge breathes by the
-   inset on every fling and a bottom-glued bar chases it — measured
-   63 device px down in Chrome, smooth 4-frame ramp, and it STAYS
-   displaced. viewport-fit=cover (Base.astro) pins the viewport to
-   the physical screen bottom so the chase has nothing to chase; the
-   inset is then reported via env(), and the bar pads its chin with
-   it so the buttons keep clear of the gesture pill.
+   ANCHORING — why bottom is min(env, 24px) and not 0: on
+   edge-to-edge Android (Chrome; Firefox 150+ — bugzilla 2057232) the
+   system inset is applied to the layout viewport at rest and
+   RELEASED mid-scroll; a bottom:0 bar chases the moving edge —
+   measured 63 device px down in Chrome, smooth 4-frame ramp, and it
+   STAYS displaced. viewport-fit=cover (Base.astro) pins the viewport
+   to the physical screen bottom; the inset is then reported via
+   env(), and the bar floats above it: bottom = min(env, 24px) puts
+   the button row exactly where it sat in the pre-cover design (just
+   above the gesture pill), 56px tall, with the pill zone showing
+   paper below it.
 
-   THE CAP (24px) is load-bearing: the standard Android gesture inset
-   is 24dp, but Firefox 150+ over-reports env(bottom) at rest (it
-   adds the toolbar height — bugzilla 2057232) and corrects it after
-   the first scroll. Capping at 24 freezes the chin at the same size
-   in the buggy and the correct states, so the buttons cannot drift
-   when the value corrects. Browsers that ignore viewport-fit (older
-   Firefox) report env = 0 and clip at the old viewport edge: the
-   chin below the buttons collapses to the 12px guard, the button row
-   lands at the same screen position, nothing changes visually. */
+   THE CAP is load-bearing twice over: (1) 24dp is the standard
+   Android gesture inset, and (2) Firefox 150+ over-reports env
+   (bottom) at rest — it adds the toolbar height — and corrects the
+   value after the first scroll. min() freezes the anchor at 24px in
+   both states, so the bar cannot drift when Firefox's value
+   corrects. Browsers that ignore viewport-fit report env = 0 and
+   behave exactly like the pre-cover design. */
 .tab-bar {
   position: fixed;
-  bottom: 0;
+  bottom: min(env(safe-area-inset-bottom, 0px), 24px);
   left: 0;
   right: 0;
   margin-inline: auto; /* centred without transform — never fights the router's FLIP */
   width: min(100%, var(--app-max));
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  align-items: start; /* buttons pinned; the chin padding hangs below */
-  align-content: start;
-  padding-bottom: calc(12px + min(env(safe-area-inset-bottom, 0px), 24px));
+  align-items: start;
+  height: 56px;
   background: var(--card);
   box-shadow:
     0 -1px 0 rgba(22, 24, 29, 0.10),
     0 -10px 18px rgba(22, 24, 29, 0.05);
   z-index: 50;
+}
+
+/* Gecko fork — Firefox only. Firefox's bottom inset/env is not just
+   over-reported, it is scroll-DEPENDENT (Mozilla, bugzilla 2057232:
+   "after scrolling a web page, this value will have correct value")
+   and the nsWindow surface height itself has been wrong with the
+   dynamic toolbar — so any bottom-anchored bar can inherit that
+   jitter. Firefox's TOP edge has no such instability (their
+   scroll-to-hide toolbar is off in current builds; the recording
+   shows 57 frames of scrolling with the URL bar static), so pin the
+   bar to the small-viewport line instead: svh is the toolbar-shown
+   height, constant by definition, measured from the edge that does
+   not move; the capped env term keeps the resting position identical
+   to the bottom-anchored one. Chrome must NOT get this fork — its
+   own toolbar hides on scroll and moves the viewport's top edge by
+   the toolbar height, which would drag a top-pinned bar with it. */
+@supports (-moz-appearance: none) {
+  .tab-bar {
+    top: calc(100svh - 56px - min(env(safe-area-inset-bottom, 0px), 24px));
+    bottom: auto;
+  }
 }
 .tab-bar .tab {
   height: 56px;
