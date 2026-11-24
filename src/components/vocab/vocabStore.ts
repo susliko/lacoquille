@@ -211,30 +211,54 @@ export interface PlannedCard {
   lapses: number;
 }
 
-/** Commit an import plan: one app deck per Anki deck (badged),
-    cards keep their converted schedule, dedup is the same one rule
-    everywhere — a front already in any deck is skipped. Returns
-    counts for the result screen. */
+/** Commit an import plan: one app deck per Anki deck (badged).
+    A front already in any deck is not duplicated — if its back
+    differs the card is *updated* instead (Anki's own import
+    semantics), so re-importing with a corrected field mapping
+    repairs a bad import without touching review schedules.
+    Returns counts for the result screen. */
 export function commitAnkiImport(
   decks: Array<{ name: string; cards: PlannedCard[] }>,
-): { added: number; decksCreated: number; deckIds: string[] } {
+): { added: number; updated: number; decksCreated: number; deckIds: string[] } {
   const s = readVocab();
   const now = Math.floor(Date.now() / 1000);
-  const seen = new Set(Object.values(s.cards).map((c) => c.front.toLowerCase()));
+  // front → existing card, for update-vs-add decisions
+  const byFront = new Map<string, VocabCard>();
+  for (const c of Object.values(s.cards)) byFront.set(c.front.toLowerCase(), c);
+  // fronts decided during THIS commit (added or unchanged) — a deck
+  // containing the same word twice adds it once
+  const seen = new Set<string>();
   let added = 0;
+  let updated = 0;
   const deckIds: string[] = [];
 
   for (const plan of decks) {
     const fresh: Array<{ p: PlannedCard; id: string }> = [];
+    let planUpdated = 0;
     for (const p of plan.cards) {
       const front = p.front.trim();
-      if (!front || seen.has(front.toLowerCase())) continue;
+      if (!front) continue;
+      const key = front.toLowerCase();
+      const back = p.back.trim();
+      const existing = byFront.get(key);
+      if (existing) {
+        if (existing.back.trim() !== back) {
+          s.cards[existing.id] = { ...existing, back };
+          planUpdated += 1;
+        }
+        seen.add(key);
+        continue;
+      }
+      if (seen.has(key)) continue;
       const id = newId();
+      seen.add(key);
       fresh.push({ p, id });
-      seen.add(front.toLowerCase());
     }
     // a deck whose cards were all duplicates never gets created
-    if (fresh.length === 0) continue;
+    if (fresh.length === 0) {
+      updated += planUpdated;
+      continue;
+    }
     const deck: VocabDeck = {
       id: newId(),
       name: plan.name,
@@ -245,7 +269,7 @@ export function commitAnkiImport(
     s.decks.push(deck);
     deckIds.push(deck.id);
     for (const { p, id } of fresh) {
-      s.cards[id] = {
+      const card: VocabCard = {
         id,
         deckId: deck.id,
         front: p.front.trim(),
@@ -258,11 +282,14 @@ export function commitAnkiImport(
         lapses: p.lapses,
         lastAt: 0,
       };
+      s.cards[id] = card;
+      byFront.set(card.front.toLowerCase(), card);
     }
     added += fresh.length;
+    updated += planUpdated;
   }
   write(s);
-  return { added, decksCreated: deckIds.length, deckIds };
+  return { added, updated, decksCreated: deckIds.length, deckIds };
 }
 
 // ---- mining (paste-in v1) ----

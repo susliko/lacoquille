@@ -57,9 +57,11 @@ const MS_CUTOFF = 4102444800;
 
 // ─── defaults ───────────────────────────────────────────────────────
 
-/** Field 0 = front, field 1 = back, Anki's own convention for Basic;
-    single-field note types map the field to both sides and get
-    flagged by the UI. Cloze maps the cloze text field. */
+/** Field 0 = front, field 1 = back is only right for a plain Basic
+    note type. When the templates say which fields show on which
+    side, believe them — vocab decks love 3-field layouts
+    ([French, French example, English]) where "back = field 1" puts
+    French on both sides of the card. Cloze maps the text field. */
 export function defaultMapping(col: AnkiCollection): FieldMapping {
   const m: FieldMapping = {};
   for (const nt of col.notetypes) {
@@ -67,9 +69,28 @@ export function defaultMapping(col: AnkiCollection): FieldMapping {
       m[nt.id] = { front: 0, back: 0 };
       continue;
     }
-    m[nt.id] = { front: 0, back: nt.fields.length > 1 ? 1 : 0 };
+    const front = firstRefIndex(nt.frontRefs, nt.fields) ?? 0;
+    // first answer-side field that isn't the front; else whatever
+    // follows it; single-field note types map the field to both sides
+    let back = -1;
+    for (const ref of nt.backRefs) {
+      const i = nt.fields.indexOf(ref);
+      if (i !== -1 && i !== front) {
+        back = i;
+        break;
+      }
+    }
+    if (back === -1) back = nt.fields.length > 1 ? (front === 0 ? 1 : 0) : 0;
+    m[nt.id] = { front, back };
   }
   return m;
+}
+
+function firstRefIndex(refs: string[], fields: string[]): number | null {
+  for (const f of fields) {
+    if (refs.includes(f)) return fields.indexOf(f);
+  }
+  return null;
 }
 
 // ─── field cleaning ─────────────────────────────────────────────────
@@ -185,6 +206,7 @@ export interface ImportPlan {
 
 export function buildPlan(col: AnkiCollection, mapping: FieldMapping): ImportPlan {
   const now = Math.floor(Date.now() / 1000);
+  const fallback = defaultMapping(col);
   const byId = new Map(col.notetypes.map((nt) => [nt.id, nt]));
   const deckNames = new Map(col.decks.map((d) => [d.id, d.name]));
   const stats: ImportStats = { notes: col.notes.length, multiCard: 0, cloze: 0, empty: 0, orphanDecks: 0 };
@@ -205,7 +227,7 @@ export function buildPlan(col: AnkiCollection, mapping: FieldMapping): ImportPla
     }
     if (nt.templates > 1 || note.cards.length > 1) stats.multiCard += 1;
 
-    const choice = mapping[note.mid] ?? { front: 0, back: nt.fields.length > 1 ? 1 : 0 };
+    const choice = mapping[note.mid] ?? fallback[note.mid] ?? { front: 0, back: 0 };
     let front = "";
     let back = "";
     if (nt.cloze) {
@@ -239,4 +261,35 @@ export function buildPlan(col: AnkiCollection, mapping: FieldMapping): ImportPla
     .map(([name, cards]) => ({ name, cards }))
     .sort((a, b) => a.name.localeCompare(b.name));
   return { decks, stats };
+}
+
+/** A live "what the first card will look like" sample for the mapping
+    screen — the cheapest way to see that a mapping is wrong (French
+    on both sides) before 2,000 cards commit it. Uses the first note
+    of this note type that produces a non-empty pair. */
+export function sampleFor(
+  col: AnkiCollection,
+  mapping: FieldMapping,
+  nt: AnkiNotetypeInfo,
+): { front: string; back: string } | null {
+  const choice = mapping[nt.id] ?? defaultMapping(col)[nt.id];
+  if (!choice) return null;
+  for (const note of col.notes) {
+    if (note.mid !== nt.id) continue;
+    let sides: { front: string; back: string } | null = null;
+    if (nt.cloze) {
+      sides = clozeSides(note.fields[choice.front] ?? "");
+      if (!sides) {
+        const front = cleanHtml(note.fields[choice.front] ?? "");
+        const back = cleanHtml(note.fields[choice.back] ?? "");
+        if (front && back) sides = { front, back };
+      }
+    } else {
+      const front = cleanHtml(note.fields[choice.front] ?? "");
+      const back = cleanHtml(note.fields[choice.back] ?? "");
+      if (front && back) sides = { front, back };
+    }
+    if (sides) return sides;
+  }
+  return null;
 }

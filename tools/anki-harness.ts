@@ -31,6 +31,7 @@ import { commitAnkiImport, readVocab } from "../src/components/vocab/vocabStore"
 const DIR = process.argv[2] ?? "/tmp/anki-fixtures";
 const CRT = 1590000000;
 const DAY = 86400;
+const MID = 1590000000000; // note type id in the fixtures
 
 let failures = 0;
 let checks = 0;
@@ -47,11 +48,13 @@ const bytes = (name: string) => new Uint8Array(readFileSync(`${DIR}/${name}`));
 async function load(name: string) {
   const blob = new Blob([bytes(name) as BlobPart]);
   const ct = await readAnkiContainer(blob);
+  const stages: string[] = [];
   const col = await openAnkiCollection(ct, {
     // node: feed the wasm directly (browser uses /vendor/sql-wasm.wasm)
-    wasmBinary: readFileSync("public/vendor/sql-wasm.wasm").buffer as ArrayBuffer,
+    sqlConfig: { wasmBinary: readFileSync("public/vendor/sql-wasm.wasm").buffer as ArrayBuffer },
+    onStage: (s) => stages.push(s),
   });
-  return { ct, col };
+  return { ct, col, stages };
 }
 
 async function main() {
@@ -94,6 +97,10 @@ async function main() {
     ok(learning.due === 1700000100, "learning due epoch-seconds kept", learning.due);
     ok(plan.stats.multiCard === 3, "multi-template disclosure counts", plan.stats);
     ok(plan.stats.empty === 0 && plan.stats.cloze === 0, "no empties, no cloze");
+
+    // template-driven mapping: qfmt "{{Front}}" / afmt "…{{Back}}"
+    const map11 = defaultMapping(col);
+    ok(map11[MID].front === 0 && map11[MID].back === 1, "mapping follows template sides", map11[MID]);
   }
 
   // ── schema 18 (.anki21b tables, protobuf media) ───────────────
@@ -107,6 +114,13 @@ async function main() {
     ok(!!cloze && cloze.name === "Cloze French", "cloze flag from config type", cloze?.name);
     ok(cloze?.fields.length === 2, "cloze fields from fields table", cloze?.fields);
 
+    // THE regression: [Front, Sound, English] with the audio field on
+    // the question side — "back = field 1" would put the wrong
+    // language on both sides; the template formats must win
+    const map18 = defaultMapping(col);
+    const basicNt = col.notetypes.find((n) => n.name === "Basic")!;
+    ok(map18[basicNt.id].front === 0, "front follows qfmt (field 0)", map18[basicNt.id]);
+    ok(map18[basicNt.id].back === 2, "back follows afmt (English, not Sound)", map18[basicNt.id]);
     const plan = buildPlan(col, defaultMapping(col));
     const basic = plan.decks[0]?.cards[0];
     ok(basic?.front === "un oiseau marin; seabird", "html + sound cleaned", basic?.front);
@@ -192,7 +206,7 @@ async function main() {
     const { col } = await load("schema11.apkg");
     const plan = buildPlan(col, defaultMapping(col));
     const r1 = commitAnkiImport(plan.decks);
-    ok(r1.added === 3, "three cards committed", r1);
+    ok(r1.added === 3 && r1.updated === 0, "three cards committed", r1);
     ok(r1.decksCreated === 1, "one deck created", r1);
     const s = readVocab();
     ok(s.decks.length === 1 && s.decks[0].src === "anki", "deck badged anki", s.decks[0]);
@@ -201,10 +215,24 @@ async function main() {
     const stored = Object.values(s.cards)[0];
     ok(typeof stored.due === "number" && typeof stored.ease === "number", "schedule persisted");
 
-    // re-import the same package: every front is a duplicate
+    // re-import the same package: identical backs — a clean no-op
     const r2 = commitAnkiImport(plan.decks);
-    ok(r2.added === 0 && r2.decksCreated === 0, "full dedup on re-import", r2);
-    ok(readVocab().decks.length === 1, "no phantom deck for dup-only plan");
+    ok(r2.added === 0 && r2.updated === 0 && r2.decksCreated === 0, "identical re-import is a no-op", r2);
+    ok(readVocab().decks.length === 1, "no phantom deck");
+
+    // re-import with corrected backs — the fix-my-bad-import path:
+    // same fronts, different backs → every card updates in place,
+    // no new deck, schedules untouched
+    const corrected = buildPlan(col, defaultMapping(col));
+    for (const d of corrected.decks) for (const c of d.cards) c.back = `${c.back} — corrected`;
+    const r3 = commitAnkiImport(corrected.decks);
+    ok(r3.added === 0 && r3.updated === 3 && r3.decksCreated === 0, "corrected re-import updates backs", r3);
+    const after = readVocab();
+    ok(after.decks.length === 1, "still one deck — no duplicates");
+    const cards = Object.values(after.cards);
+    ok(cards.every((c) => c.back.endsWith("— corrected")), "backs corrected in place", cards.map((c) => c.back));
+    const reviewCard = cards.find((c) => c.front === "une goéland")!;
+    ok(reviewCard.interval === 12 && reviewCard.due === CRT + 1234 * DAY, "schedule untouched by the update", reviewCard);
   }
 
   console.log(`\n${checks - failures}/${checks} checks passed`);

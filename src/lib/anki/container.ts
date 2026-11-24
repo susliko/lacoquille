@@ -21,7 +21,16 @@
  */
 
 import { inflateSync } from "fflate";
-import { decompress as zstdDecompress } from "fzstd";
+
+// zstd appears in .anki21b and modern .colpkg only — keep the
+// decoder out of the first-load bundle and pull it on first use
+let zstdDecompress: ((d: Uint8Array) => Uint8Array) | null = null;
+async function zstdSync(bytes: Uint8Array): Promise<Uint8Array> {
+  if (!zstdDecompress) {
+    zstdDecompress = (await import("fzstd")).decompress;
+  }
+  return zstdDecompress(bytes);
+}
 
 export type CollectionVariant = "anki2" | "anki21" | "anki21b";
 export type ContainerKind = "zip" | "tar+zstd" | "zstd";
@@ -56,9 +65,9 @@ const isZstd = (b: Uint8Array, at = 0): boolean =>
   b[at + 2] === ZSTD_MAGIC[2] &&
   b[at + 3] === ZSTD_MAGIC[3];
 
-function zstd(bytes: Uint8Array, what: string): Uint8Array {
+async function zstd(bytes: Uint8Array, what: string): Promise<Uint8Array> {
   try {
-    return zstdDecompress(bytes);
+    return await zstdSync(bytes);
   } catch {
     throw new AnkiError("badfile", `${what} is compressed but couldn't be unpacked — the file may be truncated.`);
   }
@@ -145,7 +154,7 @@ async function readEntry(file: Blob, e: ZipEntry): Promise<Uint8Array> {
         throw new AnkiError("badfile", "This package's zip is damaged.");
       }
     case 93:
-      return zstd(raw, `zip entry ${e.name}`);
+      return await zstd(raw, `zip entry ${e.name}`);
     default:
       throw new AnkiError("unsupported", `This package uses a compression this app can't unpack (${e.method}).`);
   }
@@ -239,7 +248,7 @@ export async function readAnkiContainer(file: Blob): Promise<AnkiContainer> {
     if (file.size > MAX_DECOMPRESSED) {
       throw new AnkiError("toolarge", "This package is too large to open on this device.");
     }
-    const raw = zstd(new Uint8Array(await file.arrayBuffer()), "The package");
+    const raw = await zstd(new Uint8Array(await file.arrayBuffer()), "The package");
     // the tar case: an entry per file, media alongside the collection
     if (decoder.decode(raw.slice(257, 262)) === "ustar") {
       for (const [variant, re] of VARIANT_ORDER) {
@@ -272,7 +281,7 @@ export async function readAnkiContainer(file: Blob): Promise<AnkiContainer> {
     let bytes = await readEntry(file, hit);
     // .anki21b is itself a zstd frame in some exports, deflate in
     // others — decide by magic, not by the zip method byte
-    if (isZstd(bytes)) bytes = zstd(bytes, "The collection");
+    if (isZstd(bytes)) bytes = await zstd(bytes, "The collection");
     if (isSqlite(bytes)) {
       variant = v;
       collection = bytes;

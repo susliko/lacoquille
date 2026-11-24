@@ -20,7 +20,6 @@
  * first one's schedule, and the "What's in it" screen says so.
  */
 
-import initSqlJs from "sql.js";
 import type { AnkiContainer, CollectionVariant } from "./container";
 
 export interface AnkiNotetypeInfo {
@@ -29,6 +28,13 @@ export interface AnkiNotetypeInfo {
   fields: string[];
   cloze: boolean;
   templates: number;
+  /** Field names the card templates show on the question / answer
+      side, in field order — the honest signal for defaulting the
+      front↔back mapping ("Basic (and reversed)" decks, 3-field
+      vocab layouts with audio columns, …). Empty when the export
+      carries no readable templates; callers fall back to 0/1. */
+  frontRefs: string[];
+  backRefs: string[];
 }
 
 export interface AnkiDeckInfo {
@@ -73,16 +79,30 @@ const FLDS_SEP = "\x1f";
 
 type Db = import("sql.js").Database;
 
+/** Stage reports for the import screen's loading line. "decoder" is
+    the wasm fetch — seconds on a phone, once; "cards" covers the
+    note-reading loop on big decks. */
+export type CollectionStage = "decoder" | "cards";
+
 export async function openAnkiCollection(
   container: AnkiContainer,
-  /** Test hook only — the node harness feeds the wasm binary
-      directly; the browser always uses the default /vendor/ path. */
-  sqlConfig?: { wasmBinary?: ArrayBuffer },
+  opts?: {
+    /** Test hook — the node harness feeds the wasm binary directly;
+        the browser always uses the default /vendor/ path. */
+    sqlConfig?: { wasmBinary?: ArrayBuffer };
+    onStage?: (s: CollectionStage) => void;
+  },
 ): Promise<AnkiCollection> {
-  // The wasm lives next to the app as a static asset; only this page
-  // ever pulls it in (dynamic import, ~660 KB gzipped, cached). The
-  // name is pinned: the browser glue asks for sql-wasm-browser.wasm,
-  // the node harness for sql-wasm.wasm — same bytes either way.
+  // Dynamic import on purpose: the emscripten glue is ~60 KB of JS —
+  // shipping it inside the import island made the page's first load
+  // pay for it before the learner had picked a file. Only this page
+  // ever pulls it, and only now, when a file is actually open.
+  const { onStage, sqlConfig } = opts ?? {};
+  onStage?.("decoder");
+  const initSqlJs = (await import("sql.js")).default;
+  // The wasm lives next to the app as a static asset. The name is
+  // pinned: the browser glue asks for sql-wasm-browser.wasm, the
+  // node harness for sql-wasm.wasm — same bytes either way.
   const SQL = await initSqlJs({
     locateFile: () => `/vendor/sql-wasm.wasm`,
     ...sqlConfig,
@@ -98,7 +118,8 @@ export async function openAnkiCollection(
     const crt = Number(scalar(db, "SELECT crt FROM col LIMIT 1") ?? 0);
     const notetypes = readNotetypes(db, tables);
     const decks = readDecks(db, tables);
-    const notes = readNotes(db);
+    onStage?.("cards");
+    const notes = await readNotes(db);
     const revlog = tables.has("revlog")
       ? {
           count: Number(scalar(db, "SELECT COUNT(*) FROM revlog") ?? 0),
@@ -132,6 +153,14 @@ function rows(db: Db, sql: string): unknown[][] {
   }
 }
 
+const utf8 = new TextDecoder();
+/** Schema 18 stores the notetype/template configs as BLOBs (Anki's
+    own schema does too) — sql.js hands those back as Uint8Array, and
+    String() on one produces digit soup, not JSON. */
+function asText(v: unknown): string {
+  return typeof v === "string" ? v : v instanceof Uint8Array ? utf8.decode(v) : String(v ?? "");
+}
+
 /** Column-safe select: old exports can lack a column (e.g. anki2 v1
     scheduler cards without `factor`) — missing columns come back null. */
 function trySelect(db: Db, cols: string, table: string, extra = ""): unknown[][] {
@@ -149,20 +178,27 @@ function readNotetypes(db: Db, tables: Set<string>): AnkiNotetypeInfo[] {
       if (!fieldNames.has(k)) fieldNames.set(k, new Map());
       fieldNames.get(k)!.set(Number(ord), String(name));
     }
-    const tmplCount = new Map<number, number>();
-    for (const [ntid, n] of rows(db, "SELECT ntid, COUNT(*) FROM templates GROUP BY ntid")) {
-      tmplCount.set(Number(ntid), Number(n));
+    // the template config JSON carries qfmt/afmt — the question and
+    // answer formats that say which fields show on which side
+    const tmplSides = new Map<number, Array<{ q: string; a: string }>>();
+    for (const [ntid, config] of rows(db, "SELECT ntid, config FROM templates")) {
+      const cfg = safeJson(asText(config ?? "{}")) as { qfmt?: string; afmt?: string } | null;
+      const k = Number(ntid);
+      if (!tmplSides.has(k)) tmplSides.set(k, []);
+      tmplSides.get(k)!.push({ q: cfg?.qfmt ?? "", a: cfg?.afmt ?? "" });
     }
     const out: AnkiNotetypeInfo[] = [];
     for (const [id, name, config] of rows(db, "SELECT id, name, config FROM notetypes ORDER BY id")) {
-      const cfg = safeJson(String(config ?? "{}")) as { type?: number } | null;
+      const cfg = safeJson(asText(config ?? "{}")) as { type?: number } | null;
       const fields = [...(fieldNames.get(Number(id))?.values() ?? [])];
+      const tmpls = tmplSides.get(Number(id)) ?? [];
       out.push({
         id: Number(id),
         name: String(name),
         fields,
         cloze: (cfg?.type ?? 0) === 1 || /cloze/i.test(String(name)),
-        templates: tmplCount.get(Number(id)) ?? 1,
+        templates: Math.max(1, tmpls.length),
+        ...sidesFor(fields, tmpls),
       });
     }
     return out;
@@ -171,16 +207,62 @@ function readNotetypes(db: Db, tables: Set<string>): AnkiNotetypeInfo[] {
   // schema 11 (anki2 / anki21): models JSON in the col row
   const modelsJson = scalar(db, "SELECT models FROM col LIMIT 1");
   const models = safeJson(String(modelsJson ?? "{}")) as
-    | Record<string, { id?: number; name?: string; type?: number; flds?: Array<{ name?: string }>; tmpls?: unknown[] }>
+    | Record<
+        string,
+        {
+          id?: number;
+          name?: string;
+          type?: number;
+          flds?: Array<{ name?: string }>;
+          tmpls?: Array<{ q?: string; a?: string }>;
+        }
+      >
     | null;
   if (!models) return [];
-  return Object.values(models).map((m) => ({
-    id: Number(m.id ?? 0),
-    name: String(m.name ?? "?"),
-    fields: (m.flds ?? []).map((f) => String(f.name ?? "")),
-    cloze: (m.type ?? 0) === 1 || /cloze/i.test(String(m.name ?? "")),
-    templates: Array.isArray(m.tmpls) ? m.tmpls.length : 1,
-  }));
+  return Object.values(models).map((m) => {
+    const fields = (m.flds ?? []).map((f) => String(f.name ?? ""));
+    const tmpls = Array.isArray(m.tmpls)
+      ? m.tmpls.map((t) => ({ q: String(t.q ?? ""), a: String(t.a ?? "") }))
+      : [];
+    return {
+      id: Number(m.id ?? 0),
+      name: String(m.name ?? "?"),
+      fields,
+      cloze: (m.type ?? 0) === 1 || /cloze/i.test(String(m.name ?? "")),
+      templates: tmpls.length || 1,
+      ...sidesFor(fields, tmpls),
+    };
+  });
+}
+
+/** Which fields a note type's templates put on the question vs the
+    answer side. {{hint:Field}} and {{type:Field}} still name a field;
+    {{FrontSide}}/{{Tags}}/cloze markers don't. Compared against the
+    real field list, case-insensitively (Anki field refs are too). */
+const TEMPLATE_FIELD_RE =
+  /\{\{\s*(?:hint|type):\s*([^:#}]+?)\s*(?::[^}]*)?\}\}|\{\{\s*([^:#}]+?)\s*(?::[^}]*)?\}\}/g;
+const NON_FIELD_REFS = new Set(["frontside", "tags", "cloze", "text"]);
+
+function fieldRefs(fmt: string, fields: string[]): string[] {
+  const lower = new Map(fields.map((f) => [f.toLowerCase(), f]));
+  const hits = new Set<string>();
+  for (const m of fmt.matchAll(TEMPLATE_FIELD_RE)) {
+    const raw = (m[1] ?? m[2] ?? "").trim().toLowerCase();
+    if (raw && !NON_FIELD_REFS.has(raw) && lower.has(raw)) hits.add(lower.get(raw)!);
+  }
+  // field order, not template order — the first-listed field is the
+  // natural "front" when several appear on the question side
+  return fields.filter((f) => hits.has(f));
+}
+
+function sidesFor(fields: string[], tmpls: Array<{ q: string; a: string }>): { frontRefs: string[]; backRefs: string[] } {
+  const q = new Set<string>();
+  const a = new Set<string>();
+  for (const t of tmpls) {
+    for (const f of fieldRefs(t.q, fields)) q.add(f);
+    for (const f of fieldRefs(t.a, fields)) a.add(f);
+  }
+  return { frontRefs: fields.filter((f) => q.has(f)), backRefs: fields.filter((f) => a.has(f)) };
 }
 
 function readDecks(db: Db, tables: Set<string>): AnkiDeckInfo[] {
@@ -199,15 +281,23 @@ function readDecks(db: Db, tables: Set<string>): AnkiDeckInfo[] {
 
 // ─── learner content ────────────────────────────────────────────────
 
-function readNotes(db: Db): AnkiNoteRec[] {
+/** Paint between chunks: a 20k-note deck read synchronously freezes
+    the screen with no feedback; yielding lets the staged "Reading
+    cards…" line actually appear. */
+const yieldPaint = (): Promise<void> =>
+  new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
+
+async function readNotes(db: Db): Promise<AnkiNoteRec[]> {
   // cards grouped by note, sorted by ord — first card owns the schedule
   const cardsByNote = new Map<number, AnkiCardState[]>();
-  for (const row of trySelect(
+  const cardRows = trySelect(
     db,
     "nid, ord, did, type, queue, due, ivl, factor, reps, lapses",
     "cards",
     "ORDER BY nid, ord",
-  )) {
+  );
+  for (let i = 0; i < cardRows.length; i++) {
+    const row = cardRows[i];
     const nid = Number(row[0]);
     if (!cardsByNote.has(nid)) cardsByNote.set(nid, []);
     cardsByNote.get(nid)!.push({
@@ -221,10 +311,13 @@ function readNotes(db: Db): AnkiNoteRec[] {
       reps: Number(row[8]),
       lapses: Number(row[9]),
     });
+    if (i % 2000 === 1999) await yieldPaint();
   }
 
   const out: AnkiNoteRec[] = [];
-  for (const row of trySelect(db, "id, guid, mid, tags, flds", "notes", "ORDER BY id")) {
+  const noteRows = trySelect(db, "id, guid, mid, tags, flds", "notes", "ORDER BY id");
+  for (let i = 0; i < noteRows.length; i++) {
+    const row = noteRows[i];
     // cards.nid joins on notes.id (the rowid) — not the mid column,
     // which names the note *type* despite the prefix
     const id = Number(row[0]);
@@ -235,6 +328,7 @@ function readNotes(db: Db): AnkiNoteRec[] {
       .filter(Boolean);
     const fields = String(row[4] ?? "").split(FLDS_SEP);
     out.push({ guid, mid, tags, fields, cards: cardsByNote.get(id) ?? [] });
+    if (i % 2000 === 1999) await yieldPaint();
   }
   return out;
 }

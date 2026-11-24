@@ -42,7 +42,10 @@ MODELS_11 = json.dumps(
             "name": "Basic",
             "type": 0,
             "flds": [{"name": "Front", "ord": 0}, {"name": "Back", "ord": 1}],
-            "tmpls": [{"name": "Card 1"}, {"name": "Card 2"}],
+            "tmpls": [
+                {"name": "Card 1", "q": "{{Front}}", "a": "{{FrontSide}}<hr id=answer>{{Back}}"},
+                {"name": "Card 2", "q": "{{Back}}", "a": "{{FrontSide}}<hr id=answer>{{Front}}"},
+            ],
         }
     }
 )
@@ -189,21 +192,30 @@ def schema18_db(with_cloze=True):
     mid_cloze = MID + 7
     c.execute("INSERT INTO notetypes VALUES (?,?,0,0,?)", (MID, "Basic", basic_cfg))
     c.execute("INSERT INTO notetypes VALUES (?,?,0,0,?)", (mid_cloze, "Cloze French", cloze_cfg))
-    for i, name in enumerate(["Front", "Back"]):
+    # a 3-field vocab layout (front / audio / answer) — the case where
+    # "back = field 1" puts the wrong language on both sides; the
+    # template formats are what the default mapping must believe
+    for i, name in enumerate(["Front", "Sound", "English"]):
         c.execute("INSERT INTO fields VALUES (?,?,?,'{}')", (MID, i, name))
     c.execute("INSERT INTO fields VALUES (?,0,'Text','{}')", (mid_cloze,))
     c.execute("INSERT INTO fields VALUES (?,1,'Back Extra','{}')", (mid_cloze,))
-    for i, name in enumerate(["Card 1", "Card 2"]):
-        c.execute("INSERT INTO templates VALUES (?,?,?,'{}')", (MID, i, name))
-    c.execute("INSERT INTO templates VALUES (?,0,'Cloze','{}')", (mid_cloze,))
+    basic_tmpl_cfg = json.dumps(
+        {"qfmt": "{{Front}}{{Sound}}", "afmt": "{{FrontSide}}<hr id=answer>{{English}}"}
+    ).encode()
+    cloze_tmpl_cfg = json.dumps(
+        {"qfmt": "{{cloze:Text}}", "afmt": "{{cloze:Text}}<br>{{Back Extra}}"}
+    ).encode()
+    for i in [0, 1]:
+        c.execute("INSERT INTO templates VALUES (?,?,?,?)", (MID, i, f"Card {i + 1}", basic_tmpl_cfg))
+    c.execute("INSERT INTO templates VALUES (?,?,?,?)", (mid_cloze, 0, "Cloze", cloze_tmpl_cfg))
     c.execute("INSERT INTO decks VALUES (1,'Default',0,0,'{}','{}','{}')")
     c.execute("INSERT INTO decks VALUES (?,'French::Core 2k',0,0,'{}','{}','{}')", (DID,))
     notes = [
         # a review card with HTML + sound to clean — flds is
-        # \x1f-joined (two fields: Front, Back), sfld is the sort text
-        (1700000000011, "guidD", MID, "un oiseau marin<br>seabird [sound:bird.mp3]\x1f<b>a seabird</b>", "un oiseau marin"),
+        # \x1f-joined (three fields: Front, Sound, English), sfld sorts
+        (1700000000011, "guidD", MID, "un oiseau marin<br>seabird\x1f\x1f<b>a seabird</b>", "un oiseau marin"),
         # a cloze note with two deletions — first (c1) becomes the card
-        (1700000000012, "guidE", mid_cloze, "Le {{c1::phare::lighthouse}} guide les {{c2::navires}}.", ""),
+        (1700000000012, "guidE", mid_cloze, "Le {{c1::phare::lighthouse}} guide les {{c2::navires}}.\x1f", ""),
     ]
     for nid, guid, mid, flds, sfld in notes:
         c.execute("INSERT INTO notes VALUES (?,?,?,?,0,'',?,?,0,0,'')", (nid, guid, mid, 0, flds, sfld))

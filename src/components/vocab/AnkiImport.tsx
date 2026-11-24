@@ -18,7 +18,13 @@
 import { createMemo, createSignal, For, Show } from "solid-js";
 import { readAnkiContainer, AnkiError, type AnkiContainer } from "../../lib/anki/container";
 import { openAnkiCollection, type AnkiCollection } from "../../lib/anki/collection";
-import { buildPlan, defaultMapping, type FieldMapping, type ImportPlan } from "../../lib/anki/import";
+import {
+  buildPlan,
+  defaultMapping,
+  sampleFor,
+  type FieldMapping,
+  type ImportPlan,
+} from "../../lib/anki/import";
 import { commitAnkiImport } from "./vocabStore";
 
 const Back = () => (
@@ -31,6 +37,18 @@ type Phase = "pick" | "parsing" | "ready" | "importing" | "done" | "error";
 
 const fmt = (n: number) => n.toLocaleString("en");
 
+/** Let a state change paint before the next chunk of work — the
+    parsing stages are synchronous bursts (zip, wasm, SQLite rows)
+    and would otherwise all show the same frozen line. */
+const paint = (): Promise<void> =>
+  new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
+
+const STAGE_TEXT: Record<string, string> = {
+  container: "Reading the package…",
+  decoder: "Fetching the card decoder — first time only…",
+  cards: "Reading cards…",
+};
+
 export default function AnkiImport() {
   const [phase, setPhase] = createSignal<Phase>("pick");
   const [error, setError] = createSignal("");
@@ -39,7 +57,8 @@ export default function AnkiImport() {
   const [container, setContainer] = createSignal<AnkiContainer | null>(null);
   const [col, setCol] = createSignal<AnkiCollection | null>(null);
   const [mapping, setMapping] = createSignal<FieldMapping>({});
-  const [result, setResult] = createSignal<{ added: number; decks: number; skipped: number } | null>(null);
+  const [result, setResult] = createSignal<{ added: number; updated: number; decks: number; skipped: number } | null>(null);
+  const [stage, setStage] = createSignal<"container" | "decoder" | "cards" | "">("");
 
   let input: HTMLInputElement | undefined;
 
@@ -68,14 +87,21 @@ export default function AnkiImport() {
     setFileName(file.name);
     setFileSize(file.size);
     setPhase("parsing");
+    setError("");
     try {
+      setStage("container");
+      await paint();
       const ct = await readAnkiContainer(file);
-      const c = await openAnkiCollection(ct);
+      const c = await openAnkiCollection(ct, {
+        onStage: (s) => setStage(s),
+      });
+      setStage("");
       setContainer(ct);
       setCol(c);
       setMapping(defaultMapping(c));
       setPhase("ready");
     } catch (e) {
+      setStage("");
       const msg =
         e instanceof AnkiError
           ? e.message
@@ -98,18 +124,21 @@ export default function AnkiImport() {
     const p = plan();
     if (!p || p.decks.length === 0) return;
     setPhase("importing");
-    try {
-      const total = p.decks.reduce((n, d) => n + d.cards.length, 0);
-      const r = commitAnkiImport(p.decks);
-      setResult({ added: r.added, decks: r.decksCreated, skipped: total - r.added });
-      setPhase("done");
-      setContainer(null);
-      setCol(null);
-    } catch {
-      // private mode / quota — the store write failed session-only
-      setError("The import couldn't be saved — browser storage refused the write.");
-      setPhase("error");
-    }
+    // let the button's "Importing…" state paint before the sync write
+    requestAnimationFrame(() => {
+      try {
+        const total = p.decks.reduce((n, d) => n + d.cards.length, 0);
+        const r = commitAnkiImport(p.decks);
+        setResult({ added: r.added, updated: r.updated, decks: r.decksCreated, skipped: total - r.added - r.updated });
+        setPhase("done");
+        setContainer(null);
+        setCol(null);
+      } catch {
+        // private mode / quota — the store write failed session-only
+        setError("The import couldn't be saved — browser storage refused the write.");
+        setPhase("error");
+      }
+    });
   };
 
   const history = createMemo(() => {
@@ -151,8 +180,11 @@ export default function AnkiImport() {
                 </>
               }
             >
-              <b>Opening {fileName()}…</b>
-              <span>large decks take a moment</span>
+              <b>{fileName()}</b>
+              <span class="ai-wait">
+                <i class="ai-spin" aria-hidden="true" />
+                {STAGE_TEXT[stage()] ?? "Working…"}
+              </span>
             </Show>
           </button>
           <Show when={phase() === "error"}>
@@ -288,9 +320,27 @@ export default function AnkiImport() {
                 )}
               </For>
             </div>
+            {/* the sample is the feedback that makes a wrong mapping
+                visible before 2,000 cards commit it */}
+            <For each={notetypesUsed()}>
+              {(nt) => {
+                const s = () => sampleFor(col()!, mapping(), nt);
+                return (
+                  <Show when={s()}>
+                    <div class="ai-sample">
+                      <span class="k">{nt.name}</span>
+                      <span class="v">
+                        <b>{s()!.front}</b>
+                        <span>{s()!.back}</span>
+                      </span>
+                    </div>
+                  </Show>
+                );
+              }}
+            </For>
             <p class="ai-note">
               Cards are drilled the way Anki drills them: see the front, reveal the back, rate
-              yourself.
+              yourself. Same word twice across decks? It's kept once.
             </p>
           </section>
 
@@ -303,9 +353,20 @@ export default function AnkiImport() {
 
         <Show when={phase() === "done" && result()}>
           <section class="ai-sec ai-done">
-            <div class="ai-done-big">{fmt(result()!.added)} cards added</div>
+            <div class="ai-done-big">
+              {fmt(result()!.added)} cards added
+              <Show when={result()!.updated > 0}>
+                {" · "}
+                {fmt(result()!.updated)} updated
+              </Show>
+            </div>
             <p class="ai-note">
               {result()!.decks === 1 ? "1 deck" : `${fmt(result()!.decks)} decks`} created
+              <Show when={result()!.updated > 0}>
+                {" · "}
+                {fmt(result()!.updated)} cards got their back corrected (re-import with new
+                mapping — schedules untouched)
+              </Show>
               <Show when={result()!.skipped > 0}>
                 {" · "}
                 {fmt(result()!.skipped)} already in your decks — skipped

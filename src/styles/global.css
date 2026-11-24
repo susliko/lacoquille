@@ -2187,6 +2187,79 @@ article {
   line-height: 1.5;
   color: var(--muted);
 }
+/* parsing stages — the ring + the staged line are the only honest
+   feedback while wasm downloads and the collection reads */
+.ai-wait {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.ai-spin {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border: 2px solid var(--line);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: ai-rotate 0.8s linear infinite;
+}
+@keyframes ai-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ai-spin {
+    animation: none;
+    border-top-color: var(--blue);
+    border-right-color: var(--muted);
+  }
+}
+/* first-card preview per note type — the "which field is which"
+   section made checkable: wrong mappings show French on both sides
+   HERE, before the commit, not in the drill afterwards */
+.ai-sample {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--ground);
+}
+.ai-sample .k {
+  flex: none;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  max-width: 92px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ai-sample .v {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ai-sample .v b {
+  font-weight: 800;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ai-sample .v span {
+  color: var(--blue);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .ai-error {
   margin: 14px 2px 0;
   padding: 12px 14px;
