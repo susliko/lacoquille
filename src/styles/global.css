@@ -17,6 +17,13 @@
    composite gap. */
 html {
   background: var(--paper);
+  /* No pull-to-refresh, no overscroll glow: the browser's rubber-band
+     translates the whole page surface for the length of the gesture —
+     tab bar included — clipping its lower edge, and a completed pull
+     reloads the app, dropping any drill state. Reaching the top of a
+     list is an everyday gesture here; the app owns its refresh
+     cycles. */
+  overscroll-behavior-y: none;
   /* Android text autosizing re-inflates text after first paint on
      wide text blocks — pages drew narrower than the screen for an
      instant, then rescaled. Font sizes here are explicit; freeze them. */
@@ -1472,7 +1479,14 @@ article {
   width: 100%;
   max-width: var(--app-max);
   margin: 0 auto;
-  min-height: 100dvh;
+  /* svh, not dvh: dvh tracks the toolbar, and browsers like DDG hide
+     that on every vertical drag — the document height would breathe
+     mid-gesture, re-laying-out content and jumping the scroll while
+     the finger is down (duckduckgo/Android #5581). svh is the
+     toolbar-shown height and never changes while scrolling; the
+     page tail below it is paper either way (html background). */
+  min-height: 100dvh; /* fallback where svh is unsupported */
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
 }
@@ -1503,22 +1517,37 @@ article {
    its layout depends on env(), so no toolbar collapse, keyboard or
    inset report can ever move or resize the buttons. The shadow — not
    a 1px border — separates the bar from scrolled content, which
-   visibly slides beneath it. */
+   visibly slides beneath it.
+
+   Overdraw guard — the reason a bottom-glued bar can still LOOK like
+   it changes height mid-scroll: browsers that hide their toolbar on
+   drag (DDG does it on every vertical gesture, duckduckgo/Android
+   #4594/#5581; their staff confirm scrollability is never checked)
+   resize the page viewport WHILE the finger is down. For a few frames
+   the compositor still paints the stale pre-resize frame — stretched
+   or clipped at the surface edge — so the bottom strip of a
+   bottom-anchored fixed layer visibly dips, then pops back. The guard
+   is 12px of the bar's own card colour hanging BELOW the viewport
+   edge (negative bottom margin): off-viewport in the steady state,
+   invisible; the resize race eats the guard, never the buttons or
+   the shadow line. */
 .tab-bar {
   position: fixed;
   bottom: 0;
+  margin-bottom: -12px; /* overdraw guard — see the block comment above */
   left: 0;
   right: 0;
   margin-inline: auto; /* centred without transform — never fights the router's FLIP */
   width: min(100%, var(--app-max));
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  align-items: start; /* buttons pinned; the inset padding hangs below */
+  align-items: start; /* buttons pinned; the guard padding hangs below */
   /* No safe-area padding: browser tabs never paint under the gesture
      bar (cover is declared-but-not-honoured there, and Chrome then
      reports a 24px inset it will not let us fill — a phantom white
      strip above the black one). The bar ends at the viewport edge. */
-  min-height: 56px;
+  height: 68px; /* 56px button row + 12px overdraw guard (border-box) */
+  padding-bottom: 12px;
   background: var(--card);
   box-shadow:
     0 -1px 0 rgba(22, 24, 29, 0.10),
@@ -2053,7 +2082,10 @@ article {
 
 /* ---- the drill ---- */
 .vd-root {
-  min-height: 100dvh;
+  /* svh over dvh — same rationale as .app-shell: a full-height page
+     must not re-layout when the browser toolbar hides mid-scroll. */
+  min-height: 100dvh; /* fallback where svh is unsupported */
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
 }
