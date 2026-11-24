@@ -1,5 +1,16 @@
 # AGENTS.md
 
+## Workflow rule (standing)
+
+**Always `git commit` + `git push` when a piece of work is finished — never wait to be
+asked.** The user verifies from the pushed state; uncommitted work is not done.
+Deployment is automatic on push to `main` (GitHub Actions → https://lacoquille.fly.dev/).
+
+GitHub MCP tools may be unavailable in a session; when they are, plain `git commit` /
+`git push` works — Pi-Bolt wires a credential helper for github.com (no PAT handling
+needed). Keep commit messages in the repo's style: lowercase `area: summary` subject
++ body bullets.
+
 ## Design system (Penpot)
 
 Self-hosted Penpot at `http://localhost:9001` (credentials in `~/programming/penpot/.env`).
