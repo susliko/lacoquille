@@ -27,10 +27,19 @@ const cleanTitle = title.replace(/ — La Coquille$/, "").replace(/ · La Coquil
     <!-- interactive-widget=resizes-content: on Android (Chrome 108+) the
          layout viewport shrinks when the system keyboard opens, so
          bottom-anchored UI stays above it. iOS handles this via visual
-         viewport scrolling; the attribute is ignored there. -->
+         viewport scrolling; the attribute is ignored there.
+     viewport-fit=cover: the layout viewport extends to the physical
+         screen edge, past the gesture-bar zone. WITHOUT it, Chrome and
+         Firefox 150+ apply the bottom system inset at rest and RELEASE
+         it mid-scroll (edge-to-edge immersive) — the viewport's bottom
+         edge breathes by ~24px on every fling and a bottom-glued tab
+         bar chases it (measured: 63 device px jump in Chrome,
+         bugzilla 2057232 for Firefox). With cover the viewport bottom
+         is constant; the inset is reported via env() instead, and the
+         tab bar pads its chin with it (capped — see global.css). -->
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, interactive-widget=resizes-content"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
     />
     <meta name="description" content={description} />
     <title>{cleanTitle} · La Coquille</title>

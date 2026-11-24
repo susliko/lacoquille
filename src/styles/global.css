@@ -1509,45 +1509,48 @@ article {
 }
 .app-shell.with-tab > main {
   /* scroll clearance: the bar is fixed, so the last rows of every list
-     must be able to scroll clear of it (56px buttons + air) */
-  padding-bottom: calc(56px + var(--s-6));
+     must be able to scroll clear of it (56px buttons + the env chin
+     below them + air) */
+  padding-bottom: calc(56px + min(env(safe-area-inset-bottom, 0px), 24px) +
+    var(--s-6));
 }
 
-/* The bar is position:fixed with a fixed 56px button row — nothing in
-   its layout depends on env(), so no toolbar collapse, keyboard or
-   inset report can ever move or resize the buttons. The shadow — not
-   a 1px border — separates the bar from scrolled content, which
+/* The bar is position:fixed with a fixed 56px button row. The shadow —
+   not a 1px border — separates the bar from scrolled content, which
    visibly slides beneath it.
 
-   Overdraw guard — the reason a bottom-glued bar can still LOOK like
-   it changes height mid-scroll: browsers that hide their toolbar on
-   drag (DDG does it on every vertical gesture, duckduckgo/Android
-   #4594/#5581; their staff confirm scrollability is never checked)
-   resize the page viewport WHILE the finger is down. For a few frames
-   the compositor still paints the stale pre-resize frame — stretched
-   or clipped at the surface edge — so the bottom strip of a
-   bottom-anchored fixed layer visibly dips, then pops back. The guard
-   is 12px of the bar's own card colour hanging BELOW the viewport
-   edge (negative bottom margin): off-viewport in the steady state,
-   invisible; the resize race eats the guard, never the buttons or
-   the shadow line. */
+   WHY THE CHIN (the env padding below the buttons): on edge-to-edge
+   Android (Chrome; Firefox 150+ — bugzilla 2057232), the system
+   applies the gesture-bar inset to the layout viewport at rest and
+   RELEASES it mid-scroll: the viewport's bottom edge breathes by the
+   inset on every fling and a bottom-glued bar chases it — measured
+   63 device px down in Chrome, smooth 4-frame ramp, and it STAYS
+   displaced. viewport-fit=cover (Base.astro) pins the viewport to
+   the physical screen bottom so the chase has nothing to chase; the
+   inset is then reported via env(), and the bar pads its chin with
+   it so the buttons keep clear of the gesture pill.
+
+   THE CAP (24px) is load-bearing: the standard Android gesture inset
+   is 24dp, but Firefox 150+ over-reports env(bottom) at rest (it
+   adds the toolbar height — bugzilla 2057232) and corrects it after
+   the first scroll. Capping at 24 freezes the chin at the same size
+   in the buggy and the correct states, so the buttons cannot drift
+   when the value corrects. Browsers that ignore viewport-fit (older
+   Firefox) report env = 0 and clip at the old viewport edge: the
+   chin below the buttons collapses to the 12px guard, the button row
+   lands at the same screen position, nothing changes visually. */
 .tab-bar {
   position: fixed;
   bottom: 0;
-  margin-bottom: -12px; /* overdraw guard — see the block comment above */
   left: 0;
   right: 0;
   margin-inline: auto; /* centred without transform — never fights the router's FLIP */
   width: min(100%, var(--app-max));
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  align-items: start; /* buttons pinned; the guard padding hangs below */
-  /* No safe-area padding: browser tabs never paint under the gesture
-     bar (cover is declared-but-not-honoured there, and Chrome then
-     reports a 24px inset it will not let us fill — a phantom white
-     strip above the black one). The bar ends at the viewport edge. */
-  height: 68px; /* 56px button row + 12px overdraw guard (border-box) */
-  padding-bottom: 12px;
+  align-items: start; /* buttons pinned; the chin padding hangs below */
+  align-content: start;
+  padding-bottom: calc(12px + min(env(safe-area-inset-bottom, 0px), 24px));
   background: var(--card);
   box-shadow:
     0 -1px 0 rgba(22, 24, 29, 0.10),
