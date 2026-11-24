@@ -124,10 +124,18 @@ const cleanTitle = title.replace(/ — La Coquille$/, "").replace(/ · La Coquil
          to a tab re-attaches the exact DOM node, no re-render, no
          re-fetch, state intact. Browsers without Element.moveBefore
          simply fall through to the old remount behaviour. */
+      /* Keys are the session-cached instant-swap routes (TAB_ROOTS below):
+         the three tab roots plus /settings/ — the pushed screen behind the
+         home gears, whose links are rendered client-side by the Solid
+         islands and therefore never seen by Astro's prefetch scanner (it
+         only walks the anchors present at astro:page-load). The value is
+         the island to park, null = no parking (settings carries no persist
+         island; its state lives in settingsStore and survives a remount). */
       var TAB_ISLANDS = {
         "/": "progress-home",
         "/practice/": "practice-home",
         "/theory/": null,
+        "/settings/": null,
       };
       var TAB_ROOTS = Object.keys(TAB_ISLANDS);
       /* Internal links don't agree on the trailing slash (the tab bar
@@ -145,17 +153,30 @@ const cleanTitle = title.replace(/ — La Coquille$/, "").replace(/ · La Coquil
         return true;
       };
 
-      /* ── 3 · Tab-root HTML lives in a session map, so a hot tap never
+      /* ── 3 · Fast-route HTML lives in a session map, so a hot tap never
          touches the network. Measured RTT from a phone to the deployment
          is ~0.8s; HTML is no-cache (deploy-safe), which means every
          router fetch revalidates — the tap froze for a full round trip
          before the (already instant) swap. First visits warm the map;
-         the other two roots are also prefetched in the background right
-         after load. Keyed by origin+path+search, hash excluded. The map
-         dies with the SPA session: a reload starts fresh against the
+         every other route in TAB_ROOTS — the other tab roots, and
+         /settings/ for the gear tap — is prefetched in the background
+         right after load. Keyed by origin+path+search, hash excluded. The
+         map dies with the SPA session: a reload starts fresh against the
          deployed site, so deploys can never serve stale HTML. */
       var tabHtml = new Map();
       var parser = null;
+      /* One macrotask, MessageChannel-style. setTimeout is useless here:
+         a hidden WebView suspends its timers (observed: setTimeout(200)
+         still pending after 5s) and could hold a cache hit for minutes. */
+      var macrotask = function (fn) {
+        var ch = new MessageChannel();
+        ch.port1.onmessage = function () {
+          ch.port1.close();
+          ch.port2.close();
+          fn();
+        };
+        ch.port2.postMessage(0);
+      };
       var warm = function (path) {
         var url = location.origin + path;
         var known = Array.from(tabHtml.keys()).some(function (k) {
@@ -188,15 +209,35 @@ const cleanTitle = title.replace(/ — La Coquille$/, "").replace(/ · La Coquil
         /* replace the router's loader: parse from the session map, and
            fall back to the network (storing the result) on a miss —
            same contract as the default loader (newDocument + enabled
-           meta check), minus style-link preloading that tab pages
-           never need (their CSS is inlined in the cached HTML). The
+           meta check), minus style-link preloading these routes never
+           need (their CSS is inlined in the cached HTML). The
            router invokes loader() with no arguments, so close over
            the event itself. */
         ev.loader = function () {
+          var abortErr = function () {
+            /* the default loader gets this for free from fetch(signal); a
+               cache hit must check by hand or a stale macrotask could
+               resume a navigation the router already aborted */
+            return new DOMException("Aborted", "AbortError");
+          };
           return new Promise(function (resolve, reject) {
             var existing = tabHtml.get(key);
             if (existing != null) {
-              resolve(existing);
+              /* Cache hits resolve one macrotask out, the same gap a real
+                 fetch always leaves. Resolving inside the tap's microtask
+                 drain made the parse, the island upgrades (parse-time AND
+                 adoption-time connectedCallbacks both call start()) and
+                 the swap land in one drain — the hydration chains raced
+                 with nothing separating them and intermittently stranded
+                 the arriving island as dead SSR markup (no error, ssr
+                 attribute left in place). Observed on /settings/. */
+              macrotask(function () {
+                if (ev.signal.aborted) {
+                  reject(abortErr());
+                  return;
+                }
+                resolve(existing);
+              });
               return;
             }
             fetch(key, { signal: ev.signal })
