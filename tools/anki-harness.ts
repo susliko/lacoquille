@@ -26,7 +26,7 @@ import { AnkiError, readAnkiContainer } from "../src/lib/anki/container";
 import { openAnkiCollection } from "../src/lib/anki/collection";
 import { buildPlan, defaultMapping } from "../src/lib/anki/import";
 import { buildAnkiExport } from "../src/lib/anki/export";
-import { commitAnkiImport, readVocab } from "../src/components/vocab/vocabStore";
+import { commitAnkiImport, readVocab, removeCard, removeDeck, restoreCard } from "../src/components/vocab/vocabStore";
 
 const DIR = process.argv[2] ?? "/tmp/anki-fixtures";
 const CRT = 1590000000;
@@ -263,6 +263,28 @@ async function main() {
     ok(cards.every((c) => c.back.endsWith("— corrected")), "backs corrected in place", cards.map((c) => c.back));
     const reviewCard = cards.find((c) => c.front === "une goéland")!;
     ok(reviewCard.interval === 12 && reviewCard.due === CRT + 1234 * DAY, "schedule untouched by the update", reviewCard);
+
+    // re-import bringing NEW cards — must land in the SAME deck,
+    // never fork a second "French" (the two-decks regression)
+    const extended = buildPlan(col, defaultMapping(col));
+    extended.decks[0].cards.push({
+      front: "la mouette", back: "the seagull — new direction",
+      due: CRT + 321 * DAY, interval: 321, ease: 2.5, reps: 3, lapses: 0,
+    });
+    const r4 = commitAnkiImport(extended.decks);
+    ok(r4.added === 1 && r4.decksCreated === 0, "new cards land in the existing deck", r4);
+    const after4 = readVocab();
+    ok(after4.decks.length === 1, "still one deck after extended re-import", after4.decks.length);
+    ok(Object.values(after4.cards).every((c) => c.deckId === after4.decks[0].id), "all cards share the deck");
+
+    // removing: card, then deck, then restore paths
+    removeCard(reviewCard.id);
+    ok(!readVocab().cards[reviewCard.id], "removeCard drops the card");
+    restoreCard(reviewCard);
+    ok(!!readVocab().cards[reviewCard.id], "restoreCard puts it back");
+    const gone = removeDeck(after4.decks[0].id);
+    ok(gone === 4, "removeDeck reports the cards it took", gone);
+    ok(readVocab().decks.length === 0 && Object.keys(readVocab().cards).length === 0, "deck and cards gone");
   }
 
   console.log(`\n${checks - failures}/${checks} checks passed`);

@@ -119,6 +119,8 @@ export default function PracticeTab() {
   const [text, setText] = createSignal("");
   const [mined, setMined] = createSignal<Mined[]>([]);
   const [toast, setToast] = createSignal("");
+  /** Where kept words land: "" = a fresh dated deck (v1 default). */
+  const [targetDeck, setTargetDeck] = createSignal<string>("");
 
   const refreshVocab = () => {
     setDecks(deckCounts());
@@ -144,15 +146,24 @@ export default function PracticeTab() {
   const kept = () => mined().filter((m) => m.keep);
 
   const commitMined = () => {
-    const today = new Date();
-    const name = `Mined · ${today.getDate()} ${today.toLocaleString("en", { month: "short" })}`;
-    const deck = addDeck(name);
     const entries = kept().map((m) => ({
       front: m.front,
       back: m.meaning,
       cx: m.cx,
     }));
-    const added = addCards(deck.id, entries);
+    // the target picker: a deck you name, or a deck you already have
+    const chosen = decks().find((d) => d.deck.id === targetDeck());
+    let name: string;
+    let deckId: string;
+    if (chosen) {
+      deckId = chosen.deck.id;
+      name = chosen.deck.name;
+    } else {
+      const today = new Date();
+      name = `Mined · ${today.getDate()} ${today.toLocaleString("en", { month: "short" })}`;
+      deckId = addDeck(name).id;
+    }
+    const added = addCards(deckId, entries);
     setMined([]);
     setText("");
     setPasteOpen(false);
@@ -335,6 +346,17 @@ export default function PracticeTab() {
               </For>
             </div>
             <Show when={kept().length > 0}>
+              <Show when={decks().some((d) => d.n > 0)}>
+                <label class="v-target">
+                  <span>Add to</span>
+                  <select class="v-targetsel" value={targetDeck()} onChange={(e) => setTargetDeck(e.currentTarget.value)}>
+                    <option value="">New deck</option>
+                    <For each={decks()}>
+                      {(d) => <option value={d.deck.id}>{d.deck.name} ({d.n})</option>}
+                    </For>
+                  </select>
+                </label>
+              </Show>
               <button type="button" class="v-btn v-btn-primary" onClick={commitMined}>
                 Add {kept().length} words
               </button>
@@ -350,7 +372,7 @@ export default function PracticeTab() {
             <div class="set-rows">
               <For each={decks()}>
                 {(d) => (
-                  <div class="set-row v-deckrow">
+                  <a class="set-row v-deckrow" href={`/vocab/deck/?id=${d.deck.id}`}>
                     <span class="set-lb">
                       {d.deck.name}
                       <small>{d.n} {d.n === 1 ? "card" : "cards"}</small>
@@ -358,7 +380,8 @@ export default function PracticeTab() {
                     <Show when={d.deck.src === "anki"}>
                       <span class="anki-badge">Anki</span>
                     </Show>
-                  </div>
+                    <span class="v-chev" aria-hidden="true">›</span>
+                  </a>
                 )}
               </For>
             </div>

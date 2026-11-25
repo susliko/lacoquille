@@ -221,12 +221,14 @@ export interface PlannedCard {
 }
 
 /** Commit an import plan: one app deck per Anki deck (badged).
-    A front already in any deck is not duplicated — if its back
-    differs the card is *updated* instead (Anki's own import
-    semantics), so re-importing with a corrected field mapping
-    repairs a bad import without touching review schedules. The
-    update also repairs cards imported before word-stamping existed.
-    Returns counts for the result screen. */
+    A deck is matched by NAME first — re-importing a package adds
+    its cards to the deck they already live in instead of spawning
+    a second "French". A front already in any deck is not
+    duplicated — if its back differs the card is *updated* instead
+    (Anki's own import semantics), so re-importing with a corrected
+    field mapping repairs a bad import without touching review
+    schedules. The update also repairs cards imported before
+    word-stamping existed. Returns counts for the result screen. */
 export function commitAnkiImport(
   decks: Array<{ name: string; cards: PlannedCard[] }>,
 ): { added: number; updated: number; decksCreated: number; deckIds: string[] } {
@@ -240,6 +242,7 @@ export function commitAnkiImport(
   const seen = new Set<string>();
   let added = 0;
   let updated = 0;
+  let created = 0;
   const deckIds: string[] = [];
 
   for (const plan of decks) {
@@ -279,19 +282,33 @@ export function commitAnkiImport(
       updated += planUpdated;
       continue;
     }
-    const deck: VocabDeck = {
-      id: newId(),
-      name: plan.name,
-      createdAt: now,
-      src: "anki",
-      importedAt: now,
-    };
-    s.decks.push(deck);
-    deckIds.push(deck.id);
+    // same-name decks are the same deck (mined or imported) —
+    // Anki imports land where the name says, they don't fork it
+    const byName = s.decks.find((d) => d.name.toLowerCase() === plan.name.toLowerCase());
+    let deckId: string;
+    if (byName) {
+      deckId = byName.id;
+      if (!byName.src) {
+        byName.src = "anki";
+        byName.importedAt = now;
+      }
+    } else {
+      const deck: VocabDeck = {
+        id: newId(),
+        name: plan.name,
+        createdAt: now,
+        src: "anki",
+        importedAt: now,
+      };
+      s.decks.push(deck);
+      deckId = deck.id;
+      created += 1;
+    }
+    deckIds.push(deckId);
     for (const { p, id } of fresh) {
       const card: VocabCard = {
         id,
-        deckId: deck.id,
+        deckId,
         front: p.front.trim(),
         back: p.back.trim(),
         word: p.word || undefined,
@@ -310,7 +327,36 @@ export function commitAnkiImport(
     updated += planUpdated;
   }
   write(s);
-  return { added, updated, decksCreated: deckIds.length, deckIds };
+  return { added, updated, decksCreated: created, deckIds };
+}
+
+// ---- removing ----
+
+/** Delete a deck and its cards (schedules included — the confirm
+    screen says so in words). Returns how many cards went. */
+export function removeDeck(deckId: string): number {
+  const s = readVocab();
+  const before = Object.keys(s.cards).length;
+  s.decks = s.decks.filter((d) => d.id !== deckId);
+  for (const id of Object.keys(s.cards)) {
+    if (s.cards[id].deckId === deckId) delete s.cards[id];
+  }
+  write(s);
+  return before - Object.keys(s.cards).length;
+}
+
+/** Remove one card (deck screen; undo lives in the UI). */
+export function removeCard(cardId: string): void {
+  const s = readVocab();
+  delete s.cards[cardId];
+  write(s);
+}
+
+/** Undo a removal — the exact card, untouched schedule and all. */
+export function restoreCard(card: VocabCard): void {
+  const s = readVocab();
+  s.cards[card.id] = card;
+  write(s);
 }
 
 // ---- mining (paste-in v1) ----

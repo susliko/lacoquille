@@ -53,7 +53,9 @@ export default function FlipDrill() {
 
   onMount(() => {
     clearSessionCounter();
-    setQueue(dueQueue());
+    // a deck screen can launch a scoped session (/vocab/drill/?deck=…)
+    const scoped = new URLSearchParams(location.search).get("deck") ?? undefined;
+    setQueue(dueQueue(scoped || undefined));
     const onKey = (e: KeyboardEvent) => {
       if (done()) return;
       if (e.key === " ") {

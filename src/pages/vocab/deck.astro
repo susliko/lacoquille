@@ -1,0 +1,17 @@
+---
+import Base from "../../layouts/Base.astro";
+import DeckManager from "../../components/vocab/DeckManager";
+---
+
+<Base title="Deck · La Coquille">
+  <!-- pushed screen: no tab bar, back arrow in the island header.
+       Pure client-side — the deck and its cards live in localStorage. -->
+  <DeckManager client:load />
+</Base>
+
+<style>
+  :global(main#main-content) {
+    padding: 0;
+    max-width: none;
+  }
+</style>

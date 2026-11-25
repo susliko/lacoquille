@@ -2065,8 +2065,35 @@ article {
   background: var(--card);
 }
 .v-nodecks { font-size: 13.5px; color: var(--muted); margin: 0 2px; }
-.v-deckrow { cursor: default; }
 .v-deckrow .set-lb small { color: var(--muted); }
+.v-deckrow { text-decoration: none; color: inherit; cursor: pointer; }
+.v-chev {
+  flex: none;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  margin-left: 2px;
+}
+.v-target {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.v-targetsel {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-weight: 700;
+  color: var(--ink);
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--card);
+}
 .anki-badge {
   flex: none;
   padding: 3px 8px;
@@ -2076,6 +2103,141 @@ article {
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.02em;
+}
+
+/* ---- deck manager (/vocab/deck/, pushed screen) ----
+   The bar, back arrow and toast are shared with the import screen
+   (ai-*). What's new: the honest destructive act — deleting a deck
+   says, in words, that cards and their schedules go with it. */
+.dm-gone { padding: 24px 20px; font-size: 14px; color: var(--muted); }
+.dm-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 4px 14px;
+}
+.dm-facts { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.dm-facts b { font-size: 17px; color: var(--ink); }
+.dm-facts span { font-size: 13px; color: var(--muted); }
+.dm-study {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--card);
+  text-decoration: none;
+  color: inherit;
+  margin-bottom: 18px;
+}
+.dm-study b { display: block; font-size: 15px; color: var(--ink); }
+.dm-study span span,
+.dm-study > span > span:last-child { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.dm-cards { border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+.dm-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--card);
+}
+.dm-card:last-child { border-bottom: none; }
+.dm-faces { flex: 1; min-width: 0; }
+.dm-faces b {
+  display: block;
+  font-size: 14px;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dm-faces span {
+  display: block;
+  font-size: 12.5px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dm-x {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.dm-x:hover { color: var(--review); background: var(--chip); }
+.dm-more {
+  width: 100%;
+  margin-top: 10px;
+  padding: 11px;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--blue);
+  border: 1px dashed var(--line);
+  border-radius: var(--r-md);
+  background: transparent;
+  cursor: pointer;
+}
+.dm-empty { padding: 18px 6px; font-size: 13.5px; color: var(--muted); }
+.dm-danger { padding: 22px 4px 40px; }
+.dm-del {
+  width: 100%;
+  padding: 12px;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--review);
+  border: 1px solid var(--review);
+  border-radius: var(--r-md);
+  background: transparent;
+  cursor: pointer;
+}
+.dm-danger p { font-size: 13.5px; color: var(--ink); margin: 0 0 12px; }
+.dm-delrow { display: flex; gap: 10px; }
+.dm-keep {
+  flex: 1;
+  padding: 11px;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--card);
+  cursor: pointer;
+}
+.dm-del2 {
+  flex: 1;
+  padding: 11px;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #fff;
+  border: none;
+  border-radius: var(--r-md);
+  background: var(--review);
+  cursor: pointer;
+}
+.dm-toast { display: flex; align-items: center; gap: 12px; }
+.dm-undo {
+  border: none;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
 }
 
 /* ---- Anki import (pushed screen, docs/04-vocab-and-anki.md) ----
