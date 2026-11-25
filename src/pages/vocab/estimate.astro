@@ -1,0 +1,18 @@
+---
+import Base from "../../layouts/Base.astro";
+import SpotCheck from "../../components/vocab/SpotCheck";
+---
+
+<Base title="Vocabulary size · La Coquille">
+  <!-- pushed screen: no tab bar, back arrow to Progress. The island
+       carries the 20k-word frequency list in its own chunk — only
+       this page pays for it. -->
+  <SpotCheck client:load />
+</Base>
+
+<style>
+  :global(main#main-content) {
+    padding: 0;
+    max-width: none;
+  }
+</style>

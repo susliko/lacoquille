@@ -10,36 +10,20 @@
  *
  * Both cards carry honest zero states: nothing answered → no grade;
  * no cards → no estimate. The grid handles fresh learners itself.
+ *
+ * The vocabulary card is an estimate, not a count: the deck is a
+ * census of words (word-level — reversed imports drill one word
+ * through two cards), and the spot-check (/vocab/estimate/) adds
+ * the stratified sample that sees words no deck ever carded. Until
+ * it runs, the card shows the deck census with an invitation.
  */
 
 import { createSignal, onMount, Show } from "solid-js";
 import ProgressGrid from "./progress/ProgressGrid";
 import { currentLevel, feedTopicStats } from "./exercise/feedStore";
 import { topicSummaries } from "./exercise/store";
-import { readVocab } from "./vocab/vocabStore";
-
-/** Mature = the Anki convention: interval 21 days or more. */
-const MATURE_AT_DAYS = 21;
-
-interface VocabSplit {
-  total: number;
-  mature: number;
-  learning: number;
-  fresh: number;
-}
-
-function vocabSplit(): VocabSplit {
-  const cards = Object.values(readVocab().cards);
-  let mature = 0;
-  let learning = 0;
-  let fresh = 0;
-  for (const c of cards) {
-    if (c.interval >= MATURE_AT_DAYS) mature += 1;
-    else if (c.interval >= 1) learning += 1;
-    else fresh += 1;
-  }
-  return { total: cards.length, mature, learning, fresh };
-}
+import { readCalibration } from "./vocab/calibration";
+import { wordSplit, type WordSplit } from "./vocab/words";
 
 const Gear = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -53,7 +37,8 @@ export default function ProgressHome() {
   // stores — all learner state is client-side.
   const [drilled, setDrilled] = createSignal(false);
   const [level, setLevel] = createSignal("A1");
-  const [vocab, setVocab] = createSignal<VocabSplit>({ total: 0, mature: 0, learning: 0, fresh: 0 });
+  const [vocab, setVocab] = createSignal<WordSplit>({ total: 0, mature: 0, young: 0, learning: 0, fresh: 0, known: 0, keys: new Set() });
+  const [cal, setCal] = createSignal<ReturnType<typeof readCalibration>>(null);
 
   onMount(() => {
     const feed = Object.values(feedTopicStats());
@@ -61,10 +46,26 @@ export default function ProgressHome() {
     const any = feed.some((t) => t.attempts > 0) || session.some((s) => s.attempts > 0);
     setDrilled(any);
     if (any) setLevel(currentLevel());
-    setVocab(vocabSplit());
+    setVocab(wordSplit());
+    setCal(readCalibration());
   });
 
   const pct = (n: number) => (vocab().total > 0 ? `${Math.round((n / vocab().total) * 100)}%` : "0%");
+  /** Point estimate: the spot-check's snapshot once run, else the
+   *  deck census alone (word-level — a reversed import drills one
+   *  word through two cards, and cards aren't words). */
+  const big = () => {
+    const c = cal();
+    if (c) return `≈${(Math.round(c.estimate / 10) * 10).toLocaleString("en")}`;
+    return vocab().total > 0 ? `≈${vocab().total.toLocaleString("en")}` : "";
+  };
+  const spread = () => {
+    const c = cal();
+    if (!c) return "";
+    return `±${(Math.round((c.high - c.low) / 2 / 10) * 10).toLocaleString("en")}`;
+  };
+  const when = () =>
+    new Date((cal()?.at ?? 0) * 1000).toLocaleDateString("en", { month: "short", year: "numeric" });
 
   return (
     <div class="ph-root">
@@ -94,21 +95,32 @@ export default function ProgressHome() {
 
           <div class="pg-card">
             <span class="pg-eyebrow">Vocabulary</span>
-            <Show when={vocab().total > 0} fallback={<span class="pg-big pg-dim">—</span>}>
-              <span class="pg-big">≈{vocab().total}</span>
+            <Show when={big() !== ""} fallback={<span class="pg-big pg-dim">—</span>}>
+              <span class="pg-big">{big()}</span>
             </Show>
             <Show when={vocab().total > 0}>
               <div class="pg-bar" aria-hidden="true">
                 <i style={{ width: pct(vocab().mature), background: "var(--p2)" }} />
-                <i style={{ width: pct(vocab().learning), background: "var(--p1)" }} />
-                <i style={{ width: pct(vocab().fresh), background: "var(--p0)" }} />
+                <i style={{ width: pct(vocab().young), background: "var(--p1)" }} />
+                <i style={{ width: pct(vocab().learning + vocab().fresh), background: "var(--p0)" }} />
               </div>
             </Show>
-            <span class="pg-sub">
-              {vocab().total > 0
-                ? `words · ${vocab().mature} mature`
-                : "add words in Practice"}
-            </span>
+            <Show
+              when={cal()}
+              fallback={
+                vocab().total > 0 ? (
+                  <a class="pg-sub pg-cal" href="/vocab/estimate/">
+                    in your decks · calibrate the full picture
+                  </a>
+                ) : (
+                  <span class="pg-sub">add words in Practice</span>
+                )
+              }
+            >
+              <a class="pg-sub pg-cal" href="/vocab/estimate/" title="Run the spot-check again">
+                of 20,000 common words · {spread()} · {when()}
+              </a>
+            </Show>
           </div>
         </div>
       </section>

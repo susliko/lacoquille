@@ -29,6 +29,7 @@ const DOC_KEYS = [
   "lacoquille.feed.v1",
   "lacoquille.exercises.v1",
   "lacoquille.vocab.v1",
+  "lacoquille.vocabestimate.v1",
   "lacoquille.settings.v1",
 ] as const;
 

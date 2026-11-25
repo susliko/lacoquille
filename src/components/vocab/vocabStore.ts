@@ -16,6 +16,7 @@
  */
 
 import type { Level } from "../exercise/feedStore";
+import { wordKey } from "../../lib/word";
 
 export type Rate = "again" | "hard" | "good" | "easy";
 
@@ -24,6 +25,11 @@ export interface VocabCard {
   deckId: string;
   front: string;
   back: string;
+  /** The word this card drills — a note-level stamp set by the
+   *  Anki import (both directions of a note share it) and by mining
+   *  at creation. Collapses cards into words for the vocabulary
+   *  estimate; empty for pre-word cards (front is the fallback). */
+  word?: string;
   /** Source sentence, kept from mining. May be empty. */
   cx: string;
   /** Epoch seconds when the card is next reviewable. */
@@ -114,6 +120,7 @@ export function addCards(
       deckId,
       front,
       back: e.back.trim(),
+      word: wordKey(front),
       cx: e.cx ?? "",
       due: now,
       interval: 0,
@@ -204,6 +211,8 @@ export function clearSessionCounter(): void {
 export interface PlannedCard {
   front: string;
   back: string;
+  /** Note-level word identity (imports stamp both directions). */
+  word?: string;
   due: number;
   interval: number;
   ease: number;
@@ -215,7 +224,8 @@ export interface PlannedCard {
     A front already in any deck is not duplicated — if its back
     differs the card is *updated* instead (Anki's own import
     semantics), so re-importing with a corrected field mapping
-    repairs a bad import without touching review schedules.
+    repairs a bad import without touching review schedules. The
+    update also repairs cards imported before word-stamping existed.
     Returns counts for the result screen. */
 export function commitAnkiImport(
   decks: Array<{ name: string; cards: PlannedCard[] }>,
@@ -243,9 +253,17 @@ export function commitAnkiImport(
       const existing = byFront.get(key);
       if (existing) {
         // a front decided earlier in THIS commit is a within-plan
-        // duplicate — its differing back must not flip the stored one
-        if (!seen.has(key) && existing.back.trim() !== back) {
-          s.cards[existing.id] = { ...existing, back };
+        // duplicate — its differing back must not flip the stored one.
+        // Word repair rides the same update: a re-import stamps the
+        // note-level word on cards imported before it existed.
+        const backDiffers = !seen.has(key) && existing.back.trim() !== back;
+        const wordDiffers = !seen.has(key) && !!p.word && existing.word !== p.word;
+        if (backDiffers || wordDiffers) {
+          s.cards[existing.id] = {
+            ...existing,
+            back: backDiffers ? back : existing.back,
+            word: p.word || existing.word,
+          };
           planUpdated += 1;
         }
         seen.add(key);
@@ -276,6 +294,7 @@ export function commitAnkiImport(
         deckId: deck.id,
         front: p.front.trim(),
         back: p.back.trim(),
+        word: p.word || undefined,
         cx: "",
         due: p.due,
         interval: p.interval,

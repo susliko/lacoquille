@@ -23,6 +23,7 @@
  */
 
 import type { AnkiCollection, AnkiCardState, AnkiNotetypeInfo, AnkiTemplateSides } from "./collection";
+import { wordKey } from "../word";
 
 export interface FieldChoice {
   front: number;
@@ -35,6 +36,10 @@ export type FieldMapping = Record<number, FieldChoice>;
 export interface PlannedCard {
   front: string;
   back: string;
+  /** Note-level word identity — every direction of a note carries
+   *  the same stamp, so a reversed import's two cards collapse into
+   *  one word for the vocabulary estimate. */
+  word?: string;
   due: number;
   interval: number;
   ease: number;
@@ -316,7 +321,7 @@ export function buildPlan(col: AnkiCollection, mapping: FieldMapping): ImportPla
         stats.empty += 1;
         continue;
       }
-      push(deckName, { ...toPlanned(first, col.crt, now), front, back });
+      push(deckName, { ...toPlanned(first, col.crt, now), front, back, word: wordKey(front) });
       continue;
     }
 
@@ -328,6 +333,9 @@ export function buildPlan(col: AnkiCollection, mapping: FieldMapping): ImportPla
     }
     stats.multiDir += 1;
     let imported = 0;
+    // the note's word: direction 0's front is the deck's forward
+    // face ("La souris"), and both directions drill that same word
+    const noteWord = wordKey(firstContent(dirs[0].q, note.fields, nt, "front"));
     for (const dir of dirs) {
       // optional reversed cards: Anki doesn't generate the direction
       // when its trigger field is empty — respect that
@@ -336,7 +344,7 @@ export function buildPlan(col: AnkiCollection, mapping: FieldMapping): ImportPla
       const front = firstContent(dir.q, note.fields, nt, "front");
       const back = firstContent(dir.a.filter((f) => !dir.q.includes(f)), note.fields, nt, "back");
       if (!front || !back) continue;
-      push(deckName, { ...toPlanned(state, col.crt, now), front, back });
+      push(deckName, { ...toPlanned(state, col.crt, now), front, back, word: noteWord || undefined });
       imported += 1;
     }
     if (imported === 0) stats.empty += 1;
