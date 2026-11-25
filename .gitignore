@@ -49,3 +49,7 @@ __pycache__/
 lacoquille-handoff.zip
 french-app-handoff.zip
 *.mp4
+
+# user deck files — never commit learner data
+*.apkg
+*.colpkg

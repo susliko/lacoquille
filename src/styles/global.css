@@ -2164,6 +2164,14 @@ article {
 }
 .ai-map:last-child { border-bottom: 0; }
 .ai-map .k { width: 92px; flex: none; font-size: 13px; font-weight: 700; color: var(--muted); }
+.ai-dir {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  word-break: break-word;
+}
 .ai-sel {
   flex: 1;
   min-width: 0;

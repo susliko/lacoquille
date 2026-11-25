@@ -242,7 +242,9 @@ export function commitAnkiImport(
       const back = p.back.trim();
       const existing = byFront.get(key);
       if (existing) {
-        if (existing.back.trim() !== back) {
+        // a front decided earlier in THIS commit is a within-plan
+        // duplicate — its differing back must not flip the stored one
+        if (!seen.has(key) && existing.back.trim() !== back) {
           s.cards[existing.id] = { ...existing, back };
           planUpdated += 1;
         }

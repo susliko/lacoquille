@@ -44,7 +44,6 @@ MODELS_11 = json.dumps(
             "flds": [{"name": "Front", "ord": 0}, {"name": "Back", "ord": 1}],
             "tmpls": [
                 {"name": "Card 1", "q": "{{Front}}", "a": "{{FrontSide}}<hr id=answer>{{Back}}"},
-                {"name": "Card 2", "q": "{{Back}}", "a": "{{FrontSide}}<hr id=answer>{{Front}}"},
             ],
         }
     }
@@ -190,8 +189,10 @@ def schema18_db(with_cloze=True):
     basic_cfg = json.dumps({"type": 0, "sortf": 0}).encode()
     cloze_cfg = json.dumps({"type": 1, "sortf": 0}).encode()
     mid_cloze = MID + 7
+    mid_rev = MID + 9
     c.execute("INSERT INTO notetypes VALUES (?,?,0,0,?)", (MID, "Basic", basic_cfg))
     c.execute("INSERT INTO notetypes VALUES (?,?,0,0,?)", (mid_cloze, "Cloze French", cloze_cfg))
+    c.execute("INSERT INTO notetypes VALUES (?,?,0,0,?)", (mid_rev, "Basic (and reversed card)", basic_cfg))
     # a 3-field vocab layout (front / audio / answer) — the case where
     # "back = field 1" puts the wrong language on both sides; the
     # template formats are what the default mapping must believe
@@ -199,15 +200,15 @@ def schema18_db(with_cloze=True):
         c.execute("INSERT INTO fields VALUES (?,?,?,'{}')", (MID, i, name))
     c.execute("INSERT INTO fields VALUES (?,0,'Text','{}')", (mid_cloze,))
     c.execute("INSERT INTO fields VALUES (?,1,'Back Extra','{}')", (mid_cloze,))
-    basic_tmpl_cfg = json.dumps(
-        {"qfmt": "{{Front}}{{Sound}}", "afmt": "{{FrontSide}}<hr id=answer>{{English}}"}
-    ).encode()
-    cloze_tmpl_cfg = json.dumps(
-        {"qfmt": "{{cloze:Text}}", "afmt": "{{cloze:Text}}<br>{{Back Extra}}"}
-    ).encode()
-    for i in [0, 1]:
-        c.execute("INSERT INTO templates VALUES (?,?,?,?)", (MID, i, f"Card {i + 1}", basic_tmpl_cfg))
-    c.execute("INSERT INTO templates VALUES (?,?,?,?)", (mid_cloze, 0, "Cloze", cloze_tmpl_cfg))
+    for i, name in enumerate(["Front", "Back"]):
+        c.execute("INSERT INTO fields VALUES (?,?,?,'{}')", (mid_rev, i, name))
+    # template configs: real protobuf for most, one JSON to exercise
+    # the fallback path
+    c.execute("INSERT INTO templates VALUES (?,?,?,?)", (MID, 0, "Card 1", tmpl_config_pb("{{Front}}{{Sound}}", "{{FrontSide}}<hr id=answer>{{English}}")))
+    c.execute("INSERT INTO templates VALUES (?,?,?,?)", (MID, 1, "Card 2", json.dumps({"qfmt": "{{Front}}{{Sound}}", "afmt": "{{FrontSide}}<hr id=answer>{{English}}"}).encode()))
+    c.execute("INSERT INTO templates VALUES (?,?,?,?)", (mid_cloze, 0, "Cloze", tmpl_config_pb("{{cloze:Text}}", "{{cloze:Text}}<br>{{Back Extra}}")))
+    c.execute("INSERT INTO templates VALUES (?,?,?,?)", (mid_rev, 0, "Card 1", tmpl_config_pb("{{Front}}", "{{FrontSide}}<hr id=answer>{{Back}}")))
+    c.execute("INSERT INTO templates VALUES (?,?,?,?)", (mid_rev, 1, "Card 2", tmpl_config_pb("{{Back}}", "{{FrontSide}}<hr id=answer>{{Front}}")))
     c.execute("INSERT INTO decks VALUES (1,'Default',0,0,'{}','{}','{}')")
     c.execute("INSERT INTO decks VALUES (?,'French::Core 2k',0,0,'{}','{}','{}')", (DID,))
     notes = [
@@ -216,6 +217,16 @@ def schema18_db(with_cloze=True):
         (1700000000011, "guidD", MID, "un oiseau marin<br>seabird\x1f\x1f<b>a seabird</b>", "un oiseau marin"),
         # a cloze note with two deletions — first (c1) becomes the card
         (1700000000012, "guidE", mid_cloze, "Le {{c1::phare::lighthouse}} guide les {{c2::navires}}.\x1f", ""),
+        # a reversed note: Back embeds a collapsed <details> example —
+        # it belongs on answer sides, and must never leak onto the
+        # reversed card's FRONT
+        (
+            1700000000013,
+            "guidF",
+            mid_rev,
+            "La souris\x1fMouse<details><summary>Exemple</summary>La souris mange du fromage.</details>",
+            "La souris",
+        ),
     ]
     for nid, guid, mid, flds, sfld in notes:
         c.execute("INSERT INTO notes VALUES (?,?,?,?,0,'',?,?,0,0,'')", (nid, guid, mid, 0, flds, sfld))
@@ -229,8 +240,26 @@ def schema18_db(with_cloze=True):
         " VALUES (?,?,?,?,0,0,?,?,?,?,?,?,?)",
         (1700000900012, 1700000000012, DID, 0, 0, 0, 0, 0, 0, 0, 0),
     )
+    # the reversed pair: both directions exist, each with its own
+    # schedule (ord 0 and ord 1 — like the real 322-note deck)
+    c.execute(
+        "INSERT INTO cards (id, nid, did, ord, mod, usn, type, queue, due, ivl, factor, reps, lapses)"
+        " VALUES (?,?,?,?,0,0,?,?,?,?,?,?,?)",
+        (1700000900013, 1700000000013, DID, 0, 2, 2, 1234, 12, 2500, 15, 1),
+    )
+    c.execute(
+        "INSERT INTO cards (id, nid, did, ord, mod, usn, type, queue, due, ivl, factor, reps, lapses)"
+        " VALUES (?,?,?,?,0,0,?,?,?,?,?,?,?)",
+        (1700000900014, 1700000000013, DID, 1, 2, 2, 1234, 321, 2650, 9, 0),
+    )
     c.execute(
         "INSERT INTO revlog VALUES (1593000000000,1700000900011,0,3,30,20,2350,5100,0)"
+    )
+    c.execute(
+        "INSERT INTO revlog VALUES (1593100000000,1700000900013,0,3,12,8,2500,4800,0)"
+    )
+    c.execute(
+        "INSERT INTO revlog VALUES (1593200000000,1700000900014,0,4,321,180,2650,6200,0)"
     )
     db.commit()
     db.close()
@@ -238,17 +267,31 @@ def schema18_db(with_cloze=True):
         return f.read()
 
 
+def pb_str(field_no: int, s: str) -> bytes:
+    """encode a protobuf length-delimited string field."""
+    b = s.encode()
+    return bytes([(field_no << 3) | 2, len(b)]) + b
+
+
+def tmpl_config_pb(qfmt: str, afmt: str) -> bytes:
+    """TemplateConfig as real 25.x exports store it: qfmt = field 1,
+    afmt = field 2."""
+    return pb_str(1, qfmt) + pb_str(2, afmt)
+
+
 def media_json():
     return json.dumps({"0": "bird.mp3", "1": "img/lighthouse.png"}).encode()
 
 
-def media_protobuf():
-    # the .anki21b map: repeated { name: string (field 1) } — walkable
-    # wire format, which the reader only counts
+def media_protobuf(compress=False):
+    # the .anki21b map: protobuf of repeated { name } — and current
+    # Anki zstd-compresses the map file itself
     out = bytearray()
     for name in ["bird.mp3", "img/lighthouse.png"]:
         nb = name.encode()
         out += bytes([0x0A, len(nb)]) + nb
+    if compress:
+        return zstandard.ZstdCompressor().compress(bytes(out))
     return bytes(out)
 
 
@@ -283,7 +326,7 @@ def main():
         zip_apkg(
             "schema18.apkg",
             schema18_db(),
-            media_protobuf(),
+            media_protobuf(compress=True),
             coll_member="collection.anki21b",
             compress=zipfile.ZIP_DEFLATED,
         )

@@ -187,10 +187,18 @@ function tarFind(tar: Uint8Array, names: RegExp): Uint8Array | null {
 // ─── media map (count only) ─────────────────────────────────────────
 
 /** Old packages: JSON `{ "0": "img.jpg", … }`. New (schema 18): a
-    protobuf of `repeated { name, index }` — walk top-level records
-    and count those that decode like entries. Never throws. */
-function countMedia(map: Uint8Array | null): number | null {
+    protobuf of `repeated { name, index }` — and current Anki
+    zstd-compresses the map itself (verified on a real 25.x export:
+    the 9-byte map file starts with the zstd magic). Never throws. */
+async function countMedia(map: Uint8Array | null): Promise<number | null> {
   if (!map) return null;
+  if (isZstd(map)) {
+    try {
+      map = await zstd(map, "The media map");
+    } catch {
+      return null;
+    }
+  }
   try {
     const text = decoder.decode(map);
     if (text.trimStart().startsWith("{")) {
@@ -293,6 +301,6 @@ export async function readAnkiContainer(file: Blob): Promise<AnkiContainer> {
   }
 
   const mediaEntry = byName(/(?:^|\/)media$/);
-  const mediaCount = mediaEntry ? countMedia(await readEntry(file, mediaEntry)) : null;
+  const mediaCount = mediaEntry ? await countMedia(await readEntry(file, mediaEntry)) : null;
   return { collection, variant, kind: "zip", mediaCount };
 }

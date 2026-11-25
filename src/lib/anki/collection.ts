@@ -22,17 +22,30 @@
 
 import type { AnkiContainer, CollectionVariant } from "./container";
 
+export interface AnkiTemplateSides {
+  /** Template ord — matches cards.ord for schedule lookup. */
+  ord: number;
+  name: string;
+  /** Field names this template shows on the question / answer side. */
+  q: string[];
+  a: string[];
+  /** Raw formats, kept for the cloze check. */
+  qfmt: string;
+  afmt: string;
+}
+
 export interface AnkiNotetypeInfo {
   id: number;
   name: string;
   fields: string[];
   cloze: boolean;
   templates: number;
-  /** Field names the card templates show on the question / answer
-      side, in field order — the honest signal for defaulting the
-      front↔back mapping ("Basic (and reversed)" decks, 3-field
-      vocab layouts with audio columns, …). Empty when the export
-      carries no readable templates; callers fall back to 0/1. */
+  /** Per-template question/answer sides. A notetype with two
+      distinct sides ("Basic (and reversed card)") drills two
+      directions — each imports as its own card. */
+  templateSides: AnkiTemplateSides[];
+  /** Union of question-side / answer-side fields, in field order —
+      the default front↔back mapping for single-direction types. */
   frontRefs: string[];
   backRefs: string[];
 }
@@ -107,13 +120,26 @@ export async function openAnkiCollection(
     locateFile: () => `/vendor/sql-wasm.wasm`,
     ...sqlConfig,
   });
-  const db = new SQL.Database(container.collection);
+  let db = new SQL.Database(container.collection);
   try {
     const tables = new Set(
       db
         .exec("SELECT lower(name) FROM sqlite_master WHERE type='table'")
         .flatMap((r) => r.values.map((v) => String(v[0]))),
     );
+
+    // Anki's schema-18 DDL declares `name COLLATE unicase`, a
+    // collation this SQLite build doesn't ship — tables using it
+    // (fields, templates) become unreadable ("no query solution")
+    // even for plain SELECTs. This is OUR throwaway in-memory copy,
+    // so rewrite the schema without the collation and reopen.
+    if (tables.has("fields") && rows(db, "SELECT ntid FROM fields LIMIT 1").length === 0) {
+      const fixed = withoutUnicaseCollation(db);
+      if (fixed) {
+        db.close();
+        db = new SQL.Database(fixed);
+      }
+    }
 
     const crt = Number(scalar(db, "SELECT crt FROM col LIMIT 1") ?? 0);
     const notetypes = readNotetypes(db, tables);
@@ -161,6 +187,25 @@ function asText(v: unknown): string {
   return typeof v === "string" ? v : v instanceof Uint8Array ? utf8.decode(v) : String(v ?? "");
 }
 
+/** Drop `COLLATE unicase` from the schema and export the bytes for a
+    clean reopen. Returns null when anything refuses — callers fall
+    back to the original database (fields/templates then read as
+    empty, which only costs us the reversed-directions feature). */
+function withoutUnicaseCollation(db: Db): Uint8Array | null {
+  try {
+    db.exec("PRAGMA writable_schema=ON");
+    db.exec(
+      "UPDATE sqlite_master SET sql = replace(replace(sql, 'COLLATE unicase', ''), 'collate unicase', '')" +
+        " WHERE type = 'table'",
+    );
+    db.exec("PRAGMA writable_schema=OFF");
+    const out = db.export();
+    return out instanceof Uint8Array ? out : new Uint8Array(out as ArrayBufferLike);
+  } catch {
+    return null;
+  }
+}
+
 /** Column-safe select: old exports can lack a column (e.g. anki2 v1
     scheduler cards without `factor`) — missing columns come back null. */
 function trySelect(db: Db, cols: string, table: string, extra = ""): unknown[][] {
@@ -178,14 +223,20 @@ function readNotetypes(db: Db, tables: Set<string>): AnkiNotetypeInfo[] {
       if (!fieldNames.has(k)) fieldNames.set(k, new Map());
       fieldNames.get(k)!.set(Number(ord), String(name));
     }
-    // the template config JSON carries qfmt/afmt — the question and
-    // answer formats that say which fields show on which side
-    const tmplSides = new Map<number, Array<{ q: string; a: string }>>();
-    for (const [ntid, config] of rows(db, "SELECT ntid, config FROM templates")) {
-      const cfg = safeJson(asText(config ?? "{}")) as { qfmt?: string; afmt?: string } | null;
+    // the template config names the question/answer sides. Real
+    // exports store it as protobuf (qfmt = field 1, afmt = field 2);
+    // JSON {qfmt, afmt} is accepted as a fallback.
+    const tmplSides = new Map<number, AnkiTemplateSides[]>();
+    for (const [ntid, ord, name, config] of rows(
+      db,
+      "SELECT ntid, ord, name, config FROM templates ORDER BY ntid, ord",
+    )) {
       const k = Number(ntid);
       if (!tmplSides.has(k)) tmplSides.set(k, []);
-      tmplSides.get(k)!.push({ q: cfg?.qfmt ?? "", a: cfg?.afmt ?? "" });
+      const fields = [...(fieldNames.get(k)?.values() ?? [])];
+      tmplSides
+        .get(k)!
+        .push(decodeTemplate(Number(ord), String(name), (config as Uint8Array) ?? new Uint8Array(), fields));
     }
     const out: AnkiNotetypeInfo[] = [];
     for (const [id, name, config] of rows(db, "SELECT id, name, config FROM notetypes ORDER BY id")) {
@@ -196,9 +247,14 @@ function readNotetypes(db: Db, tables: Set<string>): AnkiNotetypeInfo[] {
         id: Number(id),
         name: String(name),
         fields,
-        cloze: (cfg?.type ?? 0) === 1 || /cloze/i.test(String(name)),
+        cloze:
+          (cfg?.type ?? 0) === 1 ||
+          /cloze/i.test(String(name)) ||
+          tmpls.some((t) => /\{\{\s*cloze\s*:/i.test(t.qfmt)) ||
+          /\{\{\s*cloze\s*:/i.test(asText(config ?? "")),
         templates: Math.max(1, tmpls.length),
-        ...sidesFor(fields, tmpls),
+        templateSides: tmpls,
+        ...unionSides(fields, tmpls),
       });
     }
     return out;
@@ -214,7 +270,7 @@ function readNotetypes(db: Db, tables: Set<string>): AnkiNotetypeInfo[] {
           name?: string;
           type?: number;
           flds?: Array<{ name?: string }>;
-          tmpls?: Array<{ q?: string; a?: string }>;
+          tmpls?: Array<{ name?: string; q?: string; a?: string }>;
         }
       >
     | null;
@@ -222,7 +278,14 @@ function readNotetypes(db: Db, tables: Set<string>): AnkiNotetypeInfo[] {
   return Object.values(models).map((m) => {
     const fields = (m.flds ?? []).map((f) => String(f.name ?? ""));
     const tmpls = Array.isArray(m.tmpls)
-      ? m.tmpls.map((t) => ({ q: String(t.q ?? ""), a: String(t.a ?? "") }))
+      ? m.tmpls.map((t, i) =>
+          decodeTemplate(
+            i,
+            String(t.name ?? ""),
+            new TextEncoder().encode(JSON.stringify({ qfmt: t.q ?? "", afmt: t.a ?? "" })),
+            fields,
+          ),
+        )
       : [];
     return {
       id: Number(m.id ?? 0),
@@ -230,9 +293,33 @@ function readNotetypes(db: Db, tables: Set<string>): AnkiNotetypeInfo[] {
       fields,
       cloze: (m.type ?? 0) === 1 || /cloze/i.test(String(m.name ?? "")),
       templates: tmpls.length || 1,
-      ...sidesFor(fields, tmpls),
+      templateSides: tmpls,
+      ...unionSides(fields, tmpls),
     };
   });
+}
+
+/** Decode one template's config into its sides. Real exports store
+    protobuf (qfmt = field 1, afmt = field 2 — verified on a 25.x
+    export); JSON {qfmt, afmt} is accepted as a fallback. */
+const PB_QFMT = 1;
+const PB_AFMT = 2;
+
+function decodeTemplate(ord: number, name: string, config: Uint8Array, fields: string[]): AnkiTemplateSides {
+  let qfmt = "";
+  let afmt = "";
+  const json = safeJson(utf8.decode(config)) as { qfmt?: string; afmt?: string } | null;
+  if (json && (typeof json.qfmt === "string" || typeof json.afmt === "string")) {
+    qfmt = json.qfmt ?? "";
+    afmt = json.afmt ?? "";
+  } else {
+    // the protobuf walk must see the ORIGINAL bytes — a UTF-8
+    // roundtrip corrupts its length prefixes
+    const pb = pbDecode(config);
+    qfmt = pb.get(PB_QFMT) ?? "";
+    afmt = pb.get(PB_AFMT) ?? "";
+  }
+  return { ord, name, q: fieldRefs(qfmt, fields), a: fieldRefs(afmt, fields), qfmt, afmt };
 }
 
 /** Which fields a note type's templates put on the question vs the
@@ -255,14 +342,60 @@ function fieldRefs(fmt: string, fields: string[]): string[] {
   return fields.filter((f) => hits.has(f));
 }
 
-function sidesFor(fields: string[], tmpls: Array<{ q: string; a: string }>): { frontRefs: string[]; backRefs: string[] } {
+function unionSides(fields: string[], tmpls: AnkiTemplateSides[]): { frontRefs: string[]; backRefs: string[] } {
   const q = new Set<string>();
   const a = new Set<string>();
   for (const t of tmpls) {
-    for (const f of fieldRefs(t.q, fields)) q.add(f);
-    for (const f of fieldRefs(t.a, fields)) a.add(f);
+    for (const f of t.q) q.add(f);
+    for (const f of t.a) a.add(f);
   }
   return { frontRefs: fields.filter((f) => q.has(f)), backRefs: fields.filter((f) => a.has(f)) };
+}
+
+/** Minimal protobuf walk over a template config: returns the
+    length-delimited string fields by number (qfmt=1, afmt=2 in
+    Anki's TemplateConfig). Unknown/varint fields are skipped. */
+function pbDecode(b: Uint8Array): Map<number, string> {
+  const out = new Map<number, string>();
+  let i = 0;
+  const readVarint = (): number => {
+    let v = 0;
+    let shift = 0;
+    for (;;) {
+      if (i >= b.length) throw new RangeError("pb: truncated");
+      v += (b[i] & 0x7f) * Math.pow(2, shift);
+      const more = (b[i] & 0x80) !== 0;
+      i += 1;
+      shift += 7;
+      if (!more) return v;
+      if (shift > 42) throw new RangeError("pb: bad varint");
+    }
+  };
+  try {
+    while (i < b.length) {
+      const tag = readVarint();
+      const fieldNo = tag >>> 3;
+      const wire = tag & 0x7;
+      if (wire === 0) {
+        readVarint(); // skipped value
+      } else if (wire === 2) {
+        const len = readVarint();
+        if (i + len > b.length) break;
+        const s = utf8.decode(b.slice(i, i + len));
+        i += len;
+        if (!out.has(fieldNo)) out.set(fieldNo, s);
+      } else if (wire === 5) {
+        i += 4; // 32-bit
+      } else if (wire === 1) {
+        i += 8; // 64-bit
+      } else {
+        break; // groups (3/4) shouldn't appear in Anki configs
+      }
+    }
+  } catch {
+    /* truncated config — return what we got */
+  }
+  return out;
 }
 
 function readDecks(db: Db, tables: Set<string>): AnkiDeckInfo[] {

@@ -74,7 +74,7 @@ async function main() {
       "fields Front/Back",
       col.notetypes[0].fields,
     );
-    ok(col.notetypes[0].templates === 2, "template count from col JSON");
+    ok(col.notetypes[0].templates === 1, "template count from col JSON");
     ok(col.notetypes[0].cloze === false, "not cloze");
     ok(col.decks.some((d) => d.name === "French::Core 2k"), "deck name with :: path");
     ok(col.notes.length === 3, "three notes", col.notes.length);
@@ -95,7 +95,7 @@ async function main() {
     ok(Math.abs(fresh.due - Math.floor(Date.now() / 1000)) < 5, "new card due now", fresh.due);
     ok(learning.interval === 0, "learning card stays in learning step");
     ok(learning.due === 1700000100, "learning due epoch-seconds kept", learning.due);
-    ok(plan.stats.multiCard === 3, "multi-template disclosure counts", plan.stats);
+    ok(plan.stats.multiDir === 0, "single-direction deck: no multiDir", plan.stats);
     ok(plan.stats.empty === 0 && plan.stats.cloze === 0, "no empties, no cloze");
 
     // template-driven mapping: qfmt "{{Front}}" / afmt "…{{Back}}"
@@ -109,10 +109,26 @@ async function main() {
     const { ct, col } = await load("schema18.apkg");
     ok(ct.variant === "anki21b", "variant is anki21b", ct.variant);
     ok(ct.mediaCount === 2, "media count from protobuf map", ct.mediaCount);
-    ok(col.notetypes.length === 2, "two notetypes", col.notetypes.map((n) => n.name));
+    ok(col.notetypes.length === 3, "three notetypes", col.notetypes.map((n) => n.name));
     const cloze = col.notetypes.find((n) => n.cloze);
     ok(!!cloze && cloze.name === "Cloze French", "cloze flag from config type", cloze?.name);
     ok(cloze?.fields.length === 2, "cloze fields from fields table", cloze?.fields);
+    // protobuf template configs decode to per-template sides — and a
+    // JSON-config template decodes through the fallback
+    const rev = col.notetypes.find((n) => n.name === "Basic (and reversed card)")!;
+    ok(rev.templateSides.length === 2, "two templates", rev.templateSides);
+    ok(
+      JSON.stringify(rev.templateSides[0].q) === JSON.stringify(["Front"]) &&
+        JSON.stringify(rev.templateSides[0].a) === JSON.stringify(["Back"]),
+      "tmpl 0 sides (protobuf config)",
+      rev.templateSides[0],
+    );
+    ok(
+      JSON.stringify(rev.templateSides[1].q) === JSON.stringify(["Back"]) &&
+        JSON.stringify(rev.templateSides[1].a) === JSON.stringify(["Front"]),
+      "tmpl 1 sides reversed",
+      rev.templateSides[1],
+    );
 
     // THE regression: [Front, Sound, English] with the audio field on
     // the question side — "back = field 1" would put the wrong
@@ -134,7 +150,21 @@ async function main() {
     );
     ok(clozeCard?.back === "phare (lighthouse)", "cloze back = answer + hint", clozeCard?.back);
     ok(plan.stats.cloze === 1, "cloze counted", plan.stats);
-    ok(plan.stats.multiCard === 1, "multi-template only for the 2-tmpl notetype", plan.stats);
+
+    // ── THE fix: reversed note types import both directions ──
+    ok(plan.decks[0].cards.length === 4, "reversed note → two cards", plan.decks[0].cards.length);
+    const [frToEn, enToFr] = [plan.decks[0].cards[2], plan.decks[0].cards[3]];
+    ok(frToEn?.front === "La souris", "direction 1 front", frToEn);
+    ok(
+      frToEn?.back === "Mouse La souris mange du fromage.",
+      "direction 1 back: details unwrapped onto the answer",
+      frToEn?.back,
+    );
+    ok(frToEn?.interval === 12 && frToEn?.ease === 2.5, "direction 1 keeps its own schedule", frToEn);
+    ok(enToFr?.front === "Mouse", "THE regression: reversed front has no French left", enToFr);
+    ok(enToFr?.back === "La souris", "reversed back is the French word", enToFr);
+    ok(enToFr?.interval === 321 && enToFr?.ease === 2.65, "reversed card keeps ITS schedule", enToFr);
+    ok(plan.stats.multiDir === 1, "multi-direction disclosure counts", plan.stats);
   }
 
   // ── export without scheduling ─────────────────────────────────
@@ -154,7 +184,7 @@ async function main() {
     const { ct, col } = await load("colpkg.tar.zst");
     ok(ct.kind === "tar+zstd", "tar container", ct.kind);
     ok(ct.variant === "anki21b", "collection found inside tar");
-    ok(col.notes.length === 2, "notes read through tar path", col.notes.length);
+    ok(col.notes.length === 3, "notes read through tar path", col.notes.length);
   }
 
   // ── corrupt package errors kindly ─────────────────────────────

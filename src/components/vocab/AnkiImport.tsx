@@ -21,7 +21,8 @@ import { openAnkiCollection, type AnkiCollection } from "../../lib/anki/collecti
 import {
   buildPlan,
   defaultMapping,
-  sampleFor,
+  directionsOf,
+  samplesFor,
   type FieldMapping,
   type ImportPlan,
 } from "../../lib/anki/import";
@@ -252,10 +253,10 @@ export default function AnkiImport() {
                 because the two schedulers differ.
               </Show>
             </p>
-            <Show when={plan()!.stats.multiCard > 0}>
+            <Show when={plan()!.stats.multiDir > 0}>
               <p class="ai-note">
-                {fmt(plan()!.stats.multiCard)} notes carry several card types — we keep the
-                first card's schedule.
+                {fmt(plan()!.stats.multiDir)} notes drill both directions — each direction
+                imports as its own card, with its own Anki schedule.
               </p>
             </Show>
             <Show when={plan()!.stats.cloze > 0}>
@@ -272,69 +273,75 @@ export default function AnkiImport() {
             </div>
             <div class="ai-facts">
               <For each={notetypesUsed()}>
-                {(nt) => (
-                  <Show
-                    when={nt.cloze}
-                    fallback={
-                      <>
-                        <div class="ai-map">
-                          <span class="k">Front</span>
-                          <select
-                            class="ai-sel"
-                            value={mapping()[nt.id]?.front ?? 0}
-                            onChange={(e) => setField(nt.id, "front", Number(e.currentTarget.value))}
-                          >
-                            <For each={nt.fields}>
-                              {(f, i) => <option value={i()}>{f || `field ${i() + 1}`}</option>}
-                            </For>
-                          </select>
-                        </div>
-                        <div class="ai-map">
-                          <span class="k">Back</span>
-                          <select
-                            class="ai-sel"
-                            value={mapping()[nt.id]?.back ?? (nt.fields.length > 1 ? 1 : 0)}
-                            onChange={(e) => setField(nt.id, "back", Number(e.currentTarget.value))}
-                          >
-                            <For each={nt.fields}>
-                              {(f, i) => <option value={i()}>{f || `field ${i() + 1}`}</option>}
-                            </For>
-                          </select>
-                        </div>
-                      </>
-                    }
-                  >
-                    <div class="ai-map">
-                      <span class="k">Cloze text</span>
-                      <select
-                        class="ai-sel"
-                        value={mapping()[nt.id]?.front ?? 0}
-                        onChange={(e) => setField(nt.id, "front", Number(e.currentTarget.value))}
-                      >
-                        <For each={nt.fields}>
-                          {(f, i) => <option value={i()}>{f || `field ${i() + 1}`}</option>}
-                        </For>
-                      </select>
-                    </div>
-                  </Show>
-                )}
+                {(nt) => {
+                  const dirs = () => directionsOf(nt);
+                  return (
+                    <Show
+                      when={nt.cloze || dirs().length > 1}
+                      fallback={
+                        <>
+                          <div class="ai-map">
+                            <span class="k">Front</span>
+                            <select
+                              class="ai-sel"
+                              value={mapping()[nt.id]?.front ?? 0}
+                              onChange={(e) => setField(nt.id, "front", Number(e.currentTarget.value))}
+                            >
+                              <For each={nt.fields}>
+                                {(f, i) => <option value={i()}>{f || `field ${i() + 1}`}</option>}
+                              </For>
+                            </select>
+                          </div>
+                          <div class="ai-map">
+                            <span class="k">Back</span>
+                            <select
+                              class="ai-sel"
+                              value={mapping()[nt.id]?.back ?? (nt.fields.length > 1 ? 1 : 0)}
+                              onChange={(e) => setField(nt.id, "back", Number(e.currentTarget.value))}
+                            >
+                              <For each={nt.fields}>
+                                {(f, i) => <option value={i()}>{f || `field ${i() + 1}`}</option>}
+                              </For>
+                            </select>
+                          </div>
+                        </>
+                      }
+                    >
+                      {/* cloze and reversed note types: Anki's card
+                          types already define the sides — shown, not
+                          re-mapped */}
+                      <For each={dirs().length > 1 ? dirs() : [{ ord: 0, name: nt.name, q: [nt.fields[0]], a: [], qfmt: "", afmt: "" }]}>
+                        {(d) => (
+                          <div class="ai-map">
+                            <span class="k">{d.name || `Card ${d.ord + 1}`}</span>
+                            <span class="ai-dir">
+                              {nt.cloze ? "first deletion becomes the card" : `${d.q[0] ?? "?"} → ${d.a.filter((f) => !d.q.includes(f))[0] ?? "?"}`}
+                            </span>
+                          </div>
+                        )}
+                      </For>
+                    </Show>
+                  );
+                }}
               </For>
             </div>
-            {/* the sample is the feedback that makes a wrong mapping
+            {/* the samples are the feedback that makes a wrong mapping
                 visible before 2,000 cards commit it */}
             <For each={notetypesUsed()}>
               {(nt) => {
-                const s = () => sampleFor(col()!, mapping(), nt);
+                const s = () => samplesFor(col()!, mapping(), nt);
                 return (
-                  <Show when={s()}>
-                    <div class="ai-sample">
-                      <span class="k">{nt.name}</span>
-                      <span class="v">
-                        <b>{s()!.front}</b>
-                        <span>{s()!.back}</span>
-                      </span>
-                    </div>
-                  </Show>
+                  <For each={s()}>
+                    {(sample) => (
+                      <div class="ai-sample">
+                        <span class="k">{sample.label}</span>
+                        <span class="v">
+                          <b>{sample.front}</b>
+                          <span>{sample.back}</span>
+                        </span>
+                      </div>
+                    )}
+                  </For>
                 );
               }}
             </For>
