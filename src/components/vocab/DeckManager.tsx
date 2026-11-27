@@ -31,6 +31,12 @@ const X = () => (
   </svg>
 );
 
+const Trash = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M4 6.5h16M9.5 6.5V4.8a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1.7M6.5 6.5l1 13a1 1 0 0 0 1 .9h7a1 1 0 0 0 1-.9l1-13" />
+  </svg>
+);
+
 const CHUNK = 150;
 
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -97,6 +103,17 @@ export default function DeckManager() {
           <Back />
         </a>
         <div class="ai-title">{deckName() || "Deck"}</div>
+        {/* deletion lives in the bar — reachable above any list
+            length, which is exactly where you want it for a
+            2,000-card deck */}
+        <button
+          type="button"
+          class="dm-trash"
+          aria-label="Delete this deck"
+          onClick={() => setConfirming(true)}
+        >
+          <Trash />
+        </button>
       </header>
 
       <div class="ai-scroll">
@@ -169,34 +186,30 @@ export default function DeckManager() {
               </button>
             </Show>
           </Show>
-
-          {/* the one destructive act, asked in words first */}
-          <div class="dm-danger">
-            <Show
-              when={confirming()}
-              fallback={
-                <button type="button" class="dm-del" onClick={() => setConfirming(true)}>
-                  Delete this deck
-                </button>
-              }
-            >
-              <p>
-                Delete {deckName()}? {cards().length}{" "}
-                {cards().length === 1 ? "card" : "cards"} and their review schedules go with
-                it — this can't be undone.
-              </p>
-              <div class="dm-delrow">
-                <button type="button" class="dm-keep" onClick={() => setConfirming(false)}>
-                  Keep it
-                </button>
-                <button type="button" class="dm-del2" onClick={destroyDeck}>
-                  Delete forever
-                </button>
-              </div>
-            </Show>
-          </div>
         </Show>
       </div>
+
+      {/* the one destructive act, asked in words first — a sheet,
+          because the ask must not live at the end of a long list */}
+      <Show when={confirming()}>
+        <div class="dm-sheet" onClick={() => setConfirming(false)}>
+          <div class="dm-sheetcard" onClick={(e) => e.stopPropagation()}>
+            <b>Delete {deckName()}?</b>
+            <p>
+              {cards().length} {cards().length === 1 ? "card" : "cards"} and their review
+              schedules go with it — this can't be undone.
+            </p>
+            <div class="dm-delrow">
+              <button type="button" class="dm-keep" onClick={() => setConfirming(false)}>
+                Keep it
+              </button>
+              <button type="button" class="dm-del2" onClick={destroyDeck}>
+                Delete forever
+              </button>
+            </div>
+          </div>
+        </div>
+      </Show>
 
       <Show when={toast()}>
         <div class="v-toast dm-toast" role="status">
