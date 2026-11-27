@@ -118,7 +118,7 @@ export default function ProgressHome() {
               }
             >
               <a class="pg-sub pg-cal" href="/vocab/estimate/" title="Run the spot-check again">
-                of 20,000 common words · {spread()} · {when()}
+                of 20,000 frequent words · {spread()} · {when()}
               </a>
             </Show>
           </div>

@@ -15,9 +15,9 @@
  * walking away keeps the previous calibration untouched.
  */
 
-import { createSignal, For, Show } from "solid-js";
-import { buildCalibration, drawSample, computeEstimate, deckCensus, type SampleItem } from "./estimate";
-import { writeCalibration, type Calibration } from "./calibration";
+import { createSignal, For, onMount, Show } from "solid-js";
+import { buildCalibration, drawSample, computeEstimate, deckCensus, type SampleItem, type EstimateResult } from "./estimate";
+import { readCalibration, writeCalibration, type Calibration } from "./calibration";
 
 const Back = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -50,12 +50,68 @@ function cefr(v: number): string {
 
 const fmt = (n: number) => Math.round(n).toLocaleString("en");
 
+/** Recompute the detail view from a persisted snapshot — same math
+ *  as the live run, no second source of truth. */
+function estimateOf(c: Calibration): EstimateResult {
+  return computeEstimate(
+    c.bands.map((b) => ({ from: b.from, to: b.to, yes: b.yes, no: b.no, deckInBand: b.deckInBand })),
+    c.falseAlarms,
+    c.pseudoAsked,
+    c.deckKnown,
+  );
+}
+
+/** The estimate read-out: point, interval, band bars, and the
+ *  honest footnotes. Shared by the result screen and the intro's
+ *  "your last estimate" block. */
+function resultView(r: EstimateResult, c: Calibration) {
+  return (
+    <>
+      <div class="ve-big">≈ {fmt(r.estimate)}</div>
+      <div class="ve-sub">of the 20,000 most frequent French words</div>
+      <div class="ve-ci">
+        95% range {fmt(r.low)} – {fmt(r.high)} · roughly {cefr(r.estimate)} territory
+      </div>
+
+      <div class="ve-bands">
+        <For each={r.bands}>
+          {(b) => (
+            <Show when={b.asked > 0}>
+              <div class="ve-band">
+                <span class="k">{b.label}</span>
+                <div class="ve-bbar" aria-hidden="true">
+                  <i style={{ width: `${Math.round(b.p * 100)}%` }} />
+                </div>
+                <span class="v">{Math.round(b.p * 100)}%</span>
+              </div>
+            </Show>
+          )}
+        </For>
+      </div>
+
+      <Show when={c.falseAlarms > 0}>
+        <p class="ai-note">
+          You marked {c.falseAlarms} of {c.pseudoAsked} invented words as known — the bands
+          above are corrected for that optimism.
+        </p>
+      </Show>
+      <p class="ai-note">
+        {fmt(c.deckKnown)} words counted directly from your decks · {c.wordsAsked} sampled.
+      </p>
+    </>
+  );
+}
+
 export default function SpotCheck() {
   const [phase, setPhase] = createSignal<Phase>("intro");
   const [items, setItems] = createSignal<SampleItem[]>([]);
   const [idx, setIdx] = createSignal(0);
   const [answers, setAnswers] = createSignal<Answer[]>([]);
   const [cal, setCal] = createSignal<Calibration | null>(null);
+
+  // a previous run's snapshot — shown on the intro so the estimate
+  // stays inspectable (band by band) after leaving the result screen
+  onMount(() => setCal(readCalibration()));
 
   const start = () => {
     // deck words are drawn out of the population here — census, not
@@ -99,14 +155,7 @@ export default function SpotCheck() {
   const result = () => {
     const c = cal();
     if (!c) return null;
-    // recompute the detail view from the persisted snapshot — same
-    // math, no second source of truth
-    return computeEstimate(
-      c.bands.map((b) => ({ from: b.from, to: b.to, yes: b.yes, no: b.no, deckInBand: b.deckInBand })),
-      c.falseAlarms,
-      c.pseudoAsked,
-      c.deckKnown,
-    );
+    return estimateOf(c);
   };
 
   const when = () =>
@@ -123,10 +172,25 @@ export default function SpotCheck() {
 
       <div class="ai-scroll">
         <Show when={phase() === "intro"}>
+          <Show when={cal()} keyed>
+            {(c) => (
+              <section class="ai-sec">
+                <div class="ai-sechead">
+                  <h2>Your last estimate</h2>
+                  <span class="ve-lastdate">{when()}</span>
+                </div>
+                {resultView(estimateOf(c), c)}
+                <p class="ai-note">
+                  Running it again draws a fresh sample — a second estimate landing close to
+                  this one is the strongest signal the number is real.
+                </p>
+              </section>
+            )}
+          </Show>
           <section class="ai-sec">
             <div class="ve-lead">
               A two-minute check of what you actually know. Words are drawn from the 20,000
-              most common French lemmas, spread across five frequency bands — plus a few
+              most frequent French lemmas, spread across five frequency bands — plus a few
               invented ones.
             </div>
             <p class="ai-note">
@@ -146,7 +210,7 @@ export default function SpotCheck() {
           </section>
           <section class="ai-sec">
             <button type="button" class="ai-cta" onClick={start}>
-              Start the check
+              {cal() ? "Run it again" : "Start the check"}
             </button>
           </section>
         </Show>
@@ -176,47 +240,16 @@ export default function SpotCheck() {
           </div>
         </Show>
 
-        <Show when={phase() === "done" && result()}>
-          <section class="ai-sec ai-done">
-            <div class="ve-big">≈ {fmt(result()!.estimate)}</div>
-            <div class="ve-sub">of the 20,000 most common French words</div>
-            <div class="ve-ci">
-              95% range {fmt(result()!.low)} – {fmt(result()!.high)} · roughly {cefr(result()!.estimate)}{" "}
-              territory
-            </div>
-
-            <div class="ve-bands">
-              <For each={result()!.bands}>
-                {(b) => (
-                  <Show when={b.asked > 0}>
-                    <div class="ve-band">
-                      <span class="k">{b.label}</span>
-                      <div class="ve-bbar" aria-hidden="true">
-                        <i style={{ width: `${Math.round(b.p * 100)}%` }} />
-                      </div>
-                      <span class="v">{Math.round(b.p * 100)}%</span>
-                    </div>
-                  </Show>
-                )}
-              </For>
-            </div>
-
-            <Show when={cal()!.falseAlarms > 0}>
-              <p class="ai-note">
-                You marked {cal()!.falseAlarms} of {cal()!.pseudoAsked} invented words as
-                known — the bands above are corrected for that optimism.
-              </p>
-            </Show>
-            <p class="ai-note">
-              {fmt(cal()!.deckKnown)} words counted directly from your decks ·{" "}
-              {cal()!.wordsAsked} sampled. Estimated {when()} — recalibrate in a month or
-              two, vocabulary drifts.
-            </p>
-
-            <a class="ai-cta" href="/">
-              Done
-            </a>
-          </section>
+        <Show when={phase() === "done" && cal()} keyed>
+          {(c) => (
+            <section class="ai-sec ai-done">
+              {resultView(estimateOf(c), c)}
+              <p class="ai-note">Estimated {when()} — recalibrate in a month or two, vocabulary drifts.</p>
+              <a class="ai-cta" href="/">
+                Done
+              </a>
+            </section>
+          )}
         </Show>
       </div>
     </div>
